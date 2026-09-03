@@ -887,8 +887,7 @@
       .select('time,names,user_id')
       .eq('field', currentField)
       .eq('date', date)
-      .is('cancelled_at', null);
-
+      
     if(error){
       throw error;
     }
