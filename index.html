@@ -85,9 +85,8 @@
       `${currentUser.display_name} (${currentUser.code})`;
   }
 
-      // --- INIZIO CORREZIONE ---
-    const loginBtn = document.getElementById('login-btn');
-    
+          const loginBtn = document.getElementById('login-btn');
+
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
             const code = document.getElementById('whitelist-code').value.trim();
@@ -99,6 +98,10 @@
                 }
                 return;
             }
+
+            loginWithCode(code);
+        });
+    }
 
             loginWithCode(code);
         });
