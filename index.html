@@ -587,14 +587,9 @@
   let supabase = null;
   let currentUser = null;
 
-  function initSupabaseClient(accessToken){
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }
-    });
+  function initSupabaseClient(){
+    // Usa la chiave anonima standard. NON passare l'header Authorization.
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 
   // -----------------------------
@@ -636,7 +631,7 @@
 
       currentUser = user;
 
-      initSupabaseClient(access_token);
+      initSupabaseClient();
 
       closeLoginOverlay();
       updateUIForLoggedInUser();
@@ -681,7 +676,7 @@
   if(savedToken && savedUser){
     try{
       currentUser = JSON.parse(savedUser);
-      initSupabaseClient(savedToken);
+      initSupabaseClient();
       closeLoginOverlay();
       updateUIForLoggedInUser();
     }catch(error){
@@ -886,8 +881,9 @@
       .from('Tennis')
       .select('time,names,user_id')
       .eq('field', currentField)
-      .eq('date', date)
-      
+      .eq('date', date);
+      // <-- NIENTE .is('cancelled_at', null);
+
     if(error){
       throw error;
     }
