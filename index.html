@@ -85,7 +85,10 @@
       `${currentUser.display_name} (${currentUser.code})`;
   }
 
-  document.getElementById('login-btn').addEventListener('click', () => {
+  const mioElemento = document.getElementById('mio-elemento');
+if (mioElemento) {
+    mioElemento.addEventListener('click', ...)
+}
     const code = document.getElementById('whitelist-code').value.trim();
 
     if(!code){
