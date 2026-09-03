@@ -85,20 +85,25 @@
       `${currentUser.display_name} (${currentUser.code})`;
   }
 
-  const mioElemento = document.getElementById('mio-elemento');
-if (mioElemento) {
-    mioElemento.addEventListener('click', ...)
-}
-    const code = document.getElementById('whitelist-code').value.trim();
+      // --- INIZIO CORREZIONE ---
+    const loginBtn = document.getElementById('login-btn');
+    
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            const code = document.getElementById('whitelist-code').value.trim();
 
-    if(!code){
-      document.getElementById('login-error').textContent =
-        'Inserisci il codice della tessera.';
-      return;
+            if (!code) {
+                const errorElement = document.getElementById('login-error');
+                if (errorElement) {
+                    errorElement.textContent = 'Inserisci il codice della tessera.';
+                }
+                return;
+            }
+
+            loginWithCode(code);
+        });
     }
-
-    loginWithCode(code);
-  });
+    // --- FINE CORREZIONE ---
 
   // Carica sessione esistente
   const savedToken = localStorage.getItem('wl_access_token');
