@@ -56,6 +56,8 @@
   .slot.booked{background:var(--booked);cursor:default;}
   .slot.booked .status{color:var(--ink-soft);}
   .slot.available:hover{border-color:var(--accent);}
+  .slot.past-slot{background:var(--bg);border-color:#D0CCC0;cursor:not-allowed;opacity:0.6;}
+  .slot.past-slot .status{color:#A09A8A;}
   .slot .book-btn{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;}
   .slot .book-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
   .slot .cancel-btn{background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);}
@@ -80,6 +82,8 @@
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;z-index:20;}
   @media (prefers-reduced-motion:no-preference){.modal{animation:up .18s ease-out;}}
   @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .clean-btn{margin-top:16px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink-soft);transition:all .15s;}
+  .clean-btn:hover{border-color:var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -102,6 +106,7 @@
     <div class="slots-title" id="slots-title"></div>
     <div class="slot-list" id="slot-list"></div>
   </div>
+  <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
 </div>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
@@ -115,6 +120,12 @@
   };
   const DOW = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
   const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
+  const SUPABASE_TABLE = 'Tennis';
+  const CLEANUP_DAYS = 7; // Cancella prenotazioni più vecchie di 7 giorni
+  const PAST_SLOT_MARGIN_MINUTES = 10; // Margine di 10 minuti per gli orari passati
+
   let currentField = 'tennis';
   const today = new Date(); today.setHours(0,0,0,0);
   const baseMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -122,28 +133,70 @@
   let viewMonth = new Date(baseMonth);
   let selectedDate = null;
   let bookingsCache = {};
+
   function pad(n){return n.toString().padStart(2,'0');}
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function fmtTime(h){const hh=Math.floor(h), mm=Math.round((h-hh)*60); return pad(hh)+':'+pad(mm);}
+
+  // CONTROLLO ORARI PASSATI CON MARGINE DI 10 MINUTI
+  function isSlotPassed(dateStr, slotStartHour) {
+    const now = new Date();
+    const todayStr = dateKey(now);
+    if (dateStr !== todayStr) return false;
+    const slotMinutes = Math.floor(slotStartHour * 60);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return slotMinutes <= nowMinutes + PAST_SLOT_MARGIN_MINUTES;
+  }
+
+  // CANCELLAZIONE AUTOMATICA PRENOTAZIONI VECCHIE (7+ giorni)
+  async function deleteOldBookings() {
+    const today = new Date();
+    const cutoffDateObj = new Date(today);
+    cutoffDateObj.setDate(today.getDate() - CLEANUP_DAYS);
+    const cutoffDate = dateKey(cutoffDateObj);
+    
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?date=lt.' + cutoffDate, {
+        method: 'DELETE',
+        headers: { 
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        }
+      });
+      
+      if (res.ok) {
+        console.log('✅ Prenotazioni più vecchie di ' + CLEANUP_DAYS + ' giorni cancellate');
+      }
+    } catch(e) {
+      console.error('❌ Errore nella cancellazione:', e);
+    }
+  }
+
   function setAccent(field){
     const f = FIELDS[field];
     document.documentElement.style.setProperty('--accent', getComputedStyle(document.documentElement).getPropertyValue(f.color));
     document.documentElement.style.setProperty('--accent-soft', getComputedStyle(document.documentElement).getPropertyValue(f.colorSoft));
   }
+
   function renderFieldNote(){
     const note = currentField === 'tennis'
       ? 'Slot da 1 ora. Servono almeno 2 nomi per prenotare (fino a 4 facoltativi).'
       : 'Slot da 1 ora e mezza. Servono esattamente 4 nomi per prenotare.';
     document.getElementById('field-note').textContent = note;
   }
+
   function renderDow(){
     document.getElementById('cal-dow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   }
+
   function renderMonthNav(){
     document.getElementById('month-label').textContent = MONTHS[viewMonth.getMonth()] + ' ' + viewMonth.getFullYear();
     document.getElementById('prev-month').disabled = (viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth());
     document.getElementById('next-month').disabled = (viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth());
   }
+
   function renderCalendar(){
     const grid = document.getElementById('cal-grid');
     grid.innerHTML = '';
@@ -173,6 +226,7 @@
     renderMonthNav();
     updateBookingDots();
   }
+
   async function loadMonthDates(field, year, month){
     const start = year+'-'+pad(month+1)+'-01';
     const nextMonth = new Date(year, month+1, 1);
@@ -189,6 +243,7 @@
       return new Set();
     }
   }
+
   async function updateBookingDots(){
     const year = viewMonth.getFullYear(), month = viewMonth.getMonth();
     const dates = await loadMonthDates(currentField, year, month);
@@ -197,9 +252,7 @@
       else cell.classList.remove('has-booking');
     });
   }
-  const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
-  const SUPABASE_TABLE = 'Tennis';
+
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
@@ -221,6 +274,7 @@
       return {};
     }
   }
+
   function buildSlots(field){
     const f = FIELDS[field];
     const slots = [];
@@ -230,6 +284,7 @@
     }
     return slots;
   }
+
   async function renderSlots(){
     const section = document.getElementById('slots-section');
     const title = document.getElementById('slots-title');
@@ -242,30 +297,44 @@
     const bookings = await loadBookings(selectedDate);
     const slots = buildSlots(currentField);
     list.innerHTML = '';
+    
     slots.forEach(s=>{
       const timeId = fmtTime(s.start);
       const booking = bookings[timeId];
       const row = document.createElement('div');
-      row.className = 'slot ' + (booking ? 'booked' : 'available');
-      const left = document.createElement('div');
-      left.innerHTML = `<div class="time">${s.label}</div><div class="status">${booking ? 'Prenotato da: '+booking.names.join(', ') : 'Libero'}</div>`;
-      row.appendChild(left);
-      if(!booking){
-        const btn = document.createElement('button');
-        btn.className = 'book-btn';
-        btn.textContent = 'Prenota';
-        btn.addEventListener('click', ()=> openBookingModal(s, timeId));
-        row.appendChild(btn);
-      }else{
+      const isPastSlot = isSlotPassed(selectedDate, s.start);
+      
+      if (isPastSlot) {
+        row.className = 'slot past-slot';
+        const left = document.createElement('div');
+        left.innerHTML = `<div class="time">${s.label}</div><div class="status">⏰ Orario già passato</div>`;
+        row.appendChild(left);
+      } else if (booking) {
+        row.className = 'slot booked';
+        const left = document.createElement('div');
+        left.innerHTML = `<div class="time">${s.label}</div><div class="status">Prenotato da: ${booking.names.join(', ')}</div>`;
+        row.appendChild(left);
         const btn = document.createElement('button');
         btn.className = 'book-btn cancel-btn';
         btn.textContent = 'Cancella';
         btn.addEventListener('click', ()=> openCancelModal(s, timeId, booking));
         row.appendChild(btn);
+      } else {
+        row.className = 'slot available';
+        const left = document.createElement('div');
+        left.innerHTML = `<div class="time">${s.label}</div><div class="status">Libero</div>`;
+        row.appendChild(left);
+        const btn = document.createElement('button');
+        btn.className = 'book-btn';
+        btn.textContent = 'Prenota';
+        btn.addEventListener('click', ()=> openBookingModal(s, timeId));
+        row.appendChild(btn);
       }
+      
       list.appendChild(row);
     });
   }
+
   function openBookingModal(slot, timeId){
     const f = FIELDS[currentField];
     const root = document.getElementById('modal-root');
@@ -297,7 +366,9 @@
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> confirmBooking(timeId, requiredCount, nameCount));
   }
+
   function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
   function openCancelModal(slot, timeId, booking){
     const f = FIELDS[currentField];
     const root = document.getElementById('modal-root');
@@ -322,6 +393,7 @@
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> doCancelBooking(timeId, booking));
   }
+
   async function doCancelBooking(timeId, booking){
     const errorEl = document.getElementById('form-error');
     const typedCode = document.getElementById('cancel-code').value.trim();
@@ -357,6 +429,7 @@
       confirmBtn.textContent = 'Cancella prenotazione';
     }
   }
+
   async function confirmBooking(timeId, requiredCount, nameCount){
     const names = [];
     for(let i=0;i<nameCount;i++){
@@ -405,6 +478,7 @@
       confirmBtn.textContent = 'Conferma';
     }
   }
+
   function showCodeModal(code){
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -421,11 +495,13 @@
     `;
     document.getElementById('btn-code-ok').addEventListener('click', closeModal);
   }
+
   function showToast(msg){
     const root = document.getElementById('toast-root');
     root.innerHTML = `<div class="toast">${msg}</div>`;
     setTimeout(()=>{ root.innerHTML=''; }, 2600);
   }
+
   function switchField(field){
     currentField = field;
     document.getElementById('tab-tennis').classList.toggle('active', field==='tennis');
@@ -438,22 +514,37 @@
     renderSlots();
     updateBookingDots();
   }
+
+  // Event listeners
   document.getElementById('tab-tennis').addEventListener('click', ()=>switchField('tennis'));
   document.getElementById('tab-padel').addEventListener('click', ()=>switchField('padel'));
+  
   document.getElementById('prev-month').addEventListener('click', ()=>{
     if(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth()) return;
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
     renderCalendar();
   });
+  
   document.getElementById('next-month').addEventListener('click', ()=>{
     if(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth()) return;
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
     renderCalendar();
   });
+
+  // Pulsante pulizia manuale
+  document.getElementById('clean-btn').addEventListener('click', async () => {
+    await deleteOldBookings();
+    showToast('🧹 Prenotazioni vecchie cancellate!');
+    updateBookingDots();
+    renderSlots();
+  });
+
+  // INIZIALIZZAZIONE
   setAccent('tennis');
   renderFieldNote();
   renderDow();
   renderCalendar();
+  deleteOldBookings(); // Cancellazione automatica all'avvio
 })();
 </script>
 </body>
