@@ -177,7 +177,7 @@
         + '?select=id,time,names&field=eq.' + encodeURIComponent(currentField)
         + '&date=eq.' + encodeURIComponent(key);
       const res = await fetch(url, {
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY }
       });
       if(!res.ok) throw new Error('fetch failed');
       const rows = await res.json();
@@ -307,7 +307,7 @@
     try{
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?id=eq.' + encodeURIComponent(booking.id), {
         method: 'DELETE',
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY }
       });
       if(!res.ok) throw new Error('delete failed');
       closeModal();
@@ -347,7 +347,6 @@
         method: 'POST',
         headers: {
           apikey: SUPABASE_KEY,
-          Authorization: 'Bearer ' + SUPABASE_KEY,
           'Content-Type': 'application/json',
           Prefer: 'return=minimal'
         },
