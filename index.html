@@ -74,6 +74,7 @@
   .btn-confirm{background:var(--accent);color:#fff;border-color:var(--accent);}
   .btn-confirm:disabled{opacity:.4;cursor:not-allowed;}
   .form-error{color:var(--tennis);font-size:13px;margin-top:8px;min-height:16px;}
+  .booking-code{font-family:'Fraunces',serif;font-size:44px;font-weight:600;letter-spacing:0.15em;text-align:center;color:var(--accent);background:var(--accent-soft);border-radius:10px;padding:18px 0;margin:18px 0;}
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;z-index:20;}
   @media (prefers-reduced-motion:no-preference){.modal{animation:up .18s ease-out;}}
   @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -174,7 +175,7 @@
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=id,time,names&field=eq.' + encodeURIComponent(currentField)
+        + '?select=id,time&field=eq.' + encodeURIComponent(currentField)
         + '&date=eq.' + encodeURIComponent(key);
       const res = await fetch(url, {
         headers: { apikey: SUPABASE_KEY }
@@ -183,7 +184,7 @@
       const rows = await res.json();
       const data = {};
       rows.forEach(r=>{
-        data[r.time] = { id: r.id, names: (r.names||'').split(',').map(s=>s.trim()).filter(Boolean) };
+        data[r.time] = { id: r.id };
       });
       bookingsCache[key] = data;
       return data;
@@ -219,7 +220,7 @@
       const row = document.createElement('div');
       row.className = 'slot ' + (booking ? 'booked' : 'available');
       const left = document.createElement('div');
-      left.innerHTML = `<div class="time">${s.label}</div><div class="status">${booking ? 'Prenotato da: '+booking.names.join(', ') : 'Libero'}</div>`;
+      left.innerHTML = `<div class="time">${s.label}</div><div class="status">${booking ? 'Occupato' : 'Libero'}</div>`;
       row.appendChild(left);
       if(!booking){
         const btn = document.createElement('button');
@@ -278,8 +279,8 @@
           <h2 id="cancel-title">Cancella prenotazione</h2>
           <div class="meta">${new Date(selectedDate+'T00:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'})} · ${slot.label} · ${f.label}</div>
           <div class="name-field">
-            <label for="cancel-name">Scrivi uno dei nomi della prenotazione per confermare (${booking.names.join(', ')})</label>
-            <input id="cancel-name" type="text" autocomplete="off" />
+            <label for="cancel-code">Inserisci il codice a 4 cifre ricevuto al momento della prenotazione</label>
+            <input id="cancel-code" type="text" inputmode="numeric" maxlength="4" autocomplete="off" />
           </div>
           <div class="form-error" id="form-error"></div>
           <div class="modal-actions">
@@ -295,21 +296,29 @@
   }
   async function doCancelBooking(timeId, booking){
     const errorEl = document.getElementById('form-error');
-    const typed = document.getElementById('cancel-name').value.trim().toLowerCase();
-    const match = booking.names.some(n => n.toLowerCase() === typed);
-    if(!typed || !match){
-      errorEl.textContent = 'Il nome inserito non corrisponde a nessuno dei nomi della prenotazione.';
+    const typedCode = document.getElementById('cancel-code').value.trim();
+    if(!/^\d{4}$/.test(typedCode)){
+      errorEl.textContent = 'Inserisci un codice di 4 cifre.';
       return;
     }
     const confirmBtn = document.getElementById('btn-confirm');
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Cancello…';
     try{
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?id=eq.' + encodeURIComponent(booking.id), {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?id=eq.' + encodeURIComponent(booking.id)
+        + '&code=eq.' + encodeURIComponent(typedCode), {
         method: 'DELETE',
-        headers: { apikey: SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY, Prefer: 'return=representation' }
       });
       if(!res.ok) throw new Error('delete failed');
+      const deleted = await res.json();
+      if(!deleted || deleted.length === 0){
+        errorEl.textContent = 'Codice errato. Riprova.';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Cancella prenotazione';
+        return;
+      }
       closeModal();
       showToast('Prenotazione cancellata');
       renderSlots();
@@ -343,6 +352,7 @@
         confirmBtn.textContent = 'Conferma';
         return;
       }
+      const bookingCode = String(Math.floor(1000 + Math.random()*9000));
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE, {
         method: 'POST',
         headers: {
@@ -350,21 +360,36 @@
           'Content-Type': 'application/json',
           Prefer: 'return=minimal'
         },
-        body: JSON.stringify({ field: currentField, date: selectedDate, time: timeId, names: names.join(', ') })
+        body: JSON.stringify({ field: currentField, date: selectedDate, time: timeId, names: names.join(', '), code: bookingCode })
       });
       if(!insertRes.ok){
         let detail = '';
         try{ const errBody = await insertRes.json(); detail = errBody.message || errBody.hint || JSON.stringify(errBody); }catch(_){ detail = insertRes.status + ' ' + insertRes.statusText; }
         throw new Error(detail);
       }
-      closeModal();
-      showToast('Prenotazione confermata per le ' + timeId);
       renderSlots();
+      showCodeModal(bookingCode);
     }catch(e){
       errorEl.textContent = 'Errore: ' + (e && e.message ? e.message : 'salvataggio non riuscito');
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Conferma';
     }
+  }
+  function showCodeModal(code){
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="code-title">
+          <h2 id="code-title">Prenotazione confermata</h2>
+          <div class="meta">Segna questo codice: ti servirà se vorrai cancellare la prenotazione.</div>
+          <div class="booking-code">${code}</div>
+          <div class="modal-actions">
+            <button class="btn-confirm" id="btn-code-ok" style="flex:none;width:100%;">Ho segnato il codice</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('btn-code-ok').addEventListener('click', closeModal);
   }
   function showToast(msg){
     const root = document.getElementById('toast-root');
