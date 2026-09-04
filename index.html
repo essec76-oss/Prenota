@@ -39,7 +39,9 @@
   .month-label{font-family:'Fraunces',serif;font-weight:600;font-size:19px;text-transform:capitalize;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:8px;}
   .cal-dow{text-align:center;font-size:12px;color:var(--ink-soft);padding-bottom:4px;}
-  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:15px;cursor:pointer;color:var(--ink);}
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:15px;cursor:pointer;color:var(--ink);position:relative;}
+  .cal-day.has-booking::after{content:'';position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#D64545;}
+  .cal-day.selected.has-booking::after{background:#fff;}
   .cal-day.empty{border:none;background:none;cursor:default;}
   .cal-day.past{color:#C7C4B8;background:var(--bg);border-color:var(--line);cursor:not-allowed;}
   .cal-day.selected{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
@@ -162,12 +164,38 @@
       cell.className = 'cal-day' + (isPast?' past':'') + (key===selectedDate?' selected':'');
       cell.textContent = d;
       cell.disabled = isPast;
+      cell.dataset.date = key;
       if(!isPast){
         cell.addEventListener('click', ()=>{ selectedDate = key; renderCalendar(); renderSlots(); });
       }
       grid.appendChild(cell);
     }
     renderMonthNav();
+    updateBookingDots();
+  }
+  async function loadMonthDates(field, year, month){
+    const start = year+'-'+pad(month+1)+'-01';
+    const nextMonth = new Date(year, month+1, 1);
+    const end = nextMonth.getFullYear()+'-'+pad(nextMonth.getMonth()+1)+'-01';
+    try{
+      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?select=date&field=eq.' + encodeURIComponent(field)
+        + '&date=gte.' + start + '&date=lt.' + end;
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      if(!res.ok) return new Set();
+      const rows = await res.json();
+      return new Set(rows.map(r=>r.date));
+    }catch(e){
+      return new Set();
+    }
+  }
+  async function updateBookingDots(){
+    const year = viewMonth.getFullYear(), month = viewMonth.getMonth();
+    const dates = await loadMonthDates(currentField, year, month);
+    document.querySelectorAll('.cal-day[data-date]').forEach(cell=>{
+      if(dates.has(cell.dataset.date)) cell.classList.add('has-booking');
+      else cell.classList.remove('has-booking');
+    });
   }
   const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
@@ -175,7 +203,7 @@
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=id,time&field=eq.' + encodeURIComponent(currentField)
+        + '?select=id,time,names&field=eq.' + encodeURIComponent(currentField)
         + '&date=eq.' + encodeURIComponent(key);
       const res = await fetch(url, {
         headers: { apikey: SUPABASE_KEY }
@@ -184,7 +212,7 @@
       const rows = await res.json();
       const data = {};
       rows.forEach(r=>{
-        data[r.time] = { id: r.id };
+        data[r.time] = { id: r.id, names: (r.names||'').split(',').map(s=>s.trim()).filter(Boolean) };
       });
       bookingsCache[key] = data;
       return data;
@@ -220,7 +248,7 @@
       const row = document.createElement('div');
       row.className = 'slot ' + (booking ? 'booked' : 'available');
       const left = document.createElement('div');
-      left.innerHTML = `<div class="time">${s.label}</div><div class="status">${booking ? 'Occupato' : 'Libero'}</div>`;
+      left.innerHTML = `<div class="time">${s.label}</div><div class="status">${booking ? 'Prenotato da: '+booking.names.join(', ') : 'Libero'}</div>`;
       row.appendChild(left);
       if(!booking){
         const btn = document.createElement('button');
@@ -321,6 +349,7 @@
       }
       closeModal();
       showToast('Prenotazione cancellata');
+      updateBookingDots();
       renderSlots();
     }catch(e){
       errorEl.textContent = 'Errore nella cancellazione. Riprova.';
@@ -369,6 +398,7 @@
       }
       renderSlots();
       showCodeModal(bookingCode);
+      updateBookingDots();
     }catch(e){
       errorEl.textContent = 'Errore: ' + (e && e.message ? e.message : 'salvataggio non riuscito');
       confirmBtn.disabled = false;
@@ -406,6 +436,7 @@
     renderFieldNote();
     bookingsCache = {};
     renderSlots();
+    updateBookingDots();
   }
   document.getElementById('tab-tennis').addEventListener('click', ()=>switchField('tennis'));
   document.getElementById('tab-padel').addEventListener('click', ()=>switchField('padel'));
