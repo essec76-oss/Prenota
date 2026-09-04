@@ -122,6 +122,31 @@
           <p style="font-family: sans-serif; color: #555;">Condividi il link di prenotazione:</p>
           <img src="/qrcode.svg" alt="QR Code per prenotare" style="width: 180px; height: 180px;">
       </div>
+        </div> <!-- riga 124 (già esistente) -->
+
+      <!-- 👇 PULSANTE COPIA LINK 👇 -->
+      <div style="text-align: center; margin-top: 15px;">
+          <button onclick="copiaLink()" style="background-color: #b45309; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+              📋 Copia link di prenotazione
+          </button>
+          <p id="messaggio-copia" style="font-size: 12px; color: green; margin-top: 8px; min-height: 15px;"></p>
+      </div>
+
+      <script>
+          function copiaLink() {
+              var link = window.location.href;
+              navigator.clipboard.writeText(link).then(function() {
+                  var msg = document.getElementById("messaggio-copia");
+                  msg.innerText = "Link copiato negli appunti!";
+                  setTimeout(function() {
+                      msg.innerText = "";
+                  }, 2000);
+              });
+          }
+      </script>
+      <!-- 👆 FINE PULSANTE COPIA LINK 👆 -->
+
+      <!-- 👆 FINE QR CODE 👆 --> <!-- riga 126 (già esistente) -->
       <!-- 👆 FINE QR CODE 👆 -->
 
       <!-- 📅 SEZIONE PRENOTAZIONE --> <!-- riga 119 (già esistente) -->
