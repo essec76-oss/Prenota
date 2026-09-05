@@ -89,6 +89,8 @@
   .user-badge{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px;display:flex;justify-content:space-between;align-items:center;}
   .user-badge .logout-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;font-size:14px;}
   .user-badge .logout-btn:hover{text-decoration:underline;}
+  .guest-expiry{background:#FFF4E0;border:1px solid #E8C989;color:#8a6a1a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:600;}
+  .guest-expiry.urgent{background:#F4DFD2;border-color:#D9A583;color:#8a3a15;}
   .badge-tesserato{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;}
   .badge-ospite{background:#B84B1E;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;}
   .prenotato-da{font-size:12px;color:var(--ink-soft);margin-top:2px;}
@@ -161,6 +163,7 @@
       <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
       <button class="logout-btn" id="logout-btn">🚪 Esci</button>
     </div>
+    <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
     
     <div class="tabs" role="tablist">
       <button class="tab active" id="tab-tennis" role="tab" aria-selected="true">Tennis</button>
@@ -242,6 +245,34 @@
     if (field === 'tennis') return !!loggedUser.is_tennis_member;
     if (field === 'padel') return !!loggedUser.is_padel_member;
     return false;
+  }
+
+  // ============================================================
+  // AVVISO SCADENZA ACCESSO OSPITE
+  // ============================================================
+  function renderGuestExpiry(){
+    const el = document.getElementById('guest-expiry');
+    if (!loggedUser || loggedUser.tipo !== 'ospite' || !loggedUser.scadenza) {
+      el.style.display = 'none';
+      return;
+    }
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const scad = new Date(loggedUser.scadenza + 'T00:00:00');
+    const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
+    const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long'});
+
+    let testo;
+    if (giorniResidui <= 0) {
+      testo = '⏳ Il tuo accesso come ospite scade oggi.';
+    } else if (giorniResidui === 1) {
+      testo = '⏳ Il tuo accesso come ospite scade domani (' + dataFmt + ').';
+    } else {
+      testo = '⏳ Il tuo accesso come ospite scade tra ' + giorniResidui + ' giorni (' + dataFmt + ').';
+    }
+
+    el.textContent = testo;
+    el.classList.toggle('urgent', giorniResidui <= 1);
+    el.style.display = 'block';
   }
 
   // ============================================================
@@ -794,7 +825,8 @@
         codice: utente.codice,
         tipo: tipo,
         is_tennis_member: utente.is_tennis_member,
-        is_padel_member: utente.is_padel_member
+        is_padel_member: utente.is_padel_member,
+        scadenza: utente.scadenza || null
       };
       
       errorEl.textContent = '';
@@ -810,6 +842,7 @@
         : '<span class="badge-ospite">Ospite</span>';
       document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
       document.getElementById('user-badge').innerHTML = tipoLabel;
+      renderGuestExpiry();
       
       // Inizializza il calendario
       setAccent('tennis');
@@ -834,6 +867,7 @@
     bookingSection.style.display = 'none';
     document.getElementById('login-codice').value = '';
     document.getElementById('login-error').textContent = '';
+    document.getElementById('guest-expiry').style.display = 'none';
     selectedDate = null;
     document.getElementById('slots-section').style.display = 'none';
   }
