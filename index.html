@@ -41,7 +41,7 @@
   .cal-dow{text-align:center;font-size:12px;color:var(--ink-soft);padding-bottom:4px;}
   
   /* ============================================================
-     MIGLIORIE CALENDARIO - Giorni più grandi e interattivi
+     MIGLIORIE CALENDARIO
      ============================================================ */
   .cal-day{
     aspect-ratio:1;
@@ -100,7 +100,7 @@
   .slot-list{display:flex;flex-direction:column;gap:10px;}
   
   /* ============================================================
-     MIGLIORIE SLOT - Card con ombre e badge
+     MIGLIORIE SLOT
      ============================================================ */
   .slot{
     display:flex;
@@ -193,14 +193,15 @@
   .empty-msg{color:var(--ink-soft);font-size:14px;padding:16px 0;}
   .overlay{position:fixed;inset:0;background:rgba(27,36,31,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10;}
   @media (min-width:520px){.overlay{align-items:center;}}
-  .modal{background:var(--surface);border-radius:14px 14px 0 0;padding:22px 20px 26px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;}
+  .modal{background:var(--surface);border-radius:14px 14px 0 0;padding:22px 20px 26px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;}
   @media (min-width:520px){.modal{border-radius:14px;}}
   .modal h2{font-family:'Fraunces',serif;font-size:20px;margin:0 0 4px;}
   .modal .meta{color:var(--ink-soft);font-size:14px;margin-bottom:18px;}
+  .modal .modal-subtitle{color:var(--ink-soft);font-size:13px;margin-bottom:16px;}
   .name-field{margin-bottom:12px;}
   .name-field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px;}
-  .name-field input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;}
-  .name-field input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(--surface);}
+  .name-field input:focus-visible,.name-field select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .modal-actions{display:flex;gap:10px;margin-top:18px;}
   .modal-actions button{flex:1;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--line);}
   .btn-cancel{background:var(--surface);color:var(--ink);}
@@ -216,7 +217,7 @@
   .login-box .btn-confirm{width:100%;margin-top:8px;}
   
   /* ============================================================
-     USER BADGE - Layout migliorato
+     USER BADGE
      ============================================================ */
   .user-badge{
     background:var(--accent-soft);
@@ -238,6 +239,21 @@
     font-size:14px;
   }
   .user-badge .logout-btn:hover{text-decoration:underline;}
+  .user-badge .admin-btn{
+    background:#B84B1E;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:4px 12px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .user-badge .admin-btn:hover{
+    background:#8A3A15;
+    transform:scale(1.04);
+  }
   
   #admin-toggle-container{
     display:none;
@@ -292,6 +308,110 @@
   .slot.booked.admin-visible{border:2px solid #B84B1E;background:#FDF0EA;}
 
   /* ============================================================
+     GESTIONE UTENTI - Lista utenti
+     ============================================================ */
+  .user-list-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    margin-top:12px;
+  }
+  .user-list-table th{
+    text-align:left;
+    padding:8px 6px;
+    border-bottom:2px solid var(--line);
+    color:var(--ink-soft);
+    font-weight:600;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .user-list-table td{
+    padding:8px 6px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  .user-list-table .user-tag{
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:10px;
+    font-weight:600;
+    display:inline-block;
+  }
+  .user-list-table .user-tag.tesserato{background:#2B6E5A;color:#fff;}
+  .user-list-table .user-tag.ospite{background:#B84B1E;color:#fff;}
+  .user-list-table .user-actions{
+    display:flex;
+    gap:4px;
+  }
+  .user-list-table .user-actions button{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:2px 8px;
+    font-size:11px;
+    cursor:pointer;
+    transition:all 0.15s;
+    font-family:inherit;
+  }
+  .user-list-table .user-actions .btn-edit{
+    color:var(--ink-soft);
+  }
+  .user-list-table .user-actions .btn-edit:hover{
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .user-list-table .user-actions .btn-delete{
+    color:#B84B1E;
+  }
+  .user-list-table .user-actions .btn-delete:hover{
+    border-color:#B84B1E;
+    background:#F4DFD2;
+  }
+  .user-list-section-title{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:600;
+    margin:18px 0 8px;
+    color:var(--ink);
+  }
+  .user-list-empty{
+    color:var(--ink-soft);
+    font-size:14px;
+    padding:12px 0;
+    text-align:center;
+  }
+  .user-modal-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:16px;
+  }
+  .user-modal-tabs button{
+    flex:1;
+    padding:8px;
+    border:2px solid var(--line);
+    border-radius:8px;
+    background:var(--surface);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .user-modal-tabs button.active{
+    border-color:var(--accent);
+    color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .user-modal-tabs button:hover:not(.active){
+    border-color:var(--accent);
+  }
+  .user-modal-tabs .tab-icon{
+    margin-right:4px;
+  }
+
+  /* ============================================================
      RESPONSIVE MOBILE
      ============================================================ */
   @media (max-width:480px){
@@ -319,6 +439,16 @@
     }
     #admin-toggle-container{
       justify-content:center;
+    }
+    .user-list-table{
+      font-size:12px;
+    }
+    .user-list-table th,
+    .user-list-table td{
+      padding:6px 4px;
+    }
+    .modal{
+      padding:16px;
     }
   }
 </style>
@@ -367,6 +497,7 @@
           🔑 Admin
         </label>
       </div>
+      <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
       <button class="logout-btn" id="logout-btn">🚪 Esci</button>
       <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
     </div>
@@ -392,6 +523,8 @@
   </div>
   
 </div>
+
+<!-- MODALE PER GESTIONE UTENTI -->
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 
@@ -1066,9 +1199,11 @@ function copiaLink() {
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
+    const usersBtn = document.getElementById('admin-users-btn');
     
     if (loggedUser && loggedUser.is_admin === true) {
       container.style.display = 'flex';
+      usersBtn.style.display = 'inline-block';
       toggle.checked = false;
       adminMode = false;
       
@@ -1081,8 +1216,14 @@ function copiaLink() {
         }
         renderSlots();
       };
+      
+      // Pulsante gestione utenti
+      usersBtn.onclick = function() {
+        openUserManagement();
+      };
     } else {
       container.style.display = 'none';
+      usersBtn.style.display = 'none';
     }
   }
 
@@ -1132,6 +1273,358 @@ function copiaLink() {
     renderSlots();
     updateBookingDots();
   }
+
+  // ============================================================
+  // GESTIONE UTENTI - ADMIN
+  // ============================================================
+  let currentUserTab = 'tesserati';
+
+  async function openUserManagement() {
+    const root = document.getElementById('modal-root');
+    
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" style="max-width:620px;">
+          <h2>👥 Gestione Utenti</h2>
+          <p class="modal-subtitle">Crea nuovi utenti o gestisci quelli esistenti.</p>
+          
+          <div class="user-modal-tabs">
+            <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
+            <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
+            <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
+          </div>
+          
+          <div id="user-list-container">
+            <div class="user-list-empty">⏳ Caricamento utenti...</div>
+          </div>
+          
+          <div id="user-create-form" style="display:none;">
+            <div class="name-field">
+              <label for="create-tipo">Tipo utente</label>
+              <select id="create-tipo">
+                <option value="tesserato">⭐ Tesserato</option>
+                <option value="ospite">👤 Ospite</option>
+              </select>
+            </div>
+            <div class="name-field">
+              <label for="create-nome">Nome *</label>
+              <input id="create-nome" type="text" placeholder="Nome" />
+            </div>
+            <div class="name-field">
+              <label for="create-cognome">Cognome *</label>
+              <input id="create-cognome" type="text" placeholder="Cognome" />
+            </div>
+            <div class="name-field" id="create-sport-field">
+              <label for="create-sport">Sport</label>
+              <select id="create-sport">
+                <option value="both">Tennis + Padel</option>
+                <option value="tennis">Tennis</option>
+                <option value="padel">Padel</option>
+              </select>
+            </div>
+            <div class="name-field" id="create-telefono-field" style="display:none;">
+              <label for="create-telefono">Telefono *</label>
+              <input id="create-telefono" type="text" placeholder="Numero di telefono" />
+            </div>
+            <div class="name-field">
+              <label for="create-scadenza">Scadenza (lasciare vuoto per default)</label>
+              <input id="create-scadenza" type="date" />
+            </div>
+            <div class="form-error" id="create-error"></div>
+            <div class="modal-actions">
+              <button class="btn-cancel" id="create-cancel">Annulla</button>
+              <button class="btn-confirm" id="create-save">💾 Crea utente</button>
+            </div>
+          </div>
+          
+          <div class="modal-actions" style="margin-top:12px;">
+            <button class="btn-cancel" id="user-close" style="flex:none;width:100%;">Chiudi</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Eventi tabs
+    document.getElementById('tab-tesserati').addEventListener('click', function() {
+      switchUserTab('tesserati');
+    });
+    document.getElementById('tab-ospiti').addEventListener('click', function() {
+      switchUserTab('ospiti');
+    });
+    document.getElementById('tab-crea').addEventListener('click', function() {
+      switchUserTab('crea');
+    });
+    
+    // Evento cambio tipo per form creazione
+    document.getElementById('create-tipo').addEventListener('change', function() {
+      toggleCreateFields();
+    });
+    
+    document.getElementById('create-cancel').addEventListener('click', function() {
+      switchUserTab(currentUserTab);
+    });
+    
+    document.getElementById('create-save').addEventListener('click', function() {
+      handleCreateUser();
+    });
+    
+    document.getElementById('user-close').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if(e.target.id === 'overlay') closeModal();
+    });
+    
+    toggleCreateFields();
+    await loadUserList('tesserati');
+  }
+
+  function switchUserTab(tab) {
+    currentUserTab = tab;
+    
+    // Aggiorna tabs
+    document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    const tabBtn = document.getElementById('tab-' + tab);
+    if (tabBtn) tabBtn.classList.add('active');
+    
+    const listContainer = document.getElementById('user-list-container');
+    const createForm = document.getElementById('user-create-form');
+    
+    if (tab === 'crea') {
+      listContainer.style.display = 'none';
+      createForm.style.display = 'block';
+    } else {
+      listContainer.style.display = 'block';
+      createForm.style.display = 'none';
+      loadUserList(tab);
+    }
+  }
+
+  function toggleCreateFields() {
+    const tipo = document.getElementById('create-tipo').value;
+    const sportField = document.getElementById('create-sport-field');
+    const telefonoField = document.getElementById('create-telefono-field');
+    
+    if (tipo === 'tesserato') {
+      sportField.style.display = 'block';
+      telefonoField.style.display = 'none';
+    } else {
+      sportField.style.display = 'none';
+      telefonoField.style.display = 'block';
+    }
+  }
+
+  async function loadUserList(tipo) {
+    const container = document.getElementById('user-list-container');
+    container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
+    
+    try {
+      let data = [];
+      
+      if (tipo === 'tesserati') {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza&order=cognome.asc', {
+          headers: { apikey: SUPABASE_KEY }
+        });
+        if (!res.ok) throw new Error('Errore caricamento tesserati');
+        data = await res.json();
+        
+        if (data.length === 0) {
+          container.innerHTML = '<div class="user-list-empty">📭 Nessun tesserato presente.</div>';
+          return;
+        }
+        
+        let html = '<div class="user-list-section-title">⭐ Tesserati</div>';
+        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Azioni</th></tr></thead><tbody>';
+        
+        data.forEach(u => {
+          const sports = [];
+          if (u.is_tennis_member) sports.push('🎾');
+          if (u.is_padel_member) sports.push('🏸');
+          const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
+          const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
+          
+          html += `<tr>
+            <td><strong>${u.codice}</strong></td>
+            <td>${u.nome} ${u.cognome}</td>
+            <td>${sportLabel}</td>
+            <td>${scadenza}</td>
+            <td>
+              <div class="user-actions">
+                <button class="btn-delete" onclick="deleteUser('tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
+              </div>
+            </td>
+          </tr>`;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        
+      } else {
+        // Ospiti
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza,attivo&order=cognome.asc', {
+          headers: { apikey: SUPABASE_KEY }
+        });
+        if (!res.ok) throw new Error('Errore caricamento ospiti');
+        data = await res.json();
+        
+        if (data.length === 0) {
+          container.innerHTML = '<div class="user-list-empty">📭 Nessun ospite presente.</div>';
+          return;
+        }
+        
+        let html = '<div class="user-list-section-title">👤 Ospiti</div>';
+        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Telefono</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+        
+        data.forEach(u => {
+          const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
+          const attivo = u.attivo ? '✅ Attivo' : '❌ Inattivo';
+          
+          html += `<tr>
+            <td><strong>${u.codice || 'N/D'}</strong></td>
+            <td>${u.nome} ${u.cognome}</td>
+            <td>${u.telefono || 'N/D'}</td>
+            <td>${scadenza}</td>
+            <td>${attivo}</td>
+            <td>
+              <div class="user-actions">
+                <button class="btn-delete" onclick="deleteUser('ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
+              </div>
+            </td>
+          </tr>`;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      }
+    } catch(e) {
+      container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
+    }
+  }
+
+  async function handleCreateUser() {
+    const errorEl = document.getElementById('create-error');
+    const tipo = document.getElementById('create-tipo').value;
+    const nome = document.getElementById('create-nome').value.trim();
+    const cognome = document.getElementById('create-cognome').value.trim();
+    const scadenza = document.getElementById('create-scadenza').value || null;
+    const saveBtn = document.getElementById('create-save');
+    
+    if (!nome || !cognome) {
+      errorEl.textContent = 'Nome e Cognome sono obbligatori.';
+      return;
+    }
+    
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Salvo...';
+    errorEl.textContent = '';
+    
+    try {
+      if (tipo === 'tesserato') {
+        const sport = document.getElementById('create-sport').value;
+        const payload = {
+          nome: nome,
+          cognome: cognome,
+          is_tennis_member: sport === 'tennis' || sport === 'both',
+          is_padel_member: sport === 'padel' || sport === 'both',
+          scadenza: scadenza || '2026-12-31'
+        };
+        
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati', {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || 'Errore creazione tesserato');
+        }
+        
+        const data = await res.json();
+        showToast('✅ Tesserato ' + nome + ' ' + cognome + ' creato! Codice: ' + data[0].codice);
+        errorEl.textContent = '';
+        
+      } else {
+        // Ospite
+        const telefono = document.getElementById('create-telefono').value.trim();
+        if (!telefono) {
+          errorEl.textContent = 'Il telefono è obbligatorio per gli ospiti.';
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Crea utente';
+          return;
+        }
+        
+        const payload = {
+          nome: nome,
+          cognome: cognome,
+          telefono: telefono,
+          attivo: true,
+          scadenza: scadenza || null
+        };
+        
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti', {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || 'Errore creazione ospite');
+        }
+        
+        const data = await res.json();
+        showToast('✅ Ospite ' + nome + ' ' + cognome + ' creato! Codice: ' + (data[0].codice || 'Generato automaticamente'));
+        errorEl.textContent = '';
+      }
+      
+      // Reset form
+      document.getElementById('create-nome').value = '';
+      document.getElementById('create-cognome').value = '';
+      document.getElementById('create-telefono').value = '';
+      document.getElementById('create-scadenza').value = '';
+      
+      // Ricarica lista
+      await loadUserList(currentUserTab);
+      
+    } catch(e) {
+      errorEl.textContent = '❌ Errore: ' + e.message;
+    }
+    
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Crea utente';
+  }
+
+  // Funzioni globali per gli onclick dei pulsanti delete
+  window.deleteUser = async function(table, id, nome) {
+    if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
+    
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + table.charAt(0).toUpperCase() + table.slice(1) + '?id=eq.' + id, {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Prefer: 'return=minimal'
+        }
+      });
+      
+      if (!res.ok) throw new Error('Errore eliminazione');
+      
+      showToast('✅ ' + nome + ' eliminato con successo');
+      await loadUserList(currentUserTab);
+      
+    } catch(e) {
+      showToast('❌ Errore: ' + e.message);
+    }
+  };
 
   // ============================================================
   // LOGIN - VERSIONE CORRETTA E FUNZIONANTE
