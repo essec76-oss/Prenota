@@ -1749,6 +1749,10 @@ function copiaLink() {
       renderDow();
       renderCalendar();
       deleteOldBookings();
+
+      if (accessToken) {
+        setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + codice); }, 400);
+      }
       
     } catch(e) {
       errorEl.textContent = 'Errore di connessione. Riprova.';
@@ -1807,3 +1811,4 @@ function copiaLink() {
 </script>
 </body>
 </html>
+
