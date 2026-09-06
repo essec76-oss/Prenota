@@ -86,7 +86,7 @@
 
   .login-box{background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--line);margin-top:20px;}
   .login-box .btn-confirm{width:100%;margin-top:8px;}
-  .user-badge{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px;display:flex;justify-content:space-between;align-items:center;}
+  .user-badge{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
   .user-badge .logout-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;font-size:14px;}
   .user-badge .logout-btn:hover{text-decoration:underline;}
   .guest-expiry{background:#FFF4E0;border:1px solid #E8C989;color:#8a6a1a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:600;}
@@ -100,6 +100,52 @@
   .clean-btn{margin-top:16px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink-soft);transition:all .15s;}
   .clean-btn:hover{border-color:var(--accent);color:var(--accent);}
   .field-note.warning{background:#F4DFD2;color:#8a3a15;font-weight:600;}
+
+  /* ADMIN STYLES */
+  #admin-toggle-container {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+    background: #FFF4E0;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid #E8C989;
+  }
+  #admin-toggle-container label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #8a6a1a;
+    font-weight: 600;
+  }
+  #admin-toggle-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #B84B1E;
+  }
+  .slot .book-btn.admin-delete {
+    background: #B84B1E;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: background 0.15s;
+  }
+  .slot .book-btn.admin-delete:hover {
+    background: #8A3A15;
+  }
+  .slot.booked.admin-visible {
+    border: 2px solid #B84B1E;
+    background: #FDF0EA;
+  }
 </style>
 </head>
 <body>
@@ -119,56 +165,35 @@
       <button class="btn-confirm" id="login-btn">🔓 Accedi</button>
     </div>
   </div>
-        </div> <!-- riga 117 (già esistente) -->
 
-      <!-- 👇 INCOLLA QUI IL QR CODE 👇 -->
-      <div style="text-align: center; margin-top: 30px;">
-          <p style="font-family: sans-serif; color: #555;">Condividi il link di prenotazione:</p>
-          <img src="/qrcode.svg" alt="QR Code per prenotare" style="width: 180px; height: 180px;">
-      </div>
-        </div> <!-- riga 124 (già esistente) -->
+  <!-- QR CODE E COPIA LINK -->
+  <div style="text-align: center; margin-top: 30px;">
+    <p style="font-family: sans-serif; color: #555;">Condividi il link di prenotazione:</p>
+    <img src="/qrcode.svg" alt="QR Code per prenotare" style="width: 180px; height: 180px;">
+  </div>
 
-      <!-- 👇 PULSANTE COPIA LINK 👇 -->
-      <div style="text-align: center; margin-top: 15px;">
-          <button onclick="copiaLink()" style="background-color: #b45309; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
-              📋 Copia link di prenotazione
-          </button>
-          <p id="messaggio-copia" style="font-size: 12px; color: green; margin-top: 8px; min-height: 15px;"></p>
-      </div>
+  <div style="text-align: center; margin-top: 15px;">
+    <button onclick="copiaLink()" style="background-color: #b45309; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+      📋 Copia link di prenotazione
+    </button>
+    <p id="messaggio-copia" style="font-size: 12px; color: green; margin-top: 8px; min-height: 15px;"></p>
+  </div>
 
-      <script>
-          function copiaLink() {
-              var link = window.location.href;
-              navigator.clipboard.writeText(link).then(function() {
-                  var msg = document.getElementById("messaggio-copia");
-                  msg.innerText = "Link copiato negli appunti!";
-                  setTimeout(function() {
-                      msg.innerText = "";
-                  }, 2000);
-              });
-          }
-      </script>
-      <!-- 👆 FINE PULSANTE COPIA LINK 👆 -->
-
-      <!-- 👆 FINE QR CODE 👆 --> <!-- riga 126 (già esistente) -->
-      <!-- 👆 FINE QR CODE 👆 -->
-
-      <!-- 📅 SEZIONE PRENOTAZIONE --> <!-- riga 119 (già esistente) -->
   <!-- 📅 SEZIONE PRENOTAZIONE -->
   <div id="booking-section" style="display:none;">
     <h1>Prenota il campo</h1>
     <p class="sub">Scegli tennis o padel, poi il giorno e l'orario.</p>
     
     <div class="user-badge">
-  <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
-  <div id="admin-toggle-container" style="display:none;display:flex;align-items:center;gap:8px;margin-left:12px;background:#FFF4E0;padding:4px 12px;border-radius:6px;border:1px solid #E8C989;">
-    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;color:#8a6a1a;font-weight:600;">
-      <input type="checkbox" id="admin-toggle" style="width:18px;height:18px;cursor:pointer;accent-color:#B84B1E;">
-      🔑 Admin
-    </label>
-  </div>
-  <button class="logout-btn" id="logout-btn">🚪 Esci</button>
-</div>
+      <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
+      <div id="admin-toggle-container">
+        <label>
+          <input type="checkbox" id="admin-toggle">
+          🔑 Admin
+        </label>
+      </div>
+      <button class="logout-btn" id="logout-btn">🚪 Esci</button>
+    </div>
     <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
     
     <div class="tabs" role="tablist">
@@ -195,6 +220,17 @@
 <div id="toast-root"></div>
 
 <script>
+function copiaLink() {
+  var link = window.location.href;
+  navigator.clipboard.writeText(link).then(function() {
+    var msg = document.getElementById("messaggio-copia");
+    msg.innerText = "Link copiato negli appunti!";
+    setTimeout(function() {
+      msg.innerText = "";
+    }, 2000);
+  });
+}
+
 (function(){
   // ============================================================
   // CONFIGURAZIONE
@@ -215,7 +251,7 @@
   const PAST_SLOT_MARGIN_MINUTES = 10;
 
   let currentField = 'tennis';
-  let loggedUser = null; // { id, nome, cognome, codice, tipo, is_tennis_member, is_padel_member }
+  let loggedUser = null;
   let keyboxCode = null;
   const today = new Date(); today.setHours(0,0,0,0);
   const baseMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -250,7 +286,7 @@
   // ============================================================
   function canBookField(field){
     if (!loggedUser) return false;
-    if (loggedUser.tipo === 'ospite') return true; // per ora nessuna restrizione sugli ospiti
+    if (loggedUser.tipo === 'ospite') return true;
     if (field === 'tennis') return !!loggedUser.is_tennis_member;
     if (field === 'padel') return !!loggedUser.is_padel_member;
     return false;
@@ -412,7 +448,7 @@
   }
 
   // ============================================================
-  // LOAD KEYBOX CODE (letto sempre fresco, mai salvato nella prenotazione)
+  // LOAD KEYBOX CODE
   // ============================================================
   async function loadKeyboxCode(){
     try{
@@ -526,11 +562,32 @@
         `;
         row.appendChild(left);
         
-        const btn = document.createElement('button');
-        btn.className = 'book-btn cancel-btn';
-        btn.textContent = 'Cancella';
-        btn.addEventListener('click', ()=> openCancelModal(s, timeId, booking));
-        row.appendChild(btn);
+        // PULSANTI - se adminMode è attivo e utente è admin, mostra due pulsanti
+        if (adminMode && loggedUser && loggedUser.is_admin) {
+          // Pulsante cancellazione admin (ROSSO)
+          const adminBtn = document.createElement('button');
+          adminBtn.className = 'book-btn';
+          adminBtn.style.background = '#B84B1E';
+          adminBtn.style.marginRight = '6px';
+          adminBtn.textContent = '🗑️ Admin';
+          adminBtn.title = 'Cancella come admin (senza codice)';
+          adminBtn.addEventListener('click', ()=> doAdminCancel(booking.id, s.label));
+          row.appendChild(adminBtn);
+          
+          // Pulsante cancellazione normale (con codice)
+          const normalBtn = document.createElement('button');
+          normalBtn.className = 'book-btn cancel-btn';
+          normalBtn.textContent = 'Cancella';
+          normalBtn.addEventListener('click', ()=> openCancelModal(s, timeId, booking));
+          row.appendChild(normalBtn);
+        } else {
+          // Solo pulsante normale
+          const btn = document.createElement('button');
+          btn.className = 'book-btn cancel-btn';
+          btn.textContent = 'Cancella';
+          btn.addEventListener('click', ()=> openCancelModal(s, timeId, booking));
+          row.appendChild(btn);
+        }
       } else {
         // SLOT LIBERO
         row.className = 'slot available';
@@ -648,7 +705,6 @@
       
       const bookingCode = String(Math.floor(1000 + Math.random() * 9000));
       
-      // Costruisci il payload
       const payload = {
         field: currentField,
         date: selectedDate,
@@ -721,64 +777,10 @@
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> doCancelBooking(timeId, booking));
   }
-// ============================================================
-// ADMIN CANCEL - Cancellazione senza codice
-// ============================================================
-async function doAdminCancel(bookingId, slotLabel) {
-  if (!confirm(`⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n${slotLabel}`)) {
-    return;
-  }
-  
-  try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-      + '?id=eq.' + encodeURIComponent(bookingId), {
-      method: 'DELETE',
-      headers: {
-        apikey: SUPABASE_KEY,
-        Prefer: 'return=minimal'
-      }
-    });
-    
-    if (res.ok) {
-      showToast('✅ Prenotazione cancellata (admin)');
-      renderSlots();
-      updateBookingDots();
-    } else {
-      showToast('❌ Errore nella cancellazione admin');
-    }
-  } catch(e) {
-    showToast('❌ Errore di connessione');
-  }
-}
+
   // ============================================================
-// SETUP ADMIN TOGGLE
-// ============================================================
-function setupAdminToggle() {
-  const container = document.getElementById('admin-toggle-container');
-  const toggle = document.getElementById('admin-toggle');
-  
-  if (loggedUser && loggedUser.is_admin) {
-    container.style.display = 'flex';
-    toggle.checked = false;
-    adminMode = false;
-    
-    // Rimuovi eventuali listener precedenti
-    const newToggle = toggle.cloneNode(true);
-    toggle.parentNode.replaceChild(newToggle, toggle);
-    
-    newToggle.addEventListener('change', function() {
-      adminMode = this.checked;
-      if (adminMode) {
-        showToast('🔑 Modalità admin attivata - puoi cancellare qualsiasi prenotazione');
-      } else {
-        showToast('🔑 Modalità admin disattivata');
-      }
-      renderSlots();
-    });
-  } else {
-    container.style.display = 'none';
-  }
-}
+  // DO CANCEL BOOKING (con codice)
+  // ============================================================
   async function doCancelBooking(timeId, booking){
     const errorEl = document.getElementById('form-error');
     const typedCode = document.getElementById('cancel-code').value.trim();
@@ -812,6 +814,62 @@ function setupAdminToggle() {
       errorEl.textContent = 'Errore nella cancellazione. Riprova.';
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Cancella prenotazione';
+    }
+  }
+
+  // ============================================================
+  // ADMIN CANCEL - Cancellazione senza codice
+  // ============================================================
+  async function doAdminCancel(bookingId, slotLabel) {
+    if (!confirm(`⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n${slotLabel}`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?id=eq.' + encodeURIComponent(bookingId), {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Prefer: 'return=minimal'
+        }
+      });
+      
+      if (res.ok) {
+        showToast('✅ Prenotazione cancellata (admin)');
+        renderSlots();
+        updateBookingDots();
+      } else {
+        showToast('❌ Errore nella cancellazione admin');
+      }
+    } catch(e) {
+      showToast('❌ Errore di connessione');
+    }
+  }
+
+  // ============================================================
+  // SETUP ADMIN TOGGLE
+  // ============================================================
+  function setupAdminToggle() {
+    const container = document.getElementById('admin-toggle-container');
+    const toggle = document.getElementById('admin-toggle');
+    
+    if (loggedUser && loggedUser.is_admin === true) {
+      container.style.display = 'flex';
+      toggle.checked = false;
+      adminMode = false;
+      
+      toggle.onchange = function() {
+        adminMode = this.checked;
+        if (adminMode) {
+          showToast('🔑 Modalità admin attivata');
+        } else {
+          showToast('🔑 Modalità admin disattivata');
+        }
+        renderSlots();
+      };
+    } else {
+      container.style.display = 'none';
     }
   }
 
@@ -890,8 +948,7 @@ function setupAdminToggle() {
       if (codice.startsWith('t')) {
         tableName = 'Tesserati';
         tipo = 'tesserato';
-        // NB: Tesserati non ha colonna "attivo" — filtro rimosso per evitare errore Supabase
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member'
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tableName = 'Ospiti';
@@ -914,7 +971,6 @@ function setupAdminToggle() {
         return;
       }
       
-      // ✅ Login riuscito
       const utente = data[0];
       loggedUser = {
         id: utente.id,
@@ -931,19 +987,17 @@ function setupAdminToggle() {
       errorEl.textContent = '';
       loginBtn.disabled = false;
       
-      // Mostra sezione prenotazioni
       loginSection.style.display = 'none';
       bookingSection.style.display = 'block';
       
-      // Mostra il nome dell'utente con badge
       const tipoLabel = loggedUser.tipo === 'tesserato' 
         ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
         : '<span class="badge-ospite">Ospite</span>';
       document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
       document.getElementById('user-badge').innerHTML = tipoLabel;
       renderGuestExpiry();
+      setupAdminToggle();
       
-      // Inizializza il calendario
       setAccent('tennis');
       renderFieldNote();
       renderDow();
@@ -1002,12 +1056,6 @@ function setupAdminToggle() {
     renderSlots();
   });
 
-  // ============================================================
-  // INIZIALIZZAZIONE
-  // ============================================================
-  // La pagina parte con la sezione login visibile
-  // Il calendario verrà inizializzato dopo il login
-  
 })();
 </script>
 </body>
