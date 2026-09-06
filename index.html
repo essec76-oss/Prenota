@@ -581,6 +581,22 @@ function copiaLink() {
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function fmtTime(h){const hh=Math.floor(h), mm=Math.round((h-hh)*60); return pad(hh)+':'+pad(mm);}
 
+  // ============================================================
+  // SUPABASE AUTH — login "vero" per utenti già migrati (con auth_id)
+  // ============================================================
+  async function signInWithSupabaseAuth(email, password){
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+    if(!res.ok) throw new Error('auth_failed');
+    return await res.json();
+  }
+
   function isSlotPassed(dateStr, slotStartHour) {
     const now = new Date();
     const todayStr = dateKey(now);
@@ -1653,7 +1669,7 @@ function copiaLink() {
       
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza'
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
@@ -1680,6 +1696,23 @@ function copiaLink() {
       }
       
       const utente = data[0];
+
+      // Se il tesserato è già stato migrato a Supabase Auth (ha auth_id),
+      // proviamo un vero login con email fittizia + password = codice.
+      // Se non è migrato, non succede nulla: resta sul vecchio sistema.
+      let accessToken = null;
+      if (utente.auth_id) {
+        try {
+          const authData = await signInWithSupabaseAuth(codice + '@circolo.local', codice);
+          accessToken = authData.access_token;
+          console.log('🔐 Login Supabase Auth riuscito per', codice);
+        } catch(authErr) {
+          errorEl.textContent = '❌ Errore di autenticazione. Contatta il circolo.';
+          loginBtn.disabled = false;
+          return;
+        }
+      }
+
       loggedUser = {
         id: utente.id,
         nome: utente.nome,
@@ -1689,7 +1722,9 @@ function copiaLink() {
         is_tennis_member: utente.is_tennis_member || false,
         is_padel_member: utente.is_padel_member || false,
         is_admin: utente.is_admin || false,
-        scadenza: utente.scadenza || null
+        scadenza: utente.scadenza || null,
+        authenticated: !!accessToken,
+        accessToken: accessToken
       };
       
       console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome, 'Codice:', loggedUser.codice);
