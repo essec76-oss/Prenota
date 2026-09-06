@@ -977,9 +977,9 @@ function renderTesseratoExpiry() {
     }
     
     if (!/^[to]\d{4}$/.test(codice)) {
-      errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
-      return;
-    }
+  errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
+  return;
+}
     
     errorEl.textContent = 'Verifica in corso...';
     loginBtn.disabled = true;
