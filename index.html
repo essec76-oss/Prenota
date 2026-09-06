@@ -185,15 +185,16 @@
     <p class="sub">Scegli tennis o padel, poi il giorno e l'orario.</p>
     
     <div class="user-badge">
-      <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
-      <div id="admin-toggle-container">
-        <label>
-          <input type="checkbox" id="admin-toggle">
-          🔑 Admin
-        </label>
-      </div>
-      <button class="logout-btn" id="logout-btn">🚪 Esci</button>
-    </div>
+  <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
+  <div id="admin-toggle-container">
+    <label>
+      <input type="checkbox" id="admin-toggle">
+      🔑 Admin
+    </label>
+  </div>
+  <button class="logout-btn" id="logout-btn">🚪 Esci</button>
+  <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;"></div>
+</div>
     <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
     
     <div class="tabs" role="tablist">
@@ -326,7 +327,49 @@ function copiaLink() {
     el.classList.toggle('urgent', giorniResidui <= 1);
     el.style.display = 'block';
   }
-
+// ============================================================
+// MOSTRA SCADENZA TESSERA NEL BADGE UTENTE
+// ============================================================
+function renderTesseratoExpiry() {
+  const el = document.getElementById('tesserato-expiry');
+  
+  // Se non c'è l'elemento, esci (verrà creato dopo)
+  if (!el) return;
+  
+  // Se non è un tesserato o non ha scadenza, nascondi
+  if (!loggedUser || loggedUser.tipo !== 'tesserato' || !loggedUser.scadenza) {
+    el.style.display = 'none';
+    return;
+  }
+  
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const scad = new Date(loggedUser.scadenza + 'T00:00:00');
+  const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
+  const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
+  
+  let testo, colore;
+  if (giorniResidui < 0) {
+    testo = `⚠️ Tessera scaduta il ${dataFmt}`;
+    colore = '#B84B1E';
+  } else if (giorniResidui === 0) {
+    testo = `⚠️ La tessera scade OGGI (${dataFmt})`;
+    colore = '#B84B1E';
+  } else if (giorniResidui <= 7) {
+    testo = `⏳ La tessera scade tra ${giorniResidui} giorni (${dataFmt})`;
+    colore = '#D68A2A';
+  } else if (giorniResidui <= 30) {
+    testo = `📅 Tessera valida fino al ${dataFmt} (tra ${giorniResidui} giorni)`;
+    colore = '#2B6E5A';
+  } else {
+    testo = `✅ Tessera valida fino al ${dataFmt}`;
+    colore = '#2B6E5A';
+  }
+  
+  el.textContent = testo;
+  el.style.color = colore;
+  el.style.display = 'block';
+}
+  
   // ============================================================
   // CANCELLAZIONE PRENOTAZIONI VECCHIE
   // ============================================================
@@ -946,11 +989,11 @@ function copiaLink() {
       let url;
       
       if (codice.startsWith('t')) {
-        tableName = 'Tesserati';
-        tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin'
-          + '&codice=eq.' + encodeURIComponent(codice);
-      } else {
+  tableName = 'Tesserati';
+  tipo = 'tesserato';
+  url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza'
+}
+      else {
         tableName = 'Ospiti';
         tipo = 'ospite';
         url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza'
@@ -997,7 +1040,7 @@ function copiaLink() {
       document.getElementById('user-badge').innerHTML = tipoLabel;
       renderGuestExpiry();
       setupAdminToggle();
-      
+      renderTesseratoExpiry();  
       setAccent('tennis');
       renderFieldNote();
       renderDow();
@@ -1021,6 +1064,7 @@ function copiaLink() {
     document.getElementById('login-codice').value = '';
     document.getElementById('login-error').textContent = '';
     document.getElementById('guest-expiry').style.display = 'none';
+    document.getElementById('tesserato-expiry').style.display = 'none';
     selectedDate = null;
     document.getElementById('slots-section').style.display = 'none';
   }
