@@ -185,16 +185,16 @@
     <p class="sub">Scegli tennis o padel, poi il giorno e l'orario.</p>
     
     <div class="user-badge">
-  <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
-  <div id="admin-toggle-container">
-    <label>
-      <input type="checkbox" id="admin-toggle">
-      🔑 Admin
-    </label>
-  </div>
-  <button class="logout-btn" id="logout-btn">🚪 Esci</button>
-  <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;"></div>
-</div>
+      <span>👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
+      <div id="admin-toggle-container">
+        <label>
+          <input type="checkbox" id="admin-toggle">
+          🔑 Admin
+        </label>
+      </div>
+      <button class="logout-btn" id="logout-btn">🚪 Esci</button>
+      <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;"></div>
+    </div>
     <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
     
     <div class="tabs" role="tablist">
@@ -327,49 +327,47 @@ function copiaLink() {
     el.classList.toggle('urgent', giorniResidui <= 1);
     el.style.display = 'block';
   }
-// ============================================================
-// MOSTRA SCADENZA TESSERA NEL BADGE UTENTE
-// ============================================================
-function renderTesseratoExpiry() {
-  const el = document.getElementById('tesserato-expiry');
-  
-  // Se non c'è l'elemento, esci (verrà creato dopo)
-  if (!el) return;
-  
-  // Se non è un tesserato o non ha scadenza, nascondi
-  if (!loggedUser || loggedUser.tipo !== 'tesserato' || !loggedUser.scadenza) {
-    el.style.display = 'none';
-    return;
+
+  // ============================================================
+  // MOSTRA SCADENZA TESSERA NEL BADGE UTENTE
+  // ============================================================
+  function renderTesseratoExpiry() {
+    const el = document.getElementById('tesserato-expiry');
+    if (!el) return;
+    
+    if (!loggedUser || loggedUser.tipo !== 'tesserato' || !loggedUser.scadenza) {
+      el.style.display = 'none';
+      return;
+    }
+    
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const scad = new Date(loggedUser.scadenza + 'T00:00:00');
+    const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
+    const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
+    
+    let testo, colore;
+    if (giorniResidui < 0) {
+      testo = '⚠️ Tessera scaduta il ' + dataFmt;
+      colore = '#B84B1E';
+    } else if (giorniResidui === 0) {
+      testo = '⚠️ La tessera scade OGGI (' + dataFmt + ')';
+      colore = '#B84B1E';
+    } else if (giorniResidui <= 7) {
+      testo = '⏳ La tessera scade tra ' + giorniResidui + ' giorni (' + dataFmt + ')';
+      colore = '#D68A2A';
+    } else if (giorniResidui <= 30) {
+      testo = '📅 Tessera valida fino al ' + dataFmt + ' (tra ' + giorniResidui + ' giorni)';
+      colore = '#2B6E5A';
+    } else {
+      testo = '✅ Tessera valida fino al ' + dataFmt;
+      colore = '#2B6E5A';
+    }
+    
+    el.textContent = testo;
+    el.style.color = colore;
+    el.style.display = 'block';
   }
-  
-  const oggi = new Date(); oggi.setHours(0,0,0,0);
-  const scad = new Date(loggedUser.scadenza + 'T00:00:00');
-  const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
-  const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
-  
-  let testo, colore;
-  if (giorniResidui < 0) {
-    testo = `⚠️ Tessera scaduta il ${dataFmt}`;
-    colore = '#B84B1E';
-  } else if (giorniResidui === 0) {
-    testo = `⚠️ La tessera scade OGGI (${dataFmt})`;
-    colore = '#B84B1E';
-  } else if (giorniResidui <= 7) {
-    testo = `⏳ La tessera scade tra ${giorniResidui} giorni (${dataFmt})`;
-    colore = '#D68A2A';
-  } else if (giorniResidui <= 30) {
-    testo = `📅 Tessera valida fino al ${dataFmt} (tra ${giorniResidui} giorni)`;
-    colore = '#2B6E5A';
-  } else {
-    testo = `✅ Tessera valida fino al ${dataFmt}`;
-    colore = '#2B6E5A';
-  }
-  
-  el.textContent = testo;
-  el.style.color = colore;
-  el.style.display = 'block';
-}
-  
+
   // ============================================================
   // CANCELLAZIONE PRENOTAZIONI VECCHIE
   // ============================================================
@@ -590,10 +588,10 @@ function renderTesseratoExpiry() {
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
         const keyboxHtml = keyboxCode
-          ? `<div class="prenotato-da">🔑 Codice Key Box: <strong>${keyboxCode}</strong></div>`
+          ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
           : '';
         const ownCodeHtml = (isOwnBooking(booking) && booking.code)
-          ? `<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>${booking.code}</strong></div>`
+          ? '<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>' + booking.code + '</strong></div>'
           : '';
         
         left.innerHTML = `
@@ -635,7 +633,7 @@ function renderTesseratoExpiry() {
         // SLOT LIBERO
         row.className = 'slot available';
         const left = document.createElement('div');
-        left.innerHTML = `<div class="time">${s.label}</div><div class="status">Libero</div>`;
+        left.innerHTML = '<div class="time">' + s.label + '</div><div class="status">Libero</div>';
         row.appendChild(left);
         const btn = document.createElement('button');
         btn.className = 'book-btn';
@@ -675,10 +673,7 @@ function renderTesseratoExpiry() {
     let fieldsHtml = '';
     for(let i=0;i<nameCount;i++){
       const isRequired = i < requiredCount;
-      fieldsHtml += `<div class="name-field">
-        <label for="name-${i}">Nome giocatore ${i+1}${isRequired?' (obbligatorio)':' (facoltativo)'}</label>
-        <input id="name-${i}" type="text" autocomplete="off" />
-      </div>`;
+      fieldsHtml += '<div class="name-field">\n        <label for="name-' + i + '">Nome giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <input id="name-' + i + '" type="text" autocomplete="off" />\n      </div>';
     }
     
     root.innerHTML = `
@@ -729,7 +724,7 @@ function renderTesseratoExpiry() {
     if(names.length < requiredCount){
       errorEl.textContent = currentField==='padel'
         ? 'Servono esattamente 4 nomi per prenotare il padel.'
-        : `Servono almeno ${requiredCount} nomi per prenotare il tennis.`;
+        : 'Servono almeno ' + requiredCount + ' nomi per prenotare il tennis.';
       return;
     }
     
@@ -864,7 +859,7 @@ function renderTesseratoExpiry() {
   // ADMIN CANCEL - Cancellazione senza codice
   // ============================================================
   async function doAdminCancel(bookingId, slotLabel) {
-    if (!confirm(`⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n${slotLabel}`)) {
+    if (!confirm('⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n' + slotLabel)) {
       return;
     }
     
@@ -941,7 +936,7 @@ function renderTesseratoExpiry() {
   // ============================================================
   function showToast(msg){
     const root = document.getElementById('toast-root');
-    root.innerHTML = `<div class="toast">${msg}</div>`;
+    root.innerHTML = '<div class="toast">' + msg + '</div>';
     setTimeout(()=>{ root.innerHTML=''; }, 2600);
   }
 
@@ -964,7 +959,7 @@ function renderTesseratoExpiry() {
   }
 
   // ============================================================
-  // LOGIN
+  // LOGIN - VERSIONE CORRETTA E FUNZIONANTE
   // ============================================================
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
@@ -977,24 +972,22 @@ function renderTesseratoExpiry() {
     }
     
     if (!/^[to]\d{4}$/.test(codice)) {
-  errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
-  return;
-}
+      errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
+      return;
+    }
     
     errorEl.textContent = 'Verifica in corso...';
     loginBtn.disabled = true;
     
     try {
-      let tableName, tipo;
       let url;
+      let tipo;
       
       if (codice.startsWith('t')) {
-  tableName = 'Tesserati';
-  tipo = 'tesserato';
-  url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza'
-}
-      else {
-        tableName = 'Ospiti';
+        tipo = 'tesserato';
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza'
+          + '&codice=eq.' + encodeURIComponent(codice);
+      } else {
         tipo = 'ospite';
         url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza'
           + '&codice=eq.' + encodeURIComponent(codice)
@@ -1002,11 +995,15 @@ function renderTesseratoExpiry() {
           + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
       }
       
+      console.log('🔍 Cerco utente con codice:', codice);
+      console.log('📡 URL:', url);
+      
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       
       if (!res.ok) throw new Error('Errore di connessione');
       
       const data = await res.json();
+      console.log('📦 Dati ricevuti:', data);
       
       if (data.length === 0) {
         errorEl.textContent = '❌ Codice non valido o utente disattivato. Contatta il circolo.';
@@ -1021,11 +1018,13 @@ function renderTesseratoExpiry() {
         cognome: utente.cognome,
         codice: utente.codice,
         tipo: tipo,
-        is_tennis_member: utente.is_tennis_member,
-        is_padel_member: utente.is_padel_member,
+        is_tennis_member: utente.is_tennis_member || false,
+        is_padel_member: utente.is_padel_member || false,
         is_admin: utente.is_admin || false,
         scadenza: utente.scadenza || null
       };
+      
+      console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome, 'Codice:', loggedUser.codice);
       
       errorEl.textContent = '';
       loginBtn.disabled = false;
@@ -1040,7 +1039,8 @@ function renderTesseratoExpiry() {
       document.getElementById('user-badge').innerHTML = tipoLabel;
       renderGuestExpiry();
       setupAdminToggle();
-      renderTesseratoExpiry();  
+      renderTesseratoExpiry();
+      
       setAccent('tennis');
       renderFieldNote();
       renderDow();
@@ -1050,7 +1050,7 @@ function renderTesseratoExpiry() {
     } catch(e) {
       errorEl.textContent = 'Errore di connessione. Riprova.';
       loginBtn.disabled = false;
-      console.error(e);
+      console.error('❌ Errore:', e);
     }
   }
 
@@ -1073,27 +1073,27 @@ function renderTesseratoExpiry() {
   // EVENT LISTENERS
   // ============================================================
   document.getElementById('login-btn').addEventListener('click', handleLogin);
-  document.getElementById('login-codice').addEventListener('keydown', (e) => {
+  document.getElementById('login-codice').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') handleLogin();
   });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
   
-  document.getElementById('tab-tennis').addEventListener('click', ()=>switchField('tennis'));
-  document.getElementById('tab-padel').addEventListener('click', ()=>switchField('padel'));
+  document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
+  document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
   
-  document.getElementById('prev-month').addEventListener('click', ()=>{
+  document.getElementById('prev-month').addEventListener('click', function(){
     if(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth()) return;
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
     renderCalendar();
   });
   
-  document.getElementById('next-month').addEventListener('click', ()=>{
+  document.getElementById('next-month').addEventListener('click', function(){
     if(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth()) return;
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
     renderCalendar();
   });
 
-  document.getElementById('clean-btn').addEventListener('click', async () => {
+  document.getElementById('clean-btn').addEventListener('click', async function() {
     await deleteOldBookings();
     showToast('🧹 Prenotazioni vecchie cancellate!');
     updateBookingDots();
