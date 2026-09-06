@@ -204,11 +204,13 @@
   const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
   const SUPABASE_TABLE = 'Tennis';
+  const SUPABASE_TABLE_SETTINGS = 'Impostazioni';
   const CLEANUP_DAYS = 7;
   const PAST_SLOT_MARGIN_MINUTES = 10;
 
   let currentField = 'tennis';
   let loggedUser = null; // { id, nome, cognome, codice, tipo, is_tennis_member, is_padel_member }
+  let keyboxCode = null;
   const today = new Date(); today.setHours(0,0,0,0);
   const baseMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const maxMonth = new Date(today.getFullYear(), today.getMonth()+1, 1);
@@ -244,6 +246,13 @@
     if (loggedUser.tipo === 'ospite') return true; // per ora nessuna restrizione sugli ospiti
     if (field === 'tennis') return !!loggedUser.is_tennis_member;
     if (field === 'padel') return !!loggedUser.is_padel_member;
+    return false;
+  }
+
+  function isOwnBooking(booking){
+    if (!loggedUser) return false;
+    if (loggedUser.tipo === 'tesserato') return booking.tesserato_id === loggedUser.id;
+    if (loggedUser.tipo === 'ospite') return booking.ospite_id === loggedUser.id;
     return false;
   }
 
@@ -396,12 +405,28 @@
   }
 
   // ============================================================
+  // LOAD KEYBOX CODE (letto sempre fresco, mai salvato nella prenotazione)
+  // ============================================================
+  async function loadKeyboxCode(){
+    try{
+      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
+        + '?select=codice_keybox&id=eq.1';
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      if(!res.ok) throw new Error('fetch failed');
+      const rows = await res.json();
+      keyboxCode = (rows[0] && rows[0].codice_keybox) || null;
+    }catch(e){
+      keyboxCode = null;
+    }
+  }
+
+  // ============================================================
   // LOAD BOOKINGS
   // ============================================================
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id'
+        + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,code'
         + '&field=eq.' + encodeURIComponent(currentField)
         + '&date=eq.' + encodeURIComponent(key);
       const res = await fetch(url, {
@@ -417,7 +442,8 @@
           prenotato_da: r.prenotato_da || '',
           tipo_prenotante: r.tipo_prenotante || 'ospite',
           tesserato_id: r.tesserato_id,
-          ospite_id: r.ospite_id
+          ospite_id: r.ospite_id,
+          code: r.code || ''
         };
       });
       bookingsCache[key] = data;
@@ -453,7 +479,7 @@
     const d = new Date(selectedDate+'T00:00:00');
     title.textContent = d.toLocaleDateString('it-IT',{weekday:'long', day:'numeric', month:'long'});
     list.innerHTML = '<div class="empty-msg">Carico gli orari…</div>';
-    const bookings = await loadBookings(selectedDate);
+    const [bookings] = await Promise.all([loadBookings(selectedDate), loadKeyboxCode()]);
     const slots = buildSlots(currentField);
     list.innerHTML = '';
     
@@ -477,11 +503,19 @@
         const badge = isTesserato 
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
+        const keyboxHtml = keyboxCode
+          ? `<div class="prenotato-da">🔑 Codice Key Box: <strong>${keyboxCode}</strong></div>`
+          : '';
+        const ownCodeHtml = (isOwnBooking(booking) && booking.code)
+          ? `<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>${booking.code}</strong></div>`
+          : '';
         
         left.innerHTML = `
           <div class="time">${s.label}</div>
           <div class="status">${booking.names.join(', ')}</div>
           <div class="prenotato-da">👤 Prenotato da: <strong>${booking.prenotato_da}</strong> ${badge}</div>
+          ${keyboxHtml}
+          ${ownCodeHtml}
         `;
         row.appendChild(left);
         
