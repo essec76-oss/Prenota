@@ -497,11 +497,6 @@
     </div>
   </div>
 
-  <!-- SCHEMA CAMPO DA TENNIS -->
-  <div style="text-align: center; margin-top: 30px;">
-    <img src="/campo-tennis.jpg" alt="Schema dimensioni campo da tennis" style="max-width: 100%; width: 500px; border-radius: 8px;">
-  </div>
-
   <!-- 📅 SEZIONE PRENOTAZIONE -->
   <div id="booking-section" style="display:none;">
     <h1>Prenota il campo</h1>
@@ -527,6 +522,12 @@
       <button class="tab" id="tab-padel" role="tab" aria-selected="false">Padel</button>
     </div>
     <div class="field-note" id="field-note"></div>
+
+    <!-- SCHEMA CAMPO (cambia con transizione tra tennis e padel) -->
+    <div style="text-align: center; margin: 20px 0;">
+      <img id="court-image" src="/campo-tennis.jpg" alt="Schema dimensioni campo da tennis" style="max-width: 100%; width: 500px; border-radius: 8px; transition: opacity 0.35s ease;">
+    </div>
+
     <div class="month-nav">
       <button id="prev-month" aria-label="Mese precedente">‹</button>
       <div class="month-label" id="month-label"></div>
@@ -1340,9 +1341,26 @@ function copiaLink() {
     document.getElementById('tab-padel').setAttribute('aria-selected', field==='padel');
     setAccent(field);
     renderFieldNote();
+    updateCourtImage(field);
     bookingsCache = {};
     renderSlots();
     updateBookingDots();
+  }
+
+  // ============================================================
+  // AGGIORNA SCHEMA CAMPO CON DISSOLVENZA
+  // ============================================================
+  function updateCourtImage(field){
+    const img = document.getElementById('court-image');
+    if (!img) return;
+    const src = field === 'tennis' ? '/campo-tennis.jpg' : '/campo-padel.jpg';
+    const alt = field === 'tennis' ? 'Schema dimensioni campo da tennis' : 'Schema dimensioni campo da padel';
+    img.style.opacity = '0';
+    setTimeout(function(){
+      img.src = src;
+      img.alt = alt;
+      img.style.opacity = '1';
+    }, 300);
   }
 
   // ============================================================
