@@ -611,11 +611,10 @@ function copiaLink() {
   }
 
   // ============================================================
-  // RESTRIZIONE TENNIS/PADEL PER TESSERATI
+  // RESTRIZIONE TENNIS/PADEL - MODIFICATO: ora controlla i flag per TUTTI gli utenti
   // ============================================================
   function canBookField(field){
     if (!loggedUser) return false;
-    if (loggedUser.tipo === 'ospite') return true;
     if (field === 'tennis') return !!loggedUser.is_tennis_member;
     if (field === 'padel') return !!loggedUser.is_padel_member;
     return false;
@@ -742,7 +741,7 @@ function copiaLink() {
     const noteEl = document.getElementById('field-note');
 
     if (loggedUser && !canBookField(currentField)) {
-      noteEl.textContent = '⚠️ Non sei tesserato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + ': puoi vedere il calendario ma non prenotare questo campo.';
+      noteEl.textContent = '⚠️ Non sei abilitato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + ': puoi vedere il calendario ma non prenotare questo campo.';
       noteEl.classList.add('warning');
     } else {
       noteEl.textContent = note;
@@ -989,7 +988,7 @@ function copiaLink() {
       return;
     }
     if (!canBookField(currentField)) {
-      showToast('Non sei tesserato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + '.');
+      showToast('Non sei abilitato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + '.');
       return;
     }
     
@@ -1037,7 +1036,7 @@ function copiaLink() {
       return;
     }
     if (!canBookField(currentField)) {
-      showToast('Non sei tesserato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + '.');
+      showToast('Non sei abilitato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + '.');
       closeModal();
       return;
     }
@@ -1500,18 +1499,13 @@ function copiaLink() {
     }
   }
 
+  // ============================================================
+  // TOGGLE CREATE FIELDS - MODIFICATO: campo Sport sempre visibile
+  // ============================================================
   function toggleCreateFields() {
     const tipo = document.getElementById('create-tipo').value;
-    const sportField = document.getElementById('create-sport-field');
-    const telefonoField = document.getElementById('create-telefono-field');
-    
-    if (tipo === 'tesserato') {
-      sportField.style.display = 'block';
-      telefonoField.style.display = 'none';
-    } else {
-      sportField.style.display = 'none';
-      telefonoField.style.display = 'block';
-    }
+    document.getElementById('create-sport-field').style.display = 'block';
+    document.getElementById('create-telefono-field').style.display = (tipo === 'ospite') ? 'block' : 'none';
   }
 
   async function loadUserList(tipo) {
@@ -1561,7 +1555,7 @@ function copiaLink() {
         
       } else {
         // Ospiti
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza,attivo&order=cognome.asc', {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento ospiti');
@@ -1573,15 +1567,20 @@ function copiaLink() {
         }
         
         let html = '<div class="user-list-section-title">👤 Ospiti</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Telefono</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Telefono</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
         
         data.forEach(u => {
+          const sports = [];
+          if (u.is_tennis_member) sports.push('🎾');
+          if (u.is_padel_member) sports.push('🏸');
+          const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
           const attivo = u.attivo ? '✅ Attivo' : '❌ Inattivo';
           
           html += `<tr>
             <td><strong>${u.codice || 'N/D'}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
+            <td>${sportLabel}</td>
             <td>${u.telefono || 'N/D'}</td>
             <td>${scadenza}</td>
             <td>${attivo}</td>
@@ -1601,6 +1600,9 @@ function copiaLink() {
     }
   }
 
+  // ============================================================
+  // HANDLE CREATE USER - MODIFICATO: ospiti salvano anche lo sport
+  // ============================================================
   async function handleCreateUser() {
     const errorEl = document.getElementById('create-error');
     const tipo = document.getElementById('create-tipo').value;
@@ -1637,6 +1639,7 @@ function copiaLink() {
           return;
         }
         payload.telefono = telefono;
+        payload.sport = document.getElementById('create-sport').value;
       }
 
       const res = await fetch('/api/create-user', {
@@ -1703,7 +1706,7 @@ function copiaLink() {
   };
 
   // ============================================================
-  // LOGIN - VERSIONE CORRETTA E FUNZIONANTE
+  // LOGIN - VERSIONE CORRETTA E FUNZIONANTE (con is_tennis_member e is_padel_member per ospiti)
   // ============================================================
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
@@ -1733,7 +1736,7 @@ function copiaLink() {
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza'
+        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza,is_tennis_member,is_padel_member'
           + '&codice=eq.' + encodeURIComponent(codice)
           + '&attivo=eq.true'
           + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
@@ -1871,4 +1874,3 @@ function copiaLink() {
 </script>
 </body>
 </html>
-
