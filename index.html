@@ -1529,43 +1529,22 @@ function copiaLink() {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
     }
+
+    if (!loggedUser || !loggedUser.accessToken) {
+      errorEl.textContent = '❌ Solo un admin con login sicuro attivo può creare utenti. Rifai il login.';
+      return;
+    }
     
     saveBtn.disabled = true;
     saveBtn.textContent = 'Salvo...';
     errorEl.textContent = '';
     
     try {
+      const payload = { tipo: tipo, nome: nome, cognome: cognome, scadenza: scadenza };
+
       if (tipo === 'tesserato') {
-        const sport = document.getElementById('create-sport').value;
-        const payload = {
-          nome: nome,
-          cognome: cognome,
-          is_tennis_member: sport === 'tennis' || sport === 'both',
-          is_padel_member: sport === 'padel' || sport === 'both',
-          scadenza: scadenza || '2026-12-31'
-        };
-        
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati', {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            Prefer: 'return=representation'
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || 'Errore creazione tesserato');
-        }
-        
-        const data = await res.json();
-        showToast('✅ Tesserato ' + nome + ' ' + cognome + ' creato! Codice: ' + data[0].codice);
-        errorEl.textContent = '';
-        
+        payload.sport = document.getElementById('create-sport').value;
       } else {
-        // Ospite
         const telefono = document.getElementById('create-telefono').value.trim();
         if (!telefono) {
           errorEl.textContent = 'Il telefono è obbligatorio per gli ospiti.';
@@ -1573,34 +1552,31 @@ function copiaLink() {
           saveBtn.textContent = '💾 Crea utente';
           return;
         }
-        
-        const payload = {
-          nome: nome,
-          cognome: cognome,
-          telefono: telefono,
-          attivo: true,
-          scadenza: scadenza || null
-        };
-        
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti', {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            Prefer: 'return=representation'
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || 'Errore creazione ospite');
-        }
-        
-        const data = await res.json();
-        showToast('✅ Ospite ' + nome + ' ' + cognome + ' creato! Codice: ' + (data[0].codice || 'Generato automaticamente'));
-        errorEl.textContent = '';
+        payload.telefono = telefono;
       }
+
+      const res = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Errore creazione utente');
+      }
+
+      if (data.warning) {
+        showToast('⚠️ ' + data.warning);
+      } else {
+        const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
+        showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + data.codice);
+      }
+      errorEl.textContent = '';
       
       // Reset form
       document.getElementById('create-nome').value = '';
