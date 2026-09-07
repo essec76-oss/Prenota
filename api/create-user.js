@@ -1,179 +1,208 @@
 // ============================================================
-// API Route Vercel — Creazione sicura di tesserati/ospiti
+// GENERAZIONE CODICE UNIVOCO
 // ============================================================
-// Questa funzione gira sul SERVER di Vercel, non nel browser.
-// Usa la SUPABASE_SERVICE_ROLE_KEY (mai esposta al pubblico)
-// per verificare davvero chi sta chiedendo la creazione di un
-// nuovo utente, e per creare sia la riga in Tesserati/Ospiti
-// sia il relativo account Supabase Auth collegato.
+async function generateUniqueCode(tipo, tentativi = 0) {
+  // Massimo 20 tentativi per evitare loop infiniti
+  if (tentativi >= 20) {
+    throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
+  }
+  
+  // Genera numero casuale a 4 cifre (da 1000 a 9999)
+  const numero = String(Math.floor(1000 + Math.random() * 9000));
+  const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
+  
+  // Verifica se il codice esiste già nella tabella corrispondente
+  const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+  const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/${table}?codice=eq.${codice}&select=id`, {
+    headers: { 
+      apikey: SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!checkRes.ok) {
+    throw new Error('Errore verifica codice');
+  }
+  
+  const existing = await checkRes.json();
+  
+  // Se il codice esiste già, ritenta con un nuovo codice
+  if (existing && existing.length > 0) {
+    console.log(`🔄 Codice ${codice} già esistente, ritento... (tentativo ${tentativi + 1})`);
+    return generateUniqueCode(tipo, tentativi + 1);
+  }
+  
+  console.log(`✅ Codice univoco generato: ${codice}`);
+  return codice;
+}
+
 // ============================================================
-
-const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
-  }
-
-  if (!SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Configurazione server incompleta (manca SUPABASE_SERVICE_ROLE_KEY)' });
-  }
-
+// ROTTA /api/create-user
+// ============================================================
+app.post('/api/create-user', async (req, res) => {
   try {
-    // ------------------------------------------------------------
-    // 1) Verifica di chi sta facendo la richiesta (token utente)
-    // ------------------------------------------------------------
-    const authHeader = req.headers['authorization'] || '';
-    const userToken = authHeader.replace(/^Bearer\s+/i, '');
-
-    if (!userToken) {
-      return res.status(401).json({ error: 'Devi essere autenticato per creare un utente.' });
+    // 1. VERIFICA AUTENTICAZIONE ADMIN
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Non autorizzato. Token mancante.' });
     }
-
-    const userRes = await fetch(SUPABASE_URL + '/auth/v1/user', {
-      headers: {
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: 'Bearer ' + userToken
-      }
-    });
-
-    if (!userRes.ok) {
-      return res.status(401).json({ error: 'Sessione non valida. Rifai il login.' });
-    }
-
-    const authUser = await userRes.json();
-    const requesterAuthId = authUser.id;
-
-    // ------------------------------------------------------------
-    // 2) Verifica che sia davvero un tesserato con is_admin = true
-    // ------------------------------------------------------------
-    const adminCheckRes = await fetch(
-      SUPABASE_URL + '/rest/v1/Tesserati?select=is_admin&auth_id=eq.' + encodeURIComponent(requesterAuthId),
-      {
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Verifica token con Supabase Auth
+    try {
+      const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
         headers: {
-          apikey: SERVICE_ROLE_KEY,
-          Authorization: 'Bearer ' + SERVICE_ROLE_KEY
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${token}`
         }
+      });
+      
+      if (!verifyRes.ok) {
+        return res.status(401).json({ error: 'Token non valido o scaduto.' });
       }
-    );
-    const adminCheckData = await adminCheckRes.json();
-
-    if (!adminCheckRes.ok || !adminCheckData.length || adminCheckData[0].is_admin !== true) {
-      return res.status(403).json({ error: 'Non hai i permessi di amministratore.' });
+      
+      const userData = await verifyRes.json();
+      
+      // Verifica che l'utente sia admin (controlla nella tabella Tesserati)
+      const adminCheck = await fetch(
+        `${SUPABASE_URL}/rest/v1/Tesserati?auth_id=eq.${userData.id}&is_admin=eq.true&select=id`,
+        { headers: { apikey: SUPABASE_KEY } }
+      );
+      const adminData = await adminCheck.json();
+      
+      if (!adminData || adminData.length === 0) {
+        return res.status(403).json({ error: 'Non sei autorizzato a creare utenti.' });
+      }
+      
+    } catch(authErr) {
+      console.error('❌ Errore verifica token:', authErr);
+      return res.status(401).json({ error: 'Errore autenticazione.' });
     }
-
-    // ------------------------------------------------------------
-    // 3) Leggi i dati del nuovo utente dal corpo della richiesta
-    // ------------------------------------------------------------
-    const { tipo, nome, cognome, sport, telefono, scadenza } = req.body || {};
-
-    if (!tipo || !nome || !cognome) {
-      return res.status(400).json({ error: 'Dati mancanti: tipo, nome e cognome sono obbligatori.' });
+    
+    // 2. VALIDA INPUT
+    const { tipo, nome, cognome, sport, telefono, scadenza } = req.body;
+    
+    if (!nome || !cognome) {
+      return res.status(400).json({ error: 'Nome e Cognome sono obbligatori.' });
     }
-    if (tipo !== 'tesserato' && tipo !== 'ospite') {
-      return res.status(400).json({ error: 'Tipo non valido.' });
+    
+    if (!sport) {
+      return res.status(400).json({ error: 'Seleziona uno sport.' });
     }
-
-    // ------------------------------------------------------------
-    // 4) Inserisci la riga in Tesserati o Ospiti (con service role,
-    //    così bypassa le RLS e ottiene il "codice" generato dal DB)
-    // ------------------------------------------------------------
-    const tableName = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+    
+    // 3. GENERA CODICE UNIVOCO
+    let codice;
+    try {
+      codice = await generateUniqueCode(tipo);
+    } catch(codeErr) {
+      return res.status(500).json({ error: codeErr.message });
+    }
+    
+    // 4. PREPARA PAYLOAD
     let insertPayload;
-
     if (tipo === 'tesserato') {
       insertPayload = {
         nome,
         cognome,
+        codice,
         is_tennis_member: sport === 'tennis' || sport === 'both',
         is_padel_member: sport === 'padel' || sport === 'both',
-        scadenza: scadenza || '2026-12-31'
+        is_admin: false,
+        scadenza: scadenza || null
       };
     } else {
+      // OSPITE
       if (!telefono) {
         return res.status(400).json({ error: 'Il telefono è obbligatorio per gli ospiti.' });
       }
       insertPayload = {
         nome,
         cognome,
+        codice,
         telefono,
+        is_tennis_member: sport === 'tennis' || sport === 'both',
+        is_padel_member: sport === 'padel' || sport === 'both',
         attivo: true,
         scadenza: scadenza || null
       };
     }
-
-    const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + tableName, {
+    
+    console.log(`📝 Creazione ${tipo}:`, { nome, cognome, codice, sport });
+    
+    // 5. INSERISCI IN SUPABASE
+    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST',
       headers: {
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: 'Bearer ' + SERVICE_ROLE_KEY,
+        apikey: SUPABASE_KEY,
         'Content-Type': 'application/json',
         Prefer: 'return=representation'
       },
       body: JSON.stringify(insertPayload)
     });
-
+    
     if (!insertRes.ok) {
-      const errBody = await insertRes.json().catch(() => ({}));
-      return res.status(500).json({ error: 'Errore creazione utente: ' + (errBody.message || insertRes.statusText) });
+      let errorDetail = '';
+      try {
+        const errBody = await insertRes.json();
+        errorDetail = errBody.message || errBody.details || JSON.stringify(errBody);
+      } catch(_) {
+        errorDetail = insertRes.status + ' ' + insertRes.statusText;
+      }
+      
+      console.error('❌ Errore inserimento:', errorDetail);
+      
+      // Se il codice è duplicato (caso raro ma possibile), ritenta
+      if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
+        console.log('⚠️ Duplicato rilevato, genero nuovo codice e ritento...');
+        
+        try {
+          const newCodice = await generateUniqueCode(tipo);
+          insertPayload.codice = newCodice;
+          
+          const retryRes = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_KEY,
+              'Content-Type': 'application/json',
+              Prefer: 'return=representation'
+            },
+            body: JSON.stringify(insertPayload)
+          });
+          
+          if (retryRes.ok) {
+            const created = await retryRes.json();
+            return res.status(201).json({
+              message: 'Utente creato con successo',
+              codice: newCodice,
+              user: created[0],
+              retry: true
+            });
+          } else {
+            throw new Error('Ritentativo fallito');
+          }
+        } catch(retryErr) {
+          return res.status(500).json({ 
+            error: 'Errore durante il ritentativo. Riprova più tardi.' 
+          });
+        }
+      }
+      
+      throw new Error(errorDetail);
     }
-
-    const inserted = await insertRes.json();
-    const newRow = inserted[0];
-    const codice = newRow.codice;
-
-    if (!codice) {
-      return res.status(500).json({ error: 'Il database non ha generato un codice per il nuovo utente.' });
-    }
-
-    // ------------------------------------------------------------
-    // 5) Crea l'account Supabase Auth collegato (email fittizia)
-    // ------------------------------------------------------------
-    const authCreateRes = await fetch(SUPABASE_URL + '/auth/v1/admin/users', {
-      method: 'POST',
-      headers: {
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: 'Bearer ' + SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: codice + '@circolo.local',
-        password: codice,
-        email_confirm: true
-      })
+    
+    const created = await insertRes.json();
+    console.log(`✅ Utente ${tipo} creato con codice: ${codice}`);
+    
+    res.status(201).json({
+      message: 'Utente creato con successo',
+      codice: codice,
+      user: created[0] || { id: 'creato' }
     });
-
-    if (!authCreateRes.ok) {
-      const errBody = await authCreateRes.json().catch(() => ({}));
-      // L'utente in Tesserati/Ospiti è comunque stato creato: lo segnaliamo
-      // ma non blocchiamo tutto, così l'admin può migrare manualmente dopo.
-      return res.status(207).json({
-        warning: 'Utente creato ma account Auth non riuscito: ' + (errBody.msg || authCreateRes.statusText),
-        codice
-      });
-    }
-
-    const authNewUser = await authCreateRes.json();
-    const newAuthId = authNewUser.id;
-
-    // ------------------------------------------------------------
-    // 6) Collega l'auth_id alla riga appena creata
-    // ------------------------------------------------------------
-    await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + newRow.id, {
-      method: 'PATCH',
-      headers: {
-        apikey: SERVICE_ROLE_KEY,
-        Authorization: 'Bearer ' + SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal'
-      },
-      body: JSON.stringify({ auth_id: newAuthId })
-    });
-
-    return res.status(200).json({ success: true, codice, auth_id: newAuthId });
-
-  } catch (e) {
-    return res.status(500).json({ error: 'Errore imprevisto: ' + e.message });
+    
+  } catch(e) {
+    console.error('❌ Errore creazione utente:', e);
+    res.status(500).json({ error: e.message || 'Errore interno del server' });
   }
-};
+});
