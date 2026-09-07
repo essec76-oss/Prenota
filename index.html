@@ -498,6 +498,7 @@
         </label>
       </div>
       <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
+      <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
       <button class="logout-btn" id="logout-btn">🚪 Esci</button>
       <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
     </div>
@@ -1124,7 +1125,7 @@ function copiaLink() {
           <h2 id="cancel-title">Cancella prenotazione</h2>
           <div class="meta">${new Date(selectedDate+'T00:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'})} · ${slot.label}</div>
           <div class="name-field">
-            <label for="cancel-code">Inserisci il codice a 4 cifre ricevuto al momento della prenotazione</label>
+            <label for="cancel-code">Inserisci il codice a 4 cifre di cancellazione (lo trovi sulla riga della tua prenotazione)</label>
             <input id="cancel-code" type="text" inputmode="numeric" maxlength="4" autocomplete="off" />
           </div>
           <div class="form-error" id="form-error"></div>
@@ -1216,10 +1217,12 @@ function copiaLink() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
     const usersBtn = document.getElementById('admin-users-btn');
+    const keyboxBtn = document.getElementById('admin-keybox-btn');
     
     if (loggedUser && loggedUser.is_admin === true) {
       container.style.display = 'flex';
       usersBtn.style.display = 'inline-block';
+      keyboxBtn.style.display = 'inline-block';
       toggle.checked = false;
       adminMode = false;
       
@@ -1237,9 +1240,15 @@ function copiaLink() {
       usersBtn.onclick = function() {
         openUserManagement();
       };
+
+      // Pulsante gestione key box
+      keyboxBtn.onclick = function() {
+        openKeyboxManagement();
+      };
     } else {
       container.style.display = 'none';
       usersBtn.style.display = 'none';
+      keyboxBtn.style.display = 'none';
     }
   }
 
@@ -1252,10 +1261,10 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="code-title">
           <h2 id="code-title">Prenotazione confermata</h2>
-          <div class="meta">Segna questo codice: ti servirà se vorrai cancellare la prenotazione.</div>
+          <div class="meta">Il tuo codice di cancellazione. Lo ritroverai sempre accanto a questa prenotazione nel calendario, quindi non devi segnarlo da nessuna parte.</div>
           <div class="booking-code">${code}</div>
           <div class="modal-actions">
-            <button class="btn-confirm" id="btn-code-ok" style="flex:none;width:100%;">Ho segnato il codice</button>
+            <button class="btn-confirm" id="btn-code-ok" style="flex:none;width:100%;">Ho capito</button>
           </div>
         </div>
       </div>
@@ -1294,6 +1303,78 @@ function copiaLink() {
   // GESTIONE UTENTI - ADMIN
   // ============================================================
   let currentUserTab = 'tesserati';
+
+  async function openKeyboxManagement() {
+    const root = document.getElementById('modal-root');
+
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="keybox-title">
+          <h2 id="keybox-title">🔑 Codice Key Box</h2>
+          <p class="modal-subtitle">Il codice attuale è mostrato a tutti su ogni prenotazione. Cambialo qui quando la combinazione della key box cambia.</p>
+          <div class="name-field">
+            <label for="keybox-input">Nuovo codice</label>
+            <input id="keybox-input" type="text" placeholder="Es. 1234" autocomplete="off" value="${keyboxCode || ''}" />
+          </div>
+          <div class="form-error" id="keybox-error"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="keybox-cancel">Annulla</button>
+            <button class="btn-confirm" id="keybox-save">💾 Aggiorna codice</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('keybox-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id === 'overlay') closeModal(); });
+    document.getElementById('keybox-save').addEventListener('click', handleUpdateKeybox);
+  }
+
+  async function handleUpdateKeybox() {
+    const errorEl = document.getElementById('keybox-error');
+    const nuovoCodice = document.getElementById('keybox-input').value.trim();
+    const saveBtn = document.getElementById('keybox-save');
+
+    if (!nuovoCodice) {
+      errorEl.textContent = 'Il codice non può essere vuoto.';
+      return;
+    }
+    if (!loggedUser || !loggedUser.accessToken) {
+      errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare il codice. Rifai il login.';
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Salvo...';
+    errorEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/update-keybox', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        },
+        body: JSON.stringify({ codice_keybox: nuovoCodice })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Errore aggiornamento codice');
+      }
+
+      keyboxCode = data.codice_keybox;
+      showToast('✅ Codice Key Box aggiornato: ' + keyboxCode);
+      closeModal();
+      renderSlots();
+
+    } catch(e) {
+      errorEl.textContent = '❌ Errore: ' + e.message;
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Aggiorna codice';
+    }
+  }
 
   async function openUserManagement() {
     const root = document.getElementById('modal-root');
