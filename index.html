@@ -214,7 +214,10 @@
   @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 
   .login-box{background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--line);margin-top:20px;}
-  .login-box .btn-confirm{width:100%;margin-top:8px;}
+  .login-box .btn-confirm{width:100%;margin-top:8px;padding:16px;border-radius:10px;font-size:17px;font-weight:700;box-shadow:0 3px 8px rgba(184,75,30,0.35);}
+  .login-box .btn-confirm:active{transform:translateY(1px);box-shadow:0 1px 4px rgba(184,75,30,0.35);}
+  #login-codice{background:#F1EEE4;border:2px solid var(--accent);font-size:17px;padding:14px 14px;}
+  #login-codice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;background:var(--surface);}
   
   /* ============================================================
      USER BADGE
