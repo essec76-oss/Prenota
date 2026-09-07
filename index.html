@@ -1601,23 +1601,59 @@ function copiaLink() {
   }
 
   // ============================================================
-  // HANDLE CREATE USER - MODIFICATO: ospiti salvano anche lo sport
+  // GENERAZIONE CODICE UNIVOCO - DIRETTAMENTE IN SUPABASE
+  // ============================================================
+  async function generateUniqueCodeFrontend(tipo, tentativi = 0) {
+    if (tentativi >= 20) {
+      throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
+    }
+    
+    const numero = String(Math.floor(1000 + Math.random() * 9000));
+    const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
+    
+    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
+      headers: { 
+        apikey: SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!checkRes.ok) {
+      throw new Error('Errore verifica codice');
+    }
+    
+    const existing = await checkRes.json();
+    
+    if (existing && existing.length > 0) {
+      console.log('🔄 Codice ' + codice + ' già esistente, ritento...');
+      return generateUniqueCodeFrontend(tipo, tentativi + 1);
+    }
+    
+    return codice;
+  }
+
+  // ============================================================
+  // HANDLE CREATE USER - VERSIONE FRONTEND COMPLETA (NON USA IL BACKEND)
   // ============================================================
   async function handleCreateUser() {
     const errorEl = document.getElementById('create-error');
     const tipo = document.getElementById('create-tipo').value;
     const nome = document.getElementById('create-nome').value.trim();
     const cognome = document.getElementById('create-cognome').value.trim();
+    const sport = document.getElementById('create-sport').value;
     const scadenza = document.getElementById('create-scadenza').value || null;
+    const telefono = document.getElementById('create-telefono').value.trim();
     const saveBtn = document.getElementById('create-save');
     
+    // VALIDA INPUT
     if (!nome || !cognome) {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
     }
-
-    if (!loggedUser || !loggedUser.accessToken) {
-      errorEl.textContent = '❌ Solo un admin con login sicuro attivo può creare utenti. Rifai il login.';
+    
+    if (tipo === 'ospite' && !telefono) {
+      errorEl.textContent = 'Il telefono è obbligatorio per gli ospiti.';
       return;
     }
     
@@ -1626,43 +1662,111 @@ function copiaLink() {
     errorEl.textContent = '';
     
     try {
-      const payload = { tipo: tipo, nome: nome, cognome: cognome, scadenza: scadenza };
-
+      // 1. GENERA CODICE UNIVOCO
+      const codice = await generateUniqueCodeFrontend(tipo);
+      console.log('✅ Codice generato:', codice);
+      
+      // 2. PREPARA PAYLOAD
+      let insertPayload;
       if (tipo === 'tesserato') {
-        payload.sport = document.getElementById('create-sport').value;
+        insertPayload = {
+          nome,
+          cognome,
+          codice,
+          is_tennis_member: sport === 'tennis' || sport === 'both',
+          is_padel_member: sport === 'padel' || sport === 'both',
+          is_admin: false,
+          scadenza: scadenza || null
+        };
       } else {
-        const telefono = document.getElementById('create-telefono').value.trim();
-        if (!telefono) {
-          errorEl.textContent = 'Il telefono è obbligatorio per gli ospiti.';
-          saveBtn.disabled = false;
-          saveBtn.textContent = '💾 Crea utente';
-          return;
-        }
-        payload.telefono = telefono;
-        payload.sport = document.getElementById('create-sport').value;
+        // OSPITE
+        insertPayload = {
+          nome,
+          cognome,
+          codice,
+          telefono: telefono,
+          is_tennis_member: sport === 'tennis' || sport === 'both',
+          is_padel_member: sport === 'padel' || sport === 'both',
+          attivo: true,
+          scadenza: scadenza || null
+        };
       }
-
-      const res = await fetch('/api/create-user', {
+      
+      console.log('📝 Creazione utente:', insertPayload);
+      
+      // 3. INSERISCI IN SUPABASE
+      const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+      const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
         headers: {
+          apikey: SUPABASE_KEY,
           'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + loggedUser.accessToken
+          Prefer: 'return=representation'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(insertPayload)
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Errore creazione utente');
+      
+      if (!insertRes.ok) {
+        let errorDetail = '';
+        try {
+          const errBody = await insertRes.json();
+          errorDetail = errBody.message || errBody.details || JSON.stringify(errBody);
+        } catch(_) {
+          errorDetail = insertRes.status + ' ' + insertRes.statusText;
+        }
+        
+        console.error('❌ Errore inserimento:', errorDetail);
+        
+        // Se il codice è duplicato, ritenta
+        if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
+          console.log('⚠️ Duplicato rilevato, ritento...');
+          const newCodice = await generateUniqueCodeFrontend(tipo);
+          insertPayload.codice = newCodice;
+          
+          const retryRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_KEY,
+              'Content-Type': 'application/json',
+              Prefer: 'return=representation'
+            },
+            body: JSON.stringify(insertPayload)
+          });
+          
+          if (retryRes.ok) {
+            const created = await retryRes.json();
+            const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
+            showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + newCodice);
+            errorEl.textContent = '';
+            
+            // Reset form
+            document.getElementById('create-nome').value = '';
+            document.getElementById('create-cognome').value = '';
+            document.getElementById('create-telefono').value = '';
+            document.getElementById('create-scadenza').value = '';
+            
+            await loadUserList(currentUserTab);
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 Crea utente';
+            return;
+          } else {
+            let retryError = '';
+            try {
+              const errBody = await retryRes.json();
+              retryError = errBody.message || errBody.details || JSON.stringify(errBody);
+            } catch(_) {
+              retryError = retryRes.status + ' ' + retryRes.statusText;
+            }
+            throw new Error('Ritentativo fallito: ' + retryError);
+          }
+        }
+        
+        throw new Error(errorDetail);
       }
-
-      if (data.warning) {
-        showToast('⚠️ ' + data.warning);
-      } else {
-        const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
-        showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + data.codice);
-      }
+      
+      const created = await insertRes.json();
+      const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
+      showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + codice);
       errorEl.textContent = '';
       
       // Reset form
@@ -1671,11 +1775,11 @@ function copiaLink() {
       document.getElementById('create-telefono').value = '';
       document.getElementById('create-scadenza').value = '';
       
-      // Ricarica lista
       await loadUserList(currentUserTab);
       
     } catch(e) {
-      errorEl.textContent = '❌ Errore: ' + e.message;
+      console.error('❌ Errore creazione utente:', e);
+      errorEl.textContent = '❌ Errore: ' + (e.message || 'creazione fallita');
     }
     
     saveBtn.disabled = false;
