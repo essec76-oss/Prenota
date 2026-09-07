@@ -2,16 +2,13 @@
 // GENERAZIONE CODICE UNIVOCO
 // ============================================================
 async function generateUniqueCode(tipo, tentativi = 0) {
-  // Massimo 20 tentativi per evitare loop infiniti
   if (tentativi >= 20) {
     throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
   }
   
-  // Genera numero casuale a 4 cifre (da 1000 a 9999)
   const numero = String(Math.floor(1000 + Math.random() * 9000));
   const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
   
-  // Verifica se il codice esiste già nella tabella corrispondente
   const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
   const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/${table}?codice=eq.${codice}&select=id`, {
     headers: { 
@@ -26,13 +23,11 @@ async function generateUniqueCode(tipo, tentativi = 0) {
   
   const existing = await checkRes.json();
   
-  // Se il codice esiste già, ritenta con un nuovo codice
   if (existing && existing.length > 0) {
-    console.log(`🔄 Codice ${codice} già esistente, ritento... (tentativo ${tentativi + 1})`);
+    console.log(`🔄 Codice ${codice} già esistente, ritento...`);
     return generateUniqueCode(tipo, tentativi + 1);
   }
   
-  console.log(`✅ Codice univoco generato: ${codice}`);
   return codice;
 }
 
@@ -41,7 +36,9 @@ async function generateUniqueCode(tipo, tentativi = 0) {
 // ============================================================
 app.post('/api/create-user', async (req, res) => {
   try {
-    // 1. VERIFICA AUTENTICAZIONE ADMIN
+    console.log('📥 Richiesta creazione utente:', req.body);
+    
+    // 1. VERIFICA AUTENTICAZIONE
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Non autorizzato. Token mancante.' });
@@ -64,7 +61,7 @@ app.post('/api/create-user', async (req, res) => {
       
       const userData = await verifyRes.json();
       
-      // Verifica che l'utente sia admin (controlla nella tabella Tesserati)
+      // Verifica che l'utente sia admin
       const adminCheck = await fetch(
         `${SUPABASE_URL}/rest/v1/Tesserati?auth_id=eq.${userData.id}&is_admin=eq.true&select=id`,
         { headers: { apikey: SUPABASE_KEY } }
@@ -153,7 +150,7 @@ app.post('/api/create-user', async (req, res) => {
       
       console.error('❌ Errore inserimento:', errorDetail);
       
-      // Se il codice è duplicato (caso raro ma possibile), ritenta
+      // Se il codice è duplicato, ritenta
       if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
         console.log('⚠️ Duplicato rilevato, genero nuovo codice e ritento...');
         
@@ -176,8 +173,7 @@ app.post('/api/create-user', async (req, res) => {
             return res.status(201).json({
               message: 'Utente creato con successo',
               codice: newCodice,
-              user: created[0],
-              retry: true
+              user: created[0]
             });
           } else {
             throw new Error('Ritentativo fallito');
@@ -189,7 +185,7 @@ app.post('/api/create-user', async (req, res) => {
         }
       }
       
-      throw new Error(errorDetail);
+      return res.status(500).json({ error: errorDetail });
     }
     
     const created = await insertRes.json();
@@ -203,6 +199,7 @@ app.post('/api/create-user', async (req, res) => {
     
   } catch(e) {
     console.error('❌ Errore creazione utente:', e);
+    // ✅ SEMPRE restituire JSON
     res.status(500).json({ error: e.message || 'Errore interno del server' });
   }
 });
