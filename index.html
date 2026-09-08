@@ -313,6 +313,12 @@
   .prenotato-da strong{color:var(--ink);}
   .slot-tesserato{border-left:4px solid #2B6E5A;}
   .slot-ospite{border-left:4px solid #B84B1E;}
+  /* Riepilogo prenotazione: testi e numeri ingranditi (+50%) per leggibilità */
+  .slot.booked .time{font-size:24px !important;}
+  .slot.booked .status{font-size:20px !important;padding:5px 14px !important;}
+  .slot .prenotato-da{font-size:18px !important;margin-top:6px !important;}
+  .slot .badge-tesserato,.slot .badge-ospite{font-size:16px !important;padding:3px 12px !important;}
+  .match-type{display:inline-block;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8A5A2A;background:#F4E8D0;border-radius:8px;padding:3px 10px;margin-left:8px;vertical-align:middle;}
   .clean-btn{margin-top:16px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink-soft);transition:all .15s;}
   .clean-btn:hover{border-color:var(--accent);color:var(--accent);}
   .field-note.warning{background:#F4DFD2;color:#8a3a15;font-weight:600;}
@@ -950,9 +956,9 @@ function copiaLink() {
   // FORMATTA NOMI (Allenamento / singolo vs / doppio vs)
   // ============================================================
   function formatNamesDisplay(names){
-    if(names.length === 1) return names[0] + ', Allenamento';
-    if(names.length === 2) return names[0] + ' vs ' + names[1];
-    if(names.length === 4) return names[0] + ', ' + names[1] + ' vs ' + names[2] + ', ' + names[3];
+    if(names.length === 1) return names[0] + '<span class="match-type">Allenamento</span>';
+    if(names.length === 2) return names[0] + ' vs ' + names[1] + '<span class="match-type">Singolo</span>';
+    if(names.length === 4) return names[0] + ', ' + names[1] + ' vs ' + names[2] + ', ' + names[3] + '<span class="match-type">Doppio</span>';
     return names.join(', ');
   }
 
