@@ -610,7 +610,8 @@ function copiaLink() {
 
   let currentField = 'tennis';
   let loggedUser = null;
-  let keyboxCode = null;
+  let keyboxCodeTennis = null;
+  let keyboxCodePadel = null;
   const today = new Date(); today.setHours(0,0,0,0);
   const baseMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const maxMonth = new Date(today.getFullYear(), today.getMonth()+1, 1);
@@ -895,13 +896,15 @@ function copiaLink() {
   async function loadKeyboxCode(){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
-        + '?select=codice_keybox&id=eq.1';
+        + '?select=codice_keybox_tennis,codice_keybox_padel&id=eq.1';
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if(!res.ok) throw new Error('fetch failed');
       const rows = await res.json();
-      keyboxCode = (rows[0] && rows[0].codice_keybox) || null;
+      keyboxCodeTennis = (rows[0] && rows[0].codice_keybox_tennis) || null;
+      keyboxCodePadel = (rows[0] && rows[0].codice_keybox_padel) || null;
     }catch(e){
-      keyboxCode = null;
+      keyboxCodeTennis = null;
+      keyboxCodePadel = null;
     }
   }
 
@@ -998,6 +1001,7 @@ function copiaLink() {
         const badge = isTesserato 
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
+        const keyboxCode = currentField === 'tennis' ? keyboxCodeTennis : keyboxCodePadel;
         const keyboxHtml = keyboxCode
           ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
           : '';
@@ -1414,16 +1418,20 @@ function copiaLink() {
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="keybox-title">
-          <h2 id="keybox-title">🔑 Codice Key Box</h2>
-          <p class="modal-subtitle">Il codice attuale è mostrato a tutti su ogni prenotazione. Cambialo qui quando la combinazione della key box cambia.</p>
+          <h2 id="keybox-title">🔑 Codici Key Box</h2>
+          <p class="modal-subtitle">Il codice attuale è mostrato a tutti su ogni prenotazione, in base al campo (tennis o padel). Cambiali qui quando le combinazioni cambiano.</p>
           <div class="name-field">
-            <label for="keybox-input">Nuovo codice</label>
-            <input id="keybox-input" type="text" placeholder="Es. 1234" autocomplete="off" value="${keyboxCode || ''}" />
+            <label for="keybox-input-tennis">Nuovo codice Tennis</label>
+            <input id="keybox-input-tennis" type="text" placeholder="Es. 1234" autocomplete="off" value="${keyboxCodeTennis || ''}" />
+          </div>
+          <div class="name-field">
+            <label for="keybox-input-padel">Nuovo codice Padel</label>
+            <input id="keybox-input-padel" type="text" placeholder="Es. 1234" autocomplete="off" value="${keyboxCodePadel || ''}" />
           </div>
           <div class="form-error" id="keybox-error"></div>
           <div class="modal-actions">
             <button class="btn-cancel" id="keybox-cancel">Annulla</button>
-            <button class="btn-confirm" id="keybox-save">💾 Aggiorna codice</button>
+            <button class="btn-confirm" id="keybox-save">💾 Aggiorna codici</button>
           </div>
         </div>
       </div>
@@ -1436,15 +1444,16 @@ function copiaLink() {
 
   async function handleUpdateKeybox() {
     const errorEl = document.getElementById('keybox-error');
-    const nuovoCodice = document.getElementById('keybox-input').value.trim();
+    const nuovoCodiceTennis = document.getElementById('keybox-input-tennis').value.trim();
+    const nuovoCodicePadel = document.getElementById('keybox-input-padel').value.trim();
     const saveBtn = document.getElementById('keybox-save');
 
-    if (!nuovoCodice) {
-      errorEl.textContent = 'Il codice non può essere vuoto.';
+    if (!nuovoCodiceTennis || !nuovoCodicePadel) {
+      errorEl.textContent = 'Entrambi i codici sono obbligatori.';
       return;
     }
     if (!loggedUser || !loggedUser.accessToken) {
-      errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare il codice. Rifai il login.';
+      errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare i codici. Rifai il login.';
       return;
     }
 
@@ -1459,24 +1468,25 @@ function copiaLink() {
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + loggedUser.accessToken
         },
-        body: JSON.stringify({ codice_keybox: nuovoCodice })
+        body: JSON.stringify({ codice_keybox_tennis: nuovoCodiceTennis, codice_keybox_padel: nuovoCodicePadel })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Errore aggiornamento codice');
+        throw new Error(data.error || 'Errore aggiornamento codici');
       }
 
-      keyboxCode = data.codice_keybox;
-      showToast('✅ Codice Key Box aggiornato: ' + keyboxCode);
+      keyboxCodeTennis = data.codice_keybox_tennis;
+      keyboxCodePadel = data.codice_keybox_padel;
+      showToast('✅ Codici Key Box aggiornati');
       closeModal();
       renderSlots();
 
     } catch(e) {
       errorEl.textContent = '❌ Errore: ' + e.message;
       saveBtn.disabled = false;
-      saveBtn.textContent = '💾 Aggiorna codice';
+      saveBtn.textContent = '💾 Aggiorna codici';
     }
   }
 
