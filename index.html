@@ -1296,7 +1296,7 @@ function copiaLink() {
   }
 
   // ============================================================
-  // GESTIONE UTENTI - COMPLETA CON MODIFICA SPORT, SCADENZA, STATO
+  // GESTIONE UTENTI - COMPLETA
   // ============================================================
   async function openKeyboxManagement() {
     const root = document.getElementById('modal-root');
@@ -1539,7 +1539,7 @@ function copiaLink() {
             <td>${attivo}</td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('Tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},'${u.is_tennis_member ? 'tennis' : ''}','${u.is_padel_member ? 'padel' : ''}')">✏️</button>
+                <button class="btn-edit" onclick="editUser('Tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},${u.is_tennis_member},${u.is_padel_member})">✏️</button>
                 <button class="btn-delete" onclick="deleteUser('Tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
@@ -1580,7 +1580,7 @@ function copiaLink() {
             <td>${attivo}</td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('Ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},'${u.is_tennis_member ? 'tennis' : ''}','${u.is_padel_member ? 'padel' : ''}')">✏️</button>
+                <button class="btn-edit" onclick="editUser('Ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},${u.is_tennis_member},${u.is_padel_member})">✏️</button>
                 <button class="btn-delete" onclick="deleteUser('Ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
@@ -1763,32 +1763,22 @@ function copiaLink() {
   }
 
   // ============================================================
-  // EDIT USER - MODIFICA SPORT, SCADENZA E STATO
+  // EDIT USER - CORRETTO CON BOOLEAN
   // ============================================================
-  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, sportTennis, sportPadel) {
-    const root = document.getElementById('modal-root');
+  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, isTennis, isPadel) {
+    // Converti correttamente i booleani
+    const tennis = isTennis === true || isTennis === 'true';
+    const padel = isPadel === true || isPadel === 'true';
     
-    // Determina lo sport attuale
     let sportCorrente = 'both';
-    if (sportTennis === 'true' && sportPadel === 'true') sportCorrente = 'both';
-    else if (sportTennis === 'true') sportCorrente = 'tennis';
-    else if (sportPadel === 'true') sportCorrente = 'padel';
-    // Se i valori arrivano come stringhe vuote o undefined
-    if (sportTennis && sportTennis !== 'true' && sportPadel && sportPadel !== 'true') {
-      // Se sono già stati passati come valori diretti
-      if (sportTennis === 'tennis') sportCorrente = 'tennis';
-      else if (sportPadel === 'padel') sportCorrente = 'padel';
-      else if (sportTennis === 'tennis' && sportPadel === 'padel') sportCorrente = 'both';
-    }
-    // Se sono stati passati come booleani
-    if (typeof sportTennis === 'boolean' && typeof sportPadel === 'boolean') {
-      if (sportTennis && sportPadel) sportCorrente = 'both';
-      else if (sportTennis) sportCorrente = 'tennis';
-      else if (sportPadel) sportCorrente = 'padel';
-    }
+    if (tennis && padel) sportCorrente = 'both';
+    else if (tennis) sportCorrente = 'tennis';
+    else if (padel) sportCorrente = 'padel';
     
     const dataInput = scadenzaCorrente || '';
     const attivoChecked = attivoCorrente === true || attivoCorrente === 'true';
+    
+    const root = document.getElementById('modal-root');
     
     root.innerHTML = `
       <div class="overlay" id="overlay">
@@ -1850,6 +1840,8 @@ function copiaLink() {
           attivo: nuovoAttivo
         };
         
+        console.log('📝 Salvataggio modifiche per', nome, 'payload:', payload);
+        
         const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
           method: 'PATCH',
           headers: {
@@ -1868,6 +1860,7 @@ function copiaLink() {
           } catch(_) {
             errorMsg = res.status + ' ' + res.statusText;
           }
+          console.error('❌ Errore risposta:', errorMsg);
           throw new Error(errorMsg);
         }
         
@@ -1876,6 +1869,7 @@ function copiaLink() {
         await loadUserList(currentUserTab);
         
       } catch(e) {
+        console.error('❌ Errore:', e);
         errorEl.textContent = '❌ Errore: ' + e.message;
         saveBtn.disabled = false;
         saveBtn.textContent = '💾 Salva modifiche';
@@ -1891,6 +1885,8 @@ function copiaLink() {
     
     try {
       const tableName = table;
+      
+      console.log('🗑️ Eliminazione', nome, 'da', tableName, 'ID:', id);
       
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
@@ -1909,6 +1905,7 @@ function copiaLink() {
         } catch(_) {
           errorMsg = res.status + ' ' + res.statusText;
         }
+        console.error('❌ Errore eliminazione:', errorMsg);
         throw new Error(errorMsg);
       }
       
