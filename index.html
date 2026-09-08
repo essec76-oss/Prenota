@@ -1640,13 +1640,17 @@ function copiaLink() {
       return;
     }
     
+    if (!loggedUser || !loggedUser.accessToken) {
+      errorEl.textContent = '❌ Solo un admin con login sicuro attivo può creare utenti. Rifai il login.';
+      return;
+    }
+    
     saveBtn.disabled = true;
     saveBtn.textContent = 'Salvo...';
     errorEl.textContent = '';
     
     try {
       const codice = await generateUniqueCodeFrontend(tipo);
-      console.log('✅ Codice generato:', codice);
       
       let insertPayload;
       if (tipo === 'tesserato') {
@@ -1672,15 +1676,14 @@ function copiaLink() {
         };
       }
       
-      console.log('📝 Creazione utente:', insertPayload);
-      
       const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_KEY,
           'Content-Type': 'application/json',
-          Prefer: 'return=representation'
+          Prefer: 'return=representation',
+          Authorization: 'Bearer ' + loggedUser.accessToken
         },
         body: JSON.stringify(insertPayload)
       });
@@ -1694,10 +1697,8 @@ function copiaLink() {
           errorDetail = insertRes.status + ' ' + insertRes.statusText;
         }
         
-        console.error('❌ Errore inserimento:', errorDetail);
-        
+        // Retry su duplicato codice
         if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
-          console.log('⚠️ Duplicato rilevato, ritento...');
           const newCodice = await generateUniqueCodeFrontend(tipo);
           insertPayload.codice = newCodice;
           
@@ -1706,7 +1707,8 @@ function copiaLink() {
             headers: {
               apikey: SUPABASE_KEY,
               'Content-Type': 'application/json',
-              Prefer: 'return=representation'
+              Prefer: 'return=representation',
+              Authorization: 'Bearer ' + loggedUser.accessToken
             },
             body: JSON.stringify(insertPayload)
           });
@@ -1715,13 +1717,10 @@ function copiaLink() {
             const created = await retryRes.json();
             const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
             showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + newCodice);
-            errorEl.textContent = '';
-            
             document.getElementById('create-nome').value = '';
             document.getElementById('create-cognome').value = '';
             document.getElementById('create-scadenza').value = '';
             document.getElementById('create-attivo').value = 'true';
-            
             await loadUserList(currentUserTab);
             saveBtn.disabled = false;
             saveBtn.textContent = '💾 Crea utente';
@@ -1744,7 +1743,6 @@ function copiaLink() {
       const created = await insertRes.json();
       const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
       showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + codice);
-      errorEl.textContent = '';
       
       document.getElementById('create-nome').value = '';
       document.getElementById('create-cognome').value = '';
@@ -1763,7 +1761,7 @@ function copiaLink() {
   }
 
   // ============================================================
-  // EDIT USER - CORRETTO CON BOOLEAN
+  // EDIT USER - CORRETTO CON TOKEN JWT
   // ============================================================
   window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, isTennis, isPadel) {
     // Converti correttamente i booleani
@@ -1827,6 +1825,11 @@ function copiaLink() {
       const nuovoAttivo = document.getElementById('edit-attivo').value === 'true';
       const saveBtn = document.getElementById('edit-save');
       
+      if (!loggedUser || !loggedUser.accessToken) {
+        errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare gli utenti. Rifai il login.';
+        return;
+      }
+      
       saveBtn.disabled = true;
       saveBtn.textContent = 'Salvo...';
       errorEl.textContent = '';
@@ -1840,14 +1843,13 @@ function copiaLink() {
           attivo: nuovoAttivo
         };
         
-        console.log('📝 Salvataggio modifiche per', nome, 'payload:', payload);
-        
         const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
           method: 'PATCH',
           headers: {
             apikey: SUPABASE_KEY,
             'Content-Type': 'application/json',
-            Prefer: 'return=minimal'
+            Prefer: 'return=minimal',
+            Authorization: 'Bearer ' + loggedUser.accessToken
           },
           body: JSON.stringify(payload)
         });
@@ -1860,7 +1862,6 @@ function copiaLink() {
           } catch(_) {
             errorMsg = res.status + ' ' + res.statusText;
           }
-          console.error('❌ Errore risposta:', errorMsg);
           throw new Error(errorMsg);
         }
         
@@ -1878,22 +1879,26 @@ function copiaLink() {
   };
 
   // ============================================================
-  // DELETE USER - CORRETTO
+  // DELETE USER - CORRETTO CON TOKEN JWT
   // ============================================================
   window.deleteUser = async function(table, id, nome) {
     if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
     
+    if (!loggedUser || !loggedUser.accessToken) {
+      showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
+      return;
+    }
+    
     try {
       const tableName = table;
-      
-      console.log('🗑️ Eliminazione', nome, 'da', tableName, 'ID:', id);
       
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
         headers: {
           apikey: SUPABASE_KEY,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
+          Prefer: 'return=minimal',
+          Authorization: 'Bearer ' + loggedUser.accessToken
         }
       });
       
@@ -1905,7 +1910,6 @@ function copiaLink() {
         } catch(_) {
           errorMsg = res.status + ' ' + res.statusText;
         }
-        console.error('❌ Errore eliminazione:', errorMsg);
         throw new Error(errorMsg);
       }
       
