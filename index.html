@@ -26,7 +26,12 @@
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'Source Sans 3',sans-serif;}
   .wrap{max-width:640px;margin:0 auto;padding:28px 18px 60px;}
   h1{font-family:'Fraunces',serif;font-weight:600;font-size:28px;line-height:1.15;margin:0 0 4px;letter-spacing:-0.01em;}
+  .club-name{font-family:'Fraunces',serif;font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px;}
   .sub{color:var(--ink-soft);font-size:15px;margin:0 0 22px;}
+  .qr-share-box{margin-top:28px;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:center;}
+  .qr-share-title{font-size:14px;color:var(--ink-soft);margin:0 0 12px;}
+  .qr-image{width:160px;height:160px;border-radius:8px;margin-bottom:12px;}
+  .qr-copy-msg{font-size:13px;color:var(--padel);margin-top:8px;min-height:16px;}
   .tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);}
   .tab{flex:1;text-align:center;padding:12px 8px;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink-soft);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -183,8 +188,9 @@
     color:#fff;
     border:none;
     border-radius:10px;
-    padding:8px 18px;
-    font-size:14px;
+    padding:14px 28px;
+    min-width:120px;
+    font-size:16px;
     font-weight:700;
     cursor:pointer;
     transition:all 0.2s ease;
@@ -447,8 +453,8 @@
       font-size:13px;
     }
     .slot .book-btn{
-      padding:6px 14px;
-      font-size:13px;
+      padding:14px 14px;
+      font-size:16px;
       width:100%;
       text-align:center;
     }
@@ -484,7 +490,8 @@
   
   <!-- 🔐 SEZIONE LOGIN -->
   <div id="login-section">
-    <h1>Prenota il campo</h1>
+    <div class="club-name">Tennis Club Nulvi</div>
+    <h1>Prenota il tuo campo</h1>
     <p class="sub">Accedi con il tuo codice ID</p>
     
     <div class="login-box">
@@ -495,11 +502,19 @@
       <div class="form-error" id="login-error"></div>
       <button class="btn-confirm" id="login-btn">🔓 Accedi</button>
     </div>
+
+    <div class="qr-share-box">
+      <p class="qr-share-title">Condividi il link di prenotazione</p>
+      <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
+      <button class="btn-cancel" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
+      <div id="messaggio-copia" class="qr-copy-msg"></div>
+    </div>
   </div>
 
   <!-- 📅 SEZIONE PRENOTAZIONE -->
   <div id="booking-section" style="display:none;">
-    <h1>Prenota il campo</h1>
+    <div class="club-name">Tennis Club Nulvi</div>
+    <h1>Prenota il tuo campo</h1>
     <p class="sub">Scegli tennis o padel, poi il giorno e l'orario.</p>
     
     <div class="user-badge">
@@ -549,6 +564,14 @@
 <div id="toast-root"></div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function(){
+  var qrImg = document.getElementById('login-qr-code');
+  if (qrImg) {
+    var link = window.location.href;
+    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(link);
+  }
+});
+
 function copiaLink() {
   var link = window.location.href;
   navigator.clipboard.writeText(link).then(function() {
@@ -566,9 +589,9 @@ function copiaLink() {
   // ============================================================
   const FIELDS = {
     tennis: { key:'tennis', label:'Campo da tennis', color:'--tennis', colorSoft:'--tennis-soft',
-      slotMinutes:60, start:8, end:22, minNames:2, maxNames:4 },
+      slotMinutes:60, start:7, end:23, minNames:1, maxNames:4 },
     padel: { key:'padel', label:'Campo da padel', color:'--padel', colorSoft:'--padel-soft',
-      slotMinutes:90, start:8, end:21.5, minNames:4, maxNames:4 }
+      slotMinutes:90, start:6.5, end:23, minNames:4, maxNames:4 }
   };
   const DOW = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
   const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -752,8 +775,8 @@ function copiaLink() {
   // ============================================================
   function renderFieldNote(){
     const note = currentField === 'tennis'
-      ? 'Slot da 1 ora. Servono almeno 2 nomi per prenotare (fino a 4 facoltativi).'
-      : 'Slot da 1 ora e mezza. Servono esattamente 4 nomi per prenotare.';
+      ? 'Puoi prenotare slot da 1 ora. Basta anche solo il tuo nome (Allenamento), oppure aggiungi fino a 4 giocatori.'
+      : 'Puoi prenotare slot da 1 ora e mezza. Servono esattamente 4 nomi per prenotare.';
     const noteEl = document.getElementById('field-note');
 
     if (loggedUser && !canBookField(currentField)) {
@@ -924,6 +947,16 @@ function copiaLink() {
   }
 
   // ============================================================
+  // FORMATTA NOMI (Allenamento / singolo vs / doppio vs)
+  // ============================================================
+  function formatNamesDisplay(names){
+    if(names.length === 1) return names[0] + ', Allenamento';
+    if(names.length === 2) return names[0] + ' vs ' + names[1];
+    if(names.length === 4) return names[0] + ', ' + names[1] + ' vs ' + names[2] + ', ' + names[3];
+    return names.join(', ');
+  }
+
+  // ============================================================
   // RENDER SLOTS
   // ============================================================
   async function renderSlots(){
@@ -968,7 +1001,7 @@ function copiaLink() {
         
         left.innerHTML = `
           <div class="time">${s.label}</div>
-          <div class="status">${booking.names.join(', ')}</div>
+          <div class="status">${formatNamesDisplay(booking.names)}</div>
           <div class="prenotato-da">👤 Prenotato da: <strong>${booking.prenotato_da}</strong> ${badge}</div>
           ${keyboxHtml}
           ${ownCodeHtml}
@@ -1042,8 +1075,9 @@ function copiaLink() {
     const nameCount = f.maxNames;
     const requiredCount = f.minNames;
     
-    let fieldsHtml = '';
-    for(let i=0;i<nameCount;i++){
+    const prenotanteName = loggedUser.nome + ' ' + loggedUser.cognome;
+    let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
+    for(let i=1;i<nameCount;i++){
       const isRequired = i < requiredCount;
       fieldsHtml += '<div class="name-field">\n        <label for="name-' + i + '">Nome giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <input id="name-' + i + '" type="text" autocomplete="off" />\n      </div>';
     }
@@ -1096,7 +1130,7 @@ function copiaLink() {
     if(names.length < requiredCount){
       errorEl.textContent = currentField==='padel'
         ? 'Servono esattamente 4 nomi per prenotare il padel.'
-        : 'Servono almeno ' + requiredCount + ' nomi per prenotare il tennis.';
+        : 'Serve almeno il tuo nome per prenotare il tennis.';
       return;
     }
     
@@ -2028,6 +2062,36 @@ function copiaLink() {
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
     renderCalendar();
   });
+
+  // ============================================================
+  // SWIPE LATERALE PER CAMBIO MESE
+  // ============================================================
+  (function setupCalendarSwipe(){
+    const calGrid = document.getElementById('cal-grid');
+    let touchStartX = 0, touchStartY = 0;
+    calGrid.addEventListener('touchstart', function(e){
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+    calGrid.addEventListener('touchend', function(e){
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) {
+        // swipe verso sinistra -> mese successivo
+        if (!(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth())) {
+          viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
+          renderCalendar();
+        }
+      } else {
+        // swipe verso destra -> mese precedente
+        if (!(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth())) {
+          viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
+          renderCalendar();
+        }
+      }
+    }, { passive: true });
+  })();
 
   document.getElementById('clean-btn').addEventListener('click', async function() {
     await deleteOldBookings();
