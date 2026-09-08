@@ -7,7 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <style>
+  /* Tom Select overrides to match design */
+  .ts-wrapper{font-family:inherit;}
+  .ts-control{border:1px solid var(--line)!important;border-radius:8px!important;padding:10px 12px!important;font-size:15px!important;min-height:44px;}
+  .ts-dropdown{border:1px solid var(--line)!important;border-radius:8px!important;font-size:14px;}
+  .ts-dropdown .optgroup-header{font-weight:700;color:var(--ink);background:#F5F5F0;padding:8px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+  .ts-dropdown .option{padding:10px 12px;}
+  .ts-dropdown .active{background:var(--accent-soft)!important;color:var(--ink)!important;}
   :root{
     --bg:#FBFBF8;
     --surface:#FFFFFF;
@@ -32,6 +41,68 @@
   .qr-share-title{font-size:14px;color:var(--ink-soft);margin:0 0 12px;}
   .qr-image{width:160px;height:160px;border-radius:8px;margin-bottom:12px;}
   .qr-copy-msg{font-size:13px;color:var(--padel);margin-top:8px;min-height:16px;}
+  .btn-copy-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    max-width:320px;
+    padding:14px 20px;
+    margin-top:4px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(184,75,30,0.3);
+    transition:all 0.2s ease;
+  }
+  .btn-copy-link:hover{
+    transform:translateY(-1px);
+    box-shadow:0 5px 14px rgba(184,75,30,0.4);
+  }
+  .btn-copy-link:active{
+    transform:translateY(1px);
+  }
+  .guest-register-box{
+    margin-top:24px;
+    padding:20px 18px;
+    border:2px dashed var(--line);
+    border-radius:14px;
+    background:var(--surface);
+    text-align:center;
+  }
+  .guest-register-box p{
+    margin:0 0 14px;
+    font-size:15px;
+    color:var(--ink-soft);
+    line-height:1.4;
+  }
+  .guest-register-box .btn-guest-register{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:14px 28px;
+    background:var(--padel);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(43,110,90,0.3);
+    transition:all 0.2s ease;
+  }
+  .guest-register-box .btn-guest-register:hover{
+    transform:translateY(-1px);
+    box-shadow:0 5px 14px rgba(43,110,90,0.4);
+  }
   .tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);}
   .tab{flex:1;text-align:center;padding:12px 8px;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink-soft);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -492,8 +563,13 @@
     <div class="qr-share-box">
       <p class="qr-share-title">Condividi il link di prenotazione</p>
       <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
-      <button class="btn-cancel" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
+      <button class="btn-copy-link" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
       <div id="messaggio-copia" class="qr-copy-msg"></div>
+    </div>
+
+    <div class="guest-register-box">
+      <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi.</p>
+      <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
     </div>
   </div>
 
@@ -987,6 +1063,28 @@ function copiaLink() {
     });
   }
 
+  async function loadAllPlayersForSelect(){
+    try{
+      const [tessRes, ospRes] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', {
+          headers: { apikey: SUPABASE_KEY }
+        }),
+        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', {
+          headers: { apikey: SUPABASE_KEY }
+        })
+      ]);
+      const tesserati = tessRes.ok ? await tessRes.json() : [];
+      const ospiti = ospRes.ok ? await ospRes.json() : [];
+      // Filtra ospiti scaduti
+      const oggi = dateKey(new Date());
+      const ospitiValidi = ospiti.filter(o => !o.scadenza || o.scadenza >= oggi);
+      return { tesserati, ospiti: ospitiValidi };
+    }catch(e){
+      console.error('Errore caricamento giocatori:', e);
+      return { tesserati: [], ospiti: [] };
+    }
+  }
+
   function openBookingModal(slot, timeId){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1006,7 +1104,7 @@ function copiaLink() {
     let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
     for(let i=1;i<nameCount;i++){
       const isRequired = i < requiredCount;
-      fieldsHtml += '<div class="name-field">\n        <label for="name-' + i + '">Nome giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <input id="name-' + i + '" type="text" autocomplete="off" />\n      </div>';
+      fieldsHtml += '<div class="name-field">\n        <label for="name-' + i + '">Giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
     }
     
     root.innerHTML = `
@@ -1031,6 +1129,40 @@ function copiaLink() {
     document.getElementById('btn-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> confirmBooking(timeId, requiredCount, nameCount));
+
+    // Carica giocatori e inizializza Tom Select
+    loadAllPlayersForSelect().then(({ tesserati, ospiti }) => {
+      const options = [];
+      tesserati.forEach(u => {
+        const label = u.nome + ' ' + u.cognome;
+        options.push({ value: label, text: label + ' (' + u.codice + ')', optgroup: 'tesserati' });
+      });
+      ospiti.forEach(u => {
+        const label = u.nome + ' ' + u.cognome;
+        options.push({ value: label, text: label + ' (' + u.codice + ')', optgroup: 'ospiti' });
+      });
+
+      for (let i = 1; i < nameCount; i++) {
+        const el = document.getElementById('name-' + i);
+        if (!el) continue;
+        new TomSelect(el, {
+          options: options,
+          optgroups: [
+            { value: 'tesserati', label: '⭐ Tesserati' },
+            { value: 'ospiti', label: '👤 Ospiti' }
+          ],
+          optgroupField: 'optgroup',
+          labelField: 'text',
+          valueField: 'value',
+          searchField: ['text'],
+          placeholder: 'Cerca per nome...',
+          allowEmptyOption: true,
+          maxOptions: 300,
+          create: false,
+          sortField: { field: 'text', direction: 'asc' }
+        });
+      }
+    });
   }
 
   async function confirmBooking(timeId, requiredCount, nameCount){
@@ -1947,6 +2079,159 @@ function copiaLink() {
   };
 
   // ============================================================
+  // AUTO-CREAZIONE PROFILO OSPITE (self-register)
+  // ============================================================
+  function openGuestRegisterModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
+          <h2 id="guest-reg-title">Crea profilo ospite</h2>
+          <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
+          <div class="name-field">
+            <label for="guest-nome">Nome *</label>
+            <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
+          </div>
+          <div class="name-field">
+            <label for="guest-cognome">Cognome *</label>
+            <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
+          </div>
+          <div class="name-field">
+            <label for="guest-sport">Sport</label>
+            <select id="guest-sport">
+              <option value="both">Tennis + Padel</option>
+              <option value="tennis">Solo Tennis</option>
+              <option value="padel">Solo Padel</option>
+            </select>
+          </div>
+          <div class="form-error" id="guest-reg-error"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
+            <button class="btn-confirm" id="guest-reg-save">Crea profilo</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('guest-reg-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
+    document.getElementById('guest-reg-save').addEventListener('click', handleSelfCreateGuest);
+  }
+
+  async function handleSelfCreateGuest() {
+    const errorEl = document.getElementById('guest-reg-error');
+    const nome = document.getElementById('guest-nome').value.trim();
+    const cognome = document.getElementById('guest-cognome').value.trim();
+    const sport = document.getElementById('guest-sport').value;
+    const saveBtn = document.getElementById('guest-reg-save');
+
+    if (!nome || !cognome) {
+      errorEl.textContent = 'Nome e Cognome sono obbligatori.';
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Creo...';
+    errorEl.textContent = '';
+
+    try {
+      const codice = await generateUniqueCodeFrontend('ospite');
+      const scadenzaDate = new Date();
+      scadenzaDate.setDate(scadenzaDate.getDate() + 7);
+      const scadenza = dateKey(scadenzaDate);
+
+      const payload = {
+        nome,
+        cognome,
+        codice,
+        is_tennis_member: sport === 'tennis' || sport === 'both',
+        is_padel_member: sport === 'padel' || sport === 'both',
+        attivo: true,
+        scadenza: scadenza
+      };
+
+      const insertRes = await fetch(SUPABASE_URL + '/rest/v1/Ospiti', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!insertRes.ok) {
+        let detail = '';
+        try {
+          const errBody = await insertRes.json();
+          detail = errBody.message || errBody.details || JSON.stringify(errBody);
+        } catch(_) {
+          detail = insertRes.status + ' ' + insertRes.statusText;
+        }
+        // Retry on duplicate
+        if (detail.includes('duplicate key') || detail.includes('_codice_key')) {
+          const newCodice = await generateUniqueCodeFrontend('ospite');
+          payload.codice = newCodice;
+          const retryRes = await fetch(SUPABASE_URL + '/rest/v1/Ospiti', {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_KEY,
+              'Content-Type': 'application/json',
+              Prefer: 'return=representation'
+            },
+            body: JSON.stringify(payload)
+          });
+          if (!retryRes.ok) throw new Error('Creazione fallita dopo retry');
+          const created = await retryRes.json();
+          closeModal();
+          showGuestCodeModal(created[0] ? created[0].codice : newCodice, nome, cognome, scadenza);
+          return;
+        }
+        throw new Error(detail);
+      }
+
+      const created = await insertRes.json();
+      const finalCode = (created[0] && created[0].codice) || codice;
+      closeModal();
+      showGuestCodeModal(finalCode, nome, cognome, scadenza);
+
+    } catch(e) {
+      console.error('❌ Errore creazione ospite self:', e);
+      errorEl.textContent = '❌ Errore: ' + (e.message || 'creazione fallita');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Crea profilo';
+    }
+  }
+
+  function showGuestCodeModal(codice, nome, cognome, scadenza) {
+    const dataFmt = new Date(scadenza + 'T00:00:00').toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true">
+          <h2>Profilo ospite creato!</h2>
+          <p class="modal-subtitle">Ciao <strong>${nome} ${cognome}</strong>, il tuo profilo è attivo fino al <strong>${dataFmt}</strong>.</p>
+          <p style="text-align:center;margin:8px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso:</p>
+          <div class="booking-code">${codice}</div>
+          <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare.</p>
+          <div class="modal-actions">
+            <button class="btn-confirm" id="guest-code-ok" style="flex:none;width:100%;">Ho salvato il codice</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('guest-code-ok').addEventListener('click', function(){
+      closeModal();
+      // Precompila il campo login
+      const loginInput = document.getElementById('login-codice');
+      if (loginInput) {
+        loginInput.value = codice;
+        loginInput.type = 'text'; // mostra il codice appena creato
+      }
+      showToast('Ora puoi accedere con il tuo codice');
+    });
+  }
+
+  // ============================================================
   // LOGIN
   // ============================================================
   async function handleLogin() {
@@ -2078,6 +2363,7 @@ function copiaLink() {
     if (e.key === 'Enter') handleLogin();
   });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
   
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
   document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
