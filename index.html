@@ -1630,7 +1630,7 @@ function copiaLink() {
       let data = [];
       
       if (tipo === 'tesserati') {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo&order=cognome.asc', {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento tesserati');
@@ -1656,12 +1656,12 @@ function copiaLink() {
             <td><strong>${u.codice}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
             <td>${sportLabel}</td>
-            <td><span class="scadenza-value" data-id="${u.id}" data-table="tesserati">${scadenza}</span></td>
-            <td><span class="stato-value" data-id="${u.id}" data-table="tesserati">${attivo}</span></td>
+            <td><span class="scadenza-value" data-id="${u.id}" data-table="Tesserati">${scadenza}</span></td>
+            <td><span class="stato-value" data-id="${u.id}" data-table="Tesserati">${attivo}</span></td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
-                <button class="btn-delete" onclick="deleteUser('tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
+                <button class="btn-edit" onclick="editUser('Tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
+                <button class="btn-delete" onclick="deleteUser('Tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
           </tr>`;
@@ -1672,7 +1672,7 @@ function copiaLink() {
         
       } else {
         // Ospiti
-        const res = await fetch(SUPABASE_URL + '/rest/v1/ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento ospiti');
@@ -1698,12 +1698,12 @@ function copiaLink() {
             <td><strong>${u.codice}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
             <td>${sportLabel}</td>
-            <td><span class="scadenza-value" data-id="${u.id}" data-table="ospiti">${scadenza}</span></td>
-            <td><span class="stato-value" data-id="${u.id}" data-table="ospiti">${attivo}</span></td>
+            <td><span class="scadenza-value" data-id="${u.id}" data-table="Ospiti">${scadenza}</span></td>
+            <td><span class="stato-value" data-id="${u.id}" data-table="Ospiti">${attivo}</span></td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
-                <button class="btn-delete" onclick="deleteUser('ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
+                <button class="btn-edit" onclick="editUser('Ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
+                <button class="btn-delete" onclick="deleteUser('Ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
           </tr>`;
@@ -1728,7 +1728,7 @@ function copiaLink() {
     const numero = String(Math.floor(1000 + Math.random() * 9000));
     const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
     
-    const table = tipo === 'tesserato' ? 'tesserati' : 'ospiti';
+    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
     const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
       headers: { 
         apikey: SUPABASE_KEY,
@@ -1807,7 +1807,7 @@ function copiaLink() {
       console.log('📝 Creazione utente:', insertPayload);
       
       // 3. INSERISCI IN SUPABASE
-      const table = tipo === 'tesserato' ? 'tesserati' : 'ospiti';
+      const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
         headers: {
@@ -1950,7 +1950,7 @@ function copiaLink() {
       errorEl.textContent = '';
       
       try {
-        const tableName = table === 'tesserati' ? 'tesserati' : 'ospiti';
+        const tableName = table;
         const payload = {};
         if (nuovaScadenza !== undefined) payload.scadenza = nuovaScadenza;
         if (nuovoAttivo !== undefined) payload.attivo = nuovoAttivo;
@@ -1995,7 +1995,7 @@ function copiaLink() {
     if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
     
     try {
-      const tableName = table.toLowerCase();
+      const tableName = table;
       
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
@@ -2053,11 +2053,11 @@ function copiaLink() {
       
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id'
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
+        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
           + '&codice=eq.' + encodeURIComponent(codice)
           + '&attivo=eq.true'
           + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
