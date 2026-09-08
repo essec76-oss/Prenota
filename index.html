@@ -955,10 +955,10 @@ function copiaLink() {
   // ============================================================
   // FORMATTA NOMI (Allenamento / singolo vs / doppio vs)
   // ============================================================
-  function formatNamesDisplay(names){
-    if(names.length === 1) return names[0] + '<span class="match-type">Allenamento</span>';
-    if(names.length === 2) return names[0] + ' vs ' + names[1] + '<span class="match-type">Singolo</span>';
-    if(names.length === 4) return names[0] + ', ' + names[1] + ' vs ' + names[2] + ', ' + names[3] + '<span class="match-type">Doppio</span>';
+  function formatNamesDisplay(names, field){
+    if(field === 'tennis' && names.length === 1) return names[0] + '<span class="match-type">Allenamento</span>';
+    if(field === 'tennis' && names.length === 2) return names[0] + ' vs ' + names[1] + '<span class="match-type">Singolo</span>';
+    if(names.length === 4) return names[0] + ', ' + names[1] + ' vs ' + names[2] + ', ' + names[3] + (field === 'tennis' ? '<span class="match-type">Doppio</span>' : '');
     return names.join(', ');
   }
 
@@ -1007,7 +1007,7 @@ function copiaLink() {
         
         left.innerHTML = `
           <div class="time">${s.label}</div>
-          <div class="status">${formatNamesDisplay(booking.names)}</div>
+          <div class="status">${formatNamesDisplay(booking.names, currentField)}</div>
           <div class="prenotato-da">👤 Prenotato da: <strong>${booking.prenotato_da}</strong> ${badge}</div>
           ${keyboxHtml}
           ${ownCodeHtml}
