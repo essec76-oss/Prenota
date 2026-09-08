@@ -45,9 +45,6 @@
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:8px;}
   .cal-dow{text-align:center;font-size:12px;color:var(--ink-soft);padding-bottom:4px;}
   
-  /* ============================================================
-     MIGLIORIE CALENDARIO
-     ============================================================ */
   .cal-day{
     aspect-ratio:1;
     display:flex;
@@ -77,9 +74,6 @@
     box-shadow:0 4px 16px rgba(184,75,30,0.35);
   }
   
-  /* ============================================================
-     BADGE CONTEggio PRENOTAZIONI
-     ============================================================ */
   .cal-day.has-booking .booking-count{
     position:absolute;
     top:-6px;
@@ -120,9 +114,6 @@
   .slots-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:26px 0 12px;}
   .slot-list{display:flex;flex-direction:column;gap:10px;}
   
-  /* ============================================================
-     MIGLIORIE SLOT
-     ============================================================ */
   .slot{
     display:flex;
     align-items:center;
@@ -241,9 +232,6 @@
   #login-codice{background:#F1EEE4;border:2px solid var(--accent);font-size:17px;padding:14px 14px;}
   #login-codice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;background:var(--surface);}
   
-  /* ============================================================
-     USER BADGE
-     ============================================================ */
   .user-badge{
     background:var(--accent-soft);
     border-radius:8px;
@@ -313,7 +301,6 @@
   .prenotato-da strong{color:var(--ink);}
   .slot-tesserato{border-left:4px solid #2B6E5A;}
   .slot-ospite{border-left:4px solid #B84B1E;}
-  /* Riepilogo prenotazione: testi e numeri ingranditi (+50%) per leggibilità */
   .slot.booked .time{font-size:24px !important;}
   .slot.booked .status{font-size:20px !important;padding:5px 14px !important;}
   .slot .prenotato-da{font-size:18px !important;margin-top:6px !important;}
@@ -338,9 +325,6 @@
   .slot .book-btn.admin-delete:hover{background:#8A3A15;}
   .slot.booked.admin-visible{border:2px solid #B84B1E;background:#FDF0EA;}
 
-  /* ============================================================
-     GESTIONE UTENTI - Lista utenti
-     ============================================================ */
   .user-list-table{
     width:100%;
     border-collapse:collapse;
@@ -442,9 +426,6 @@
     margin-right:4px;
   }
 
-  /* ============================================================
-     RESPONSIVE MOBILE
-     ============================================================ */
   @media (max-width:480px){
     .slot{
       padding:12px 14px;
@@ -494,7 +475,6 @@
 <body>
 <div class="wrap" id="app">
   
-  <!-- 🔐 SEZIONE LOGIN -->
   <div id="login-section">
     <div class="club-name">Tennis Club Nulvi</div>
     <h1>Prenota il tuo campo</h1>
@@ -517,7 +497,6 @@
     </div>
   </div>
 
-  <!-- 📅 SEZIONE PRENOTAZIONE -->
   <div id="booking-section" style="display:none;">
     <div class="club-name">Tennis Club Nulvi</div>
     <h1>Prenota il tuo campo</h1>
@@ -544,7 +523,6 @@
     </div>
     <div class="field-note" id="field-note"></div>
 
-    <!-- SCHEMA CAMPO (cambia con transizione tra tennis e padel) -->
     <div style="text-align: center; margin: 20px 0;">
       <img id="court-image" src="/campo-tennis.jpg" alt="Schema dimensioni campo da tennis" style="max-width: 100%; width: 500px; border-radius: 8px; transition: opacity 0.35s ease;">
     </div>
@@ -565,7 +543,6 @@
   
 </div>
 
-<!-- MODALE PER GESTIONE UTENTI -->
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 
@@ -590,9 +567,6 @@ function copiaLink() {
 }
 
 (function(){
-  // ============================================================
-  // CONFIGURAZIONE
-  // ============================================================
   const FIELDS = {
     tennis: { key:'tennis', label:'Campo da tennis', color:'--tennis', colorSoft:'--tennis-soft',
       slotMinutes:60, start:7, end:23, minNames:1, maxNames:4 },
@@ -619,21 +593,15 @@ function copiaLink() {
   let selectedDate = null;
   let bookingsCache = {};
   let adminMode = false;
+  let currentUserTab = 'tesserati';
 
-  // Elementi DOM
   const loginSection = document.getElementById('login-section');
   const bookingSection = document.getElementById('booking-section');
 
-  // ============================================================
-  // UTILITY
-  // ============================================================
   function pad(n){return n.toString().padStart(2,'0');}
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function fmtTime(h){const hh=Math.floor(h), mm=Math.round((h-hh)*60); return pad(hh)+':'+pad(mm);}
 
-  // ============================================================
-  // SUPABASE AUTH — login "vero" per utenti già migrati (con auth_id)
-  // ============================================================
   async function signInWithSupabaseAuth(email, password){
     const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
@@ -656,9 +624,6 @@ function copiaLink() {
     return slotMinutes <= nowMinutes + PAST_SLOT_MARGIN_MINUTES;
   }
 
-  // ============================================================
-  // RESTRIZIONE TENNIS/PADEL - MODIFICATO: ora controlla i flag per TUTTI gli utenti
-  // ============================================================
   function canBookField(field){
     if (!loggedUser) return false;
     if (field === 'tennis') return !!loggedUser.is_tennis_member;
@@ -673,9 +638,6 @@ function copiaLink() {
     return false;
   }
 
-  // ============================================================
-  // AVVISO SCADENZA ACCESSO OSPITE
-  // ============================================================
   function renderGuestExpiry(){
     const el = document.getElementById('guest-expiry');
     if (!loggedUser || loggedUser.tipo !== 'ospite' || !loggedUser.scadenza) {
@@ -701,9 +663,6 @@ function copiaLink() {
     el.style.display = 'block';
   }
 
-  // ============================================================
-  // MOSTRA SCADENZA TESSERA NEL BADGE UTENTE
-  // ============================================================
   function renderTesseratoExpiry() {
     const el = document.getElementById('tesserato-expiry');
     if (!el) return;
@@ -741,9 +700,6 @@ function copiaLink() {
     el.style.display = 'block';
   }
 
-  // ============================================================
-  // CANCELLAZIONE PRENOTAZIONI VECCHIE
-  // ============================================================
   async function deleteOldBookings() {
     const today = new Date();
     const cutoffDateObj = new Date(today);
@@ -768,18 +724,12 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // SETTAGGIO ACCENT COLOR
-  // ============================================================
   function setAccent(field){
     const f = FIELDS[field];
     document.documentElement.style.setProperty('--accent', getComputedStyle(document.documentElement).getPropertyValue(f.color));
     document.documentElement.style.setProperty('--accent-soft', getComputedStyle(document.documentElement).getPropertyValue(f.colorSoft));
   }
 
-  // ============================================================
-  // RENDER CALENDARIO
-  // ============================================================
   function renderFieldNote(){
     const note = currentField === 'tennis'
       ? 'Puoi prenotare slot da 1 ora. Basta anche solo il tuo nome (Allenamento), oppure aggiungi fino a 4 giocatori.'
@@ -835,9 +785,6 @@ function copiaLink() {
     updateBookingDots();
   }
 
-  // ============================================================
-  // LOAD MONTH DATES - MODIFICATO: restituisce Map con conteggi
-  // ============================================================
   async function loadMonthDates(field, year, month){
     const start = year+'-'+pad(month+1)+'-01';
     const nextMonth = new Date(year, month+1, 1);
@@ -849,7 +796,6 @@ function copiaLink() {
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if(!res.ok) return new Map();
       const rows = await res.json();
-      // Conta quante prenotazioni per ogni data
       const countMap = new Map();
       rows.forEach(r => {
         countMap.set(r.date, (countMap.get(r.date) || 0) + 1);
@@ -860,9 +806,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // UPDATE BOOKING DOTS - MODIFICATO: mostra il conteggio numerico
-  // ============================================================
   async function updateBookingDots(){
     const year = viewMonth.getFullYear(), month = viewMonth.getMonth();
     const bookingCounts = await loadMonthDates(currentField, year, month);
@@ -871,9 +814,7 @@ function copiaLink() {
       const count = bookingCounts.get(date) || 0;
       if(count > 0){
         cell.classList.add('has-booking');
-        // Mostra il numero nel pallino
         cell.setAttribute('data-count', count);
-        // Aggiungi il numero come badge
         let badge = cell.querySelector('.booking-count');
         if(!badge){
           badge = document.createElement('span');
@@ -890,9 +831,6 @@ function copiaLink() {
     });
   }
 
-  // ============================================================
-  // LOAD KEYBOX CODE
-  // ============================================================
   async function loadKeyboxCode(){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
@@ -908,9 +846,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // LOAD BOOKINGS
-  // ============================================================
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
@@ -942,9 +877,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // BUILD SLOTS
-  // ============================================================
   function buildSlots(field){
     const f = FIELDS[field];
     const slots = [];
@@ -955,9 +887,6 @@ function copiaLink() {
     return slots;
   }
 
-  // ============================================================
-  // FORMATTA NOMI (Allenamento / singolo vs / doppio vs)
-  // ============================================================
   function formatNamesDisplay(names, field){
     if(field === 'tennis' && names.length === 1) return names[0] + '<span class="match-type">Allenamento</span>';
     if(field === 'tennis' && names.length === 2) return names[0] + ' vs ' + names[1] + '<span class="match-type">Singolo</span>';
@@ -965,9 +894,6 @@ function copiaLink() {
     return names.join(', ');
   }
 
-  // ============================================================
-  // RENDER SLOTS
-  // ============================================================
   async function renderSlots(){
     const section = document.getElementById('slots-section');
     const title = document.getElementById('slots-title');
@@ -993,7 +919,6 @@ function copiaLink() {
         left.innerHTML = `<div class="time">${s.label}</div><div class="status">⏰ Orario già passato</div>`;
         row.appendChild(left);
       } else if (booking) {
-        // SLOT PRENOTATO
         const isTesserato = booking.tipo_prenotante === 'tesserato';
         row.className = 'slot booked ' + (isTesserato ? 'slot-tesserato' : 'slot-ospite');
         
@@ -1018,9 +943,7 @@ function copiaLink() {
         `;
         row.appendChild(left);
         
-        // PULSANTI - se adminMode è attivo e utente è admin, mostra due pulsanti
         if (adminMode && loggedUser && loggedUser.is_admin) {
-          // Pulsante cancellazione admin (ROSSO)
           const adminBtn = document.createElement('button');
           adminBtn.className = 'book-btn';
           adminBtn.style.background = '#B84B1E';
@@ -1030,14 +953,12 @@ function copiaLink() {
           adminBtn.addEventListener('click', ()=> doAdminCancel(booking.id, s.label));
           row.appendChild(adminBtn);
           
-          // Pulsante cancellazione normale (con codice)
           const normalBtn = document.createElement('button');
           normalBtn.className = 'book-btn cancel-btn';
           normalBtn.textContent = 'Cancella';
           normalBtn.addEventListener('click', ()=> openCancelModal(s, timeId, booking));
           row.appendChild(normalBtn);
         } else {
-          // Solo pulsante normale
           const btn = document.createElement('button');
           btn.className = 'book-btn cancel-btn';
           btn.textContent = 'Cancella';
@@ -1045,7 +966,6 @@ function copiaLink() {
           row.appendChild(btn);
         }
       } else {
-        // SLOT LIBERO
         row.className = 'slot available';
         const left = document.createElement('div');
         left.innerHTML = '<div class="time">' + s.label + '</div><div class="status">Libero</div>';
@@ -1067,9 +987,6 @@ function copiaLink() {
     });
   }
 
-  // ============================================================
-  // OPEN BOOKING MODAL
-  // ============================================================
   function openBookingModal(slot, timeId){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1116,9 +1033,6 @@ function copiaLink() {
     document.getElementById('btn-confirm').addEventListener('click', ()=> confirmBooking(timeId, requiredCount, nameCount));
   }
 
-  // ============================================================
-  // CONFIRM BOOKING
-  // ============================================================
   async function confirmBooking(timeId, requiredCount, nameCount){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1205,9 +1119,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // OPEN CANCEL MODAL
-  // ============================================================
   function openCancelModal(slot, timeId, booking){
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -1232,9 +1143,6 @@ function copiaLink() {
     document.getElementById('btn-confirm').addEventListener('click', ()=> doCancelBooking(timeId, booking));
   }
 
-  // ============================================================
-  // DO CANCEL BOOKING (con codice)
-  // ============================================================
   async function doCancelBooking(timeId, booking){
     const errorEl = document.getElementById('form-error');
     const typedCode = document.getElementById('cancel-code').value.trim();
@@ -1271,9 +1179,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // ADMIN CANCEL - Cancellazione senza codice
-  // ============================================================
   async function doAdminCancel(bookingId, slotLabel) {
     if (!confirm('⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n' + slotLabel)) {
       return;
@@ -1301,9 +1206,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // SETUP ADMIN TOGGLE
-  // ============================================================
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
@@ -1327,12 +1229,10 @@ function copiaLink() {
         renderSlots();
       };
       
-      // Pulsante gestione utenti
       usersBtn.onclick = function() {
         openUserManagement();
       };
 
-      // Pulsante gestione key box
       keyboxBtn.onclick = function() {
         openKeyboxManagement();
       };
@@ -1343,9 +1243,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // SHOW CODE MODAL
-  // ============================================================
   function showCodeModal(code){
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -1363,9 +1260,6 @@ function copiaLink() {
     document.getElementById('btn-code-ok').addEventListener('click', closeModal);
   }
 
-  // ============================================================
-  // SHOW TOAST
-  // ============================================================
   function showToast(msg){
     const root = document.getElementById('toast-root');
     root.innerHTML = '<div class="toast">' + msg + '</div>';
@@ -1374,9 +1268,6 @@ function copiaLink() {
 
   function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
 
-  // ============================================================
-  // SWITCH FIELD
-  // ============================================================
   function switchField(field){
     currentField = field;
     document.getElementById('tab-tennis').classList.toggle('active', field==='tennis');
@@ -1391,9 +1282,6 @@ function copiaLink() {
     updateBookingDots();
   }
 
-  // ============================================================
-  // AGGIORNA SCHEMA CAMPO CON DISSOLVENZA
-  // ============================================================
   function updateCourtImage(field){
     const img = document.getElementById('court-image');
     if (!img) return;
@@ -1408,10 +1296,8 @@ function copiaLink() {
   }
 
   // ============================================================
-  // GESTIONE UTENTI - ADMIN
+  // GESTIONE UTENTI - COMPLETA CON MODIFICA SPORT, SCADENZA, STATO
   // ============================================================
-  let currentUserTab = 'tesserati';
-
   async function openKeyboxManagement() {
     const root = document.getElementById('modal-root');
 
@@ -1558,7 +1444,6 @@ function copiaLink() {
       </div>
     `;
     
-    // Eventi tabs
     document.getElementById('tab-tesserati').addEventListener('click', function() {
       switchUserTab('tesserati');
     });
@@ -1569,7 +1454,6 @@ function copiaLink() {
       switchUserTab('crea');
     });
     
-    // Evento cambio tipo per form creazione
     document.getElementById('create-tipo').addEventListener('change', function() {
       toggleCreateFields();
     });
@@ -1594,7 +1478,6 @@ function copiaLink() {
   function switchUserTab(tab) {
     currentUserTab = tab;
     
-    // Aggiorna tabs
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
       btn.classList.remove('active');
     });
@@ -1614,11 +1497,7 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // TOGGLE CREATE FIELDS - MODIFICATO: campo Sport sempre visibile
-  // ============================================================
   function toggleCreateFields() {
-    const tipo = document.getElementById('create-tipo').value;
     document.getElementById('create-sport-field').style.display = 'block';
   }
 
@@ -1656,11 +1535,11 @@ function copiaLink() {
             <td><strong>${u.codice}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
             <td>${sportLabel}</td>
-            <td><span class="scadenza-value" data-id="${u.id}" data-table="Tesserati">${scadenza}</span></td>
-            <td><span class="stato-value" data-id="${u.id}" data-table="Tesserati">${attivo}</span></td>
+            <td>${scadenza}</td>
+            <td>${attivo}</td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('Tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
+                <button class="btn-edit" onclick="editUser('Tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},'${u.is_tennis_member ? 'tennis' : ''}','${u.is_padel_member ? 'padel' : ''}')">✏️</button>
                 <button class="btn-delete" onclick="deleteUser('Tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
@@ -1671,7 +1550,6 @@ function copiaLink() {
         container.innerHTML = html;
         
       } else {
-        // Ospiti
         const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
@@ -1698,11 +1576,11 @@ function copiaLink() {
             <td><strong>${u.codice}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
             <td>${sportLabel}</td>
-            <td><span class="scadenza-value" data-id="${u.id}" data-table="Ospiti">${scadenza}</span></td>
-            <td><span class="stato-value" data-id="${u.id}" data-table="Ospiti">${attivo}</span></td>
+            <td>${scadenza}</td>
+            <td>${attivo}</td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('Ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
+                <button class="btn-edit" onclick="editUser('Ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},'${u.is_tennis_member ? 'tennis' : ''}','${u.is_padel_member ? 'padel' : ''}')">✏️</button>
                 <button class="btn-delete" onclick="deleteUser('Ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
@@ -1717,9 +1595,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // GENERAZIONE CODICE UNIVOCO - DIRETTAMENTE IN SUPABASE
-  // ============================================================
   async function generateUniqueCodeFrontend(tipo, tentativi = 0) {
     if (tentativi >= 20) {
       throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
@@ -1750,9 +1625,6 @@ function copiaLink() {
     return codice;
   }
 
-  // ============================================================
-  // HANDLE CREATE USER - VERSIONE FRONTEND COMPLETA (NON USA IL BACKEND)
-  // ============================================================
   async function handleCreateUser() {
     const errorEl = document.getElementById('create-error');
     const tipo = document.getElementById('create-tipo').value;
@@ -1763,7 +1635,6 @@ function copiaLink() {
     const attivo = document.getElementById('create-attivo').value === 'true';
     const saveBtn = document.getElementById('create-save');
     
-    // VALIDA INPUT
     if (!nome || !cognome) {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
@@ -1774,11 +1645,9 @@ function copiaLink() {
     errorEl.textContent = '';
     
     try {
-      // 1. GENERA CODICE UNIVOCO
       const codice = await generateUniqueCodeFrontend(tipo);
       console.log('✅ Codice generato:', codice);
       
-      // 2. PREPARA PAYLOAD
       let insertPayload;
       if (tipo === 'tesserato') {
         insertPayload = {
@@ -1792,7 +1661,6 @@ function copiaLink() {
           attivo: attivo
         };
       } else {
-        // OSPITE
         insertPayload = {
           nome,
           cognome,
@@ -1806,7 +1674,6 @@ function copiaLink() {
       
       console.log('📝 Creazione utente:', insertPayload);
       
-      // 3. INSERISCI IN SUPABASE
       const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
@@ -1829,7 +1696,6 @@ function copiaLink() {
         
         console.error('❌ Errore inserimento:', errorDetail);
         
-        // Se il codice è duplicato, ritenta
         if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
           console.log('⚠️ Duplicato rilevato, ritento...');
           const newCodice = await generateUniqueCodeFrontend(tipo);
@@ -1851,7 +1717,6 @@ function copiaLink() {
             showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + newCodice);
             errorEl.textContent = '';
             
-            // Reset form
             document.getElementById('create-nome').value = '';
             document.getElementById('create-cognome').value = '';
             document.getElementById('create-scadenza').value = '';
@@ -1881,7 +1746,6 @@ function copiaLink() {
       showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + codice);
       errorEl.textContent = '';
       
-      // Reset form
       document.getElementById('create-nome').value = '';
       document.getElementById('create-cognome').value = '';
       document.getElementById('create-scadenza').value = '';
@@ -1899,20 +1763,47 @@ function copiaLink() {
   }
 
   // ============================================================
-  // EDIT USER - MODIFICA SCADENZA E STATO
+  // EDIT USER - MODIFICA SPORT, SCADENZA E STATO
   // ============================================================
-  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente) {
+  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, sportTennis, sportPadel) {
     const root = document.getElementById('modal-root');
     
-    // Formatta la data per il campo input (YYYY-MM-DD)
+    // Determina lo sport attuale
+    let sportCorrente = 'both';
+    if (sportTennis === 'true' && sportPadel === 'true') sportCorrente = 'both';
+    else if (sportTennis === 'true') sportCorrente = 'tennis';
+    else if (sportPadel === 'true') sportCorrente = 'padel';
+    // Se i valori arrivano come stringhe vuote o undefined
+    if (sportTennis && sportTennis !== 'true' && sportPadel && sportPadel !== 'true') {
+      // Se sono già stati passati come valori diretti
+      if (sportTennis === 'tennis') sportCorrente = 'tennis';
+      else if (sportPadel === 'padel') sportCorrente = 'padel';
+      else if (sportTennis === 'tennis' && sportPadel === 'padel') sportCorrente = 'both';
+    }
+    // Se sono stati passati come booleani
+    if (typeof sportTennis === 'boolean' && typeof sportPadel === 'boolean') {
+      if (sportTennis && sportPadel) sportCorrente = 'both';
+      else if (sportTennis) sportCorrente = 'tennis';
+      else if (sportPadel) sportCorrente = 'padel';
+    }
+    
     const dataInput = scadenzaCorrente || '';
+    const attivoChecked = attivoCorrente === true || attivoCorrente === 'true';
     
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
           <h2>✏️ Modifica ${nome}</h2>
-          <p class="modal-subtitle">Aggiorna scadenza e stato dell'utente.</p>
+          <p class="modal-subtitle">Aggiorna sport, scadenza e stato dell'utente.</p>
           
+          <div class="name-field">
+            <label for="edit-sport">Sport</label>
+            <select id="edit-sport">
+              <option value="both" ${sportCorrente === 'both' ? 'selected' : ''}>Tennis + Padel</option>
+              <option value="tennis" ${sportCorrente === 'tennis' ? 'selected' : ''}>Tennis</option>
+              <option value="padel" ${sportCorrente === 'padel' ? 'selected' : ''}>Padel</option>
+            </select>
+          </div>
           <div class="name-field">
             <label for="edit-scadenza">Scadenza</label>
             <input id="edit-scadenza" type="date" value="${dataInput}" />
@@ -1920,8 +1811,8 @@ function copiaLink() {
           <div class="name-field">
             <label for="edit-attivo">Stato</label>
             <select id="edit-attivo">
-              <option value="true" ${attivoCorrente ? 'selected' : ''}>✅ Attivo</option>
-              <option value="false" ${!attivoCorrente ? 'selected' : ''}>❌ Inattivo</option>
+              <option value="true" ${attivoChecked ? 'selected' : ''}>✅ Attivo</option>
+              <option value="false" ${!attivoChecked ? 'selected' : ''}>❌ Inattivo</option>
             </select>
           </div>
           
@@ -1941,6 +1832,7 @@ function copiaLink() {
     
     document.getElementById('edit-save').addEventListener('click', async function() {
       const errorEl = document.getElementById('edit-error');
+      const sport = document.getElementById('edit-sport').value;
       const nuovaScadenza = document.getElementById('edit-scadenza').value || null;
       const nuovoAttivo = document.getElementById('edit-attivo').value === 'true';
       const saveBtn = document.getElementById('edit-save');
@@ -1951,9 +1843,12 @@ function copiaLink() {
       
       try {
         const tableName = table;
-        const payload = {};
-        if (nuovaScadenza !== undefined) payload.scadenza = nuovaScadenza;
-        if (nuovoAttivo !== undefined) payload.attivo = nuovoAttivo;
+        const payload = {
+          is_tennis_member: sport === 'tennis' || sport === 'both',
+          is_padel_member: sport === 'padel' || sport === 'both',
+          scadenza: nuovaScadenza,
+          attivo: nuovoAttivo
+        };
         
         const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
           method: 'PATCH',
@@ -2027,7 +1922,7 @@ function copiaLink() {
   };
 
   // ============================================================
-  // LOGIN - VERSIONE CORRETTA E FUNZIONANTE (con is_tennis_member e is_padel_member per ospiti)
+  // LOGIN
   // ============================================================
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
@@ -2064,7 +1959,6 @@ function copiaLink() {
       }
       
       console.log('🔍 Cerco utente con codice:', codice);
-      console.log('📡 URL:', url);
       
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       
@@ -2081,9 +1975,6 @@ function copiaLink() {
       
       const utente = data[0];
 
-      // Se il tesserato è già stato migrato a Supabase Auth (ha auth_id),
-      // proviamo un vero login con email fittizia + password = codice.
-      // Se non è migrato, non succede nulla: resta sul vecchio sistema.
       let accessToken = null;
       if (utente.auth_id) {
         try {
@@ -2111,7 +2002,7 @@ function copiaLink() {
         accessToken: accessToken
       };
       
-      console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome, 'Codice:', loggedUser.codice);
+      console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
       
       errorEl.textContent = '';
       loginBtn.disabled = false;
@@ -2145,9 +2036,6 @@ function copiaLink() {
     }
   }
 
-  // ============================================================
-  // LOGOUT
-  // ============================================================
   function handleLogout() {
     loggedUser = null;
     loginSection.style.display = 'block';
@@ -2160,9 +2048,6 @@ function copiaLink() {
     document.getElementById('slots-section').style.display = 'none';
   }
 
-  // ============================================================
-  // EVENT LISTENERS
-  // ============================================================
   document.getElementById('login-btn').addEventListener('click', handleLogin);
   document.getElementById('login-codice').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') handleLogin();
@@ -2184,9 +2069,6 @@ function copiaLink() {
     renderCalendar();
   });
 
-  // ============================================================
-  // SWIPE LATERALE PER CAMBIO MESE
-  // ============================================================
   (function setupCalendarSwipe(){
     const calGrid = document.getElementById('cal-grid');
     let touchStartX = 0, touchStartY = 0;
@@ -2199,13 +2081,11 @@ function copiaLink() {
       const dy = e.changedTouches[0].clientY - touchStartY;
       if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
       if (dx < 0) {
-        // swipe verso sinistra -> mese successivo
         if (!(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth())) {
           viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
           renderCalendar();
         }
       } else {
-        // swipe verso destra -> mese precedente
         if (!(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth())) {
           viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
           renderCalendar();
