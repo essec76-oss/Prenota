@@ -1533,13 +1533,16 @@ function copiaLink() {
                 <option value="padel">Padel</option>
               </select>
             </div>
-            <div class="name-field" id="create-telefono-field" style="display:none;">
-              <label for="create-telefono">Telefono *</label>
-              <input id="create-telefono" type="text" placeholder="Numero di telefono" />
-            </div>
             <div class="name-field">
               <label for="create-scadenza">Scadenza (lasciare vuoto per default)</label>
               <input id="create-scadenza" type="date" />
+            </div>
+            <div class="name-field">
+              <label for="create-attivo">Attivo</label>
+              <select id="create-attivo">
+                <option value="true">✅ Attivo</option>
+                <option value="false">❌ Inattivo</option>
+              </select>
             </div>
             <div class="form-error" id="create-error"></div>
             <div class="modal-actions">
@@ -1617,7 +1620,6 @@ function copiaLink() {
   function toggleCreateFields() {
     const tipo = document.getElementById('create-tipo').value;
     document.getElementById('create-sport-field').style.display = 'block';
-    document.getElementById('create-telefono-field').style.display = (tipo === 'ospite') ? 'block' : 'none';
   }
 
   async function loadUserList(tipo) {
@@ -1628,7 +1630,7 @@ function copiaLink() {
       let data = [];
       
       if (tipo === 'tesserati') {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza&order=cognome.asc', {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento tesserati');
@@ -1640,7 +1642,7 @@ function copiaLink() {
         }
         
         let html = '<div class="user-list-section-title">⭐ Tesserati</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Azioni</th></tr></thead><tbody>';
+        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
         
         data.forEach(u => {
           const sports = [];
@@ -1648,14 +1650,17 @@ function copiaLink() {
           if (u.is_padel_member) sports.push('🏸');
           const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
+          const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           
           html += `<tr>
             <td><strong>${u.codice}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
             <td>${sportLabel}</td>
-            <td>${scadenza}</td>
+            <td><span class="scadenza-value" data-id="${u.id}" data-table="tesserati">${scadenza}</span></td>
+            <td><span class="stato-value" data-id="${u.id}" data-table="tesserati">${attivo}</span></td>
             <td>
               <div class="user-actions">
+                <button class="btn-edit" onclick="editUser('tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
                 <button class="btn-delete" onclick="deleteUser('tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
@@ -1667,7 +1672,7 @@ function copiaLink() {
         
       } else {
         // Ospiti
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento ospiti');
@@ -1679,7 +1684,7 @@ function copiaLink() {
         }
         
         let html = '<div class="user-list-section-title">👤 Ospiti</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Telefono</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
         
         data.forEach(u => {
           const sports = [];
@@ -1687,17 +1692,17 @@ function copiaLink() {
           if (u.is_padel_member) sports.push('🏸');
           const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
-          const attivo = u.attivo ? '✅ Attivo' : '❌ Inattivo';
+          const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           
           html += `<tr>
-            <td><strong>${u.codice || 'N/D'}</strong></td>
+            <td><strong>${u.codice}</strong></td>
             <td>${u.nome} ${u.cognome}</td>
             <td>${sportLabel}</td>
-            <td>${u.telefono || 'N/D'}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
+            <td><span class="scadenza-value" data-id="${u.id}" data-table="ospiti">${scadenza}</span></td>
+            <td><span class="stato-value" data-id="${u.id}" data-table="ospiti">${attivo}</span></td>
             <td>
               <div class="user-actions">
+                <button class="btn-edit" onclick="editUser('ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true})">✏️</button>
                 <button class="btn-delete" onclick="deleteUser('ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
               </div>
             </td>
@@ -1723,7 +1728,7 @@ function copiaLink() {
     const numero = String(Math.floor(1000 + Math.random() * 9000));
     const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
     
-    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+    const table = tipo === 'tesserato' ? 'tesserati' : 'ospiti';
     const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
       headers: { 
         apikey: SUPABASE_KEY,
@@ -1755,17 +1760,12 @@ function copiaLink() {
     const cognome = document.getElementById('create-cognome').value.trim();
     const sport = document.getElementById('create-sport').value;
     const scadenza = document.getElementById('create-scadenza').value || null;
-    const telefono = document.getElementById('create-telefono').value.trim();
+    const attivo = document.getElementById('create-attivo').value === 'true';
     const saveBtn = document.getElementById('create-save');
     
     // VALIDA INPUT
     if (!nome || !cognome) {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
-      return;
-    }
-    
-    if (tipo === 'ospite' && !telefono) {
-      errorEl.textContent = 'Il telefono è obbligatorio per gli ospiti.';
       return;
     }
     
@@ -1788,7 +1788,8 @@ function copiaLink() {
           is_tennis_member: sport === 'tennis' || sport === 'both',
           is_padel_member: sport === 'padel' || sport === 'both',
           is_admin: false,
-          scadenza: scadenza || null
+          scadenza: scadenza || null,
+          attivo: attivo
         };
       } else {
         // OSPITE
@@ -1796,10 +1797,9 @@ function copiaLink() {
           nome,
           cognome,
           codice,
-          telefono: telefono,
           is_tennis_member: sport === 'tennis' || sport === 'both',
           is_padel_member: sport === 'padel' || sport === 'both',
-          attivo: true,
+          attivo: attivo,
           scadenza: scadenza || null
         };
       }
@@ -1807,7 +1807,7 @@ function copiaLink() {
       console.log('📝 Creazione utente:', insertPayload);
       
       // 3. INSERISCI IN SUPABASE
-      const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+      const table = tipo === 'tesserato' ? 'tesserati' : 'ospiti';
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
         headers: {
@@ -1854,8 +1854,8 @@ function copiaLink() {
             // Reset form
             document.getElementById('create-nome').value = '';
             document.getElementById('create-cognome').value = '';
-            document.getElementById('create-telefono').value = '';
             document.getElementById('create-scadenza').value = '';
+            document.getElementById('create-attivo').value = 'true';
             
             await loadUserList(currentUserTab);
             saveBtn.disabled = false;
@@ -1884,8 +1884,8 @@ function copiaLink() {
       // Reset form
       document.getElementById('create-nome').value = '';
       document.getElementById('create-cognome').value = '';
-      document.getElementById('create-telefono').value = '';
       document.getElementById('create-scadenza').value = '';
+      document.getElementById('create-attivo').value = 'true';
       
       await loadUserList(currentUserTab);
       
@@ -1898,25 +1898,130 @@ function copiaLink() {
     saveBtn.textContent = '💾 Crea utente';
   }
 
-  // Funzioni globali per gli onclick dei pulsanti delete
+  // ============================================================
+  // EDIT USER - MODIFICA SCADENZA E STATO
+  // ============================================================
+  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente) {
+    const root = document.getElementById('modal-root');
+    
+    // Formatta la data per il campo input (YYYY-MM-DD)
+    const dataInput = scadenzaCorrente || '';
+    
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
+          <h2>✏️ Modifica ${nome}</h2>
+          <p class="modal-subtitle">Aggiorna scadenza e stato dell'utente.</p>
+          
+          <div class="name-field">
+            <label for="edit-scadenza">Scadenza</label>
+            <input id="edit-scadenza" type="date" value="${dataInput}" />
+          </div>
+          <div class="name-field">
+            <label for="edit-attivo">Stato</label>
+            <select id="edit-attivo">
+              <option value="true" ${attivoCorrente ? 'selected' : ''}>✅ Attivo</option>
+              <option value="false" ${!attivoCorrente ? 'selected' : ''}>❌ Inattivo</option>
+            </select>
+          </div>
+          
+          <div class="form-error" id="edit-error"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="edit-cancel">Annulla</button>
+            <button class="btn-confirm" id="edit-save">💾 Salva modifiche</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('edit-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if(e.target.id === 'overlay') closeModal();
+    });
+    
+    document.getElementById('edit-save').addEventListener('click', async function() {
+      const errorEl = document.getElementById('edit-error');
+      const nuovaScadenza = document.getElementById('edit-scadenza').value || null;
+      const nuovoAttivo = document.getElementById('edit-attivo').value === 'true';
+      const saveBtn = document.getElementById('edit-save');
+      
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Salvo...';
+      errorEl.textContent = '';
+      
+      try {
+        const tableName = table === 'tesserati' ? 'tesserati' : 'ospiti';
+        const payload = {};
+        if (nuovaScadenza !== undefined) payload.scadenza = nuovaScadenza;
+        if (nuovoAttivo !== undefined) payload.attivo = nuovoAttivo;
+        
+        const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
+          method: 'PATCH',
+          headers: {
+            apikey: SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          let errorMsg = '';
+          try {
+            const errBody = await res.json();
+            errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
+          } catch(_) {
+            errorMsg = res.status + ' ' + res.statusText;
+          }
+          throw new Error(errorMsg);
+        }
+        
+        closeModal();
+        showToast('✅ Modifiche salvate per ' + nome);
+        await loadUserList(currentUserTab);
+        
+      } catch(e) {
+        errorEl.textContent = '❌ Errore: ' + e.message;
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Salva modifiche';
+      }
+    });
+  };
+
+  // ============================================================
+  // DELETE USER - CORRETTO
+  // ============================================================
   window.deleteUser = async function(table, id, nome) {
     if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
     
     try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + table.charAt(0).toUpperCase() + table.slice(1) + '?id=eq.' + id, {
+      const tableName = table.toLowerCase();
+      
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
         headers: {
           apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
           Prefer: 'return=minimal'
         }
       });
       
-      if (!res.ok) throw new Error('Errore eliminazione');
+      if (!res.ok) {
+        let errorMsg = '';
+        try {
+          const errBody = await res.json();
+          errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
+        } catch(_) {
+          errorMsg = res.status + ' ' + res.statusText;
+        }
+        throw new Error(errorMsg);
+      }
       
       showToast('✅ ' + nome + ' eliminato con successo');
       await loadUserList(currentUserTab);
       
     } catch(e) {
+      console.error('❌ Errore eliminazione:', e);
       showToast('❌ Errore: ' + e.message);
     }
   };
@@ -1948,11 +2053,11 @@ function copiaLink() {
       
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id'
+        url = SUPABASE_URL + '/rest/v1/tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,telefono,scadenza,is_tennis_member,is_padel_member'
+        url = SUPABASE_URL + '/rest/v1/ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
           + '&codice=eq.' + encodeURIComponent(codice)
           + '&attivo=eq.true'
           + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
