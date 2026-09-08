@@ -1230,10 +1230,18 @@ function copiaLink() {
       };
       
       usersBtn.onclick = function() {
+        if (!adminMode) {
+          showToast('🔑 Attiva prima la modalità Admin (checkbox)');
+          return;
+        }
         openUserManagement();
       };
 
       keyboxBtn.onclick = function() {
+        if (!adminMode) {
+          showToast('🔑 Attiva prima la modalità Admin (checkbox)');
+          return;
+        }
         openKeyboxManagement();
       };
     } else {
@@ -1340,6 +1348,10 @@ function copiaLink() {
     }
     if (!loggedUser || !loggedUser.accessToken) {
       errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare i codici. Rifai il login.';
+      return;
+    }
+    if (!adminMode) {
+      errorEl.textContent = '❌ Attiva prima la modalità Admin (checkbox).';
       return;
     }
 
@@ -1644,6 +1656,10 @@ function copiaLink() {
       errorEl.textContent = '❌ Solo un admin con login sicuro attivo può creare utenti. Rifai il login.';
       return;
     }
+    if (!adminMode) {
+      errorEl.textContent = '❌ Attiva prima la modalità Admin (checkbox).';
+      return;
+    }
     
     saveBtn.disabled = true;
     saveBtn.textContent = 'Salvo...';
@@ -1829,6 +1845,10 @@ function copiaLink() {
         errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare gli utenti. Rifai il login.';
         return;
       }
+      if (!adminMode) {
+        errorEl.textContent = '❌ Attiva prima la modalità Admin (checkbox).';
+        return;
+      }
       
       saveBtn.disabled = true;
       saveBtn.textContent = 'Salvo...';
@@ -1886,6 +1906,10 @@ function copiaLink() {
     
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
+      return;
+    }
+    if (!adminMode) {
+      showToast('❌ Attiva prima la modalità Admin (checkbox).');
       return;
     }
     
