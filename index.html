@@ -284,8 +284,7 @@
   .modal .modal-subtitle{color:var(--ink-soft);font-size:13px;margin-bottom:16px;}
   .name-field{margin-bottom:12px;}
   .name-field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px;}
-  .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(
-      .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(--surface);}
+  .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(--surface);}
   .name-field input:focus-visible,.name-field select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .modal-actions{display:flex;gap:10px;margin-top:18px;}
   .modal-actions button{flex:1;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--line);}
@@ -561,30 +560,11 @@
       <button class="btn-confirm" id="login-btn">🔓 Accedi</button>
     </div>
 
-    <!-- MODAL 2FA (nascosto inizialmente) -->
-    <div id="2fa-modal" style="display:none;">
-      <div class="login-box" style="margin-top:20px;border:2px solid var(--accent);">
-        <h3 style="margin:0 0 12px;font-family:'Fraunces',serif;font-size:18px;">🔐 Verifica 2FA</h3>
-        <p style="color:var(--ink-soft);font-size:14px;margin:0 0 16px;">Inserisci il codice a 6 cifre da Proton Authenticator</p>
-        <div class="name-field">
-          <label for="2fa-code">Codice 2FA</label>
-          <input id="2fa-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" />
-        </div>
-        <p style="color:var(--ink-soft);font-size:12px;margin:8px 0;">O usa un backup code (8 caratteri)</p>
-        <div class="form-error" id="2fa-error"></div>
-        <div style="display:flex;gap:10px;margin-top:12px;">
-          <button class="btn-cancel" id="2fa-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Indietro</button>
-          <button class="btn-confirm" id="2fa-verify" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Verifica</button>
-        </div>
-      </div>
-    </div>
-
     <div class="qr-share-box">
       <p class="qr-share-title">Condividi il link di prenotazione</p>
       <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
       <button class="btn-copy-link" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
-      <div id="messaggio-copia"
-              <div id="messaggio-copia" class="qr-copy-msg"></div>
+      <div id="messaggio-copia" class="qr-copy-msg"></div>
     </div>
 
     <div class="guest-register-box">
@@ -681,7 +661,6 @@ function copiaLink() {
 
   let currentField = 'tennis';
   let loggedUser = null;
-  let pendingLogin2FA = null;
   let keyboxCodeTennis = null;
   let keyboxCodePadel = null;
   const today = new Date(); today.setHours(0,0,0,0);
@@ -873,8 +852,6 @@ function copiaLink() {
   }
 
   function renderDow(){
-    document.getElementById('cal-dow').innerHTML = DOW.map(d=>`<div class
-      function renderDow(){
     document.getElementById('cal-dow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   }
 
@@ -1165,8 +1142,7 @@ function copiaLink() {
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
           <h2 id="modal-title">${f.label}</h2>
           <div class="meta">${new Date(selectedDate+'T00:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'})} · ${slot.label}</div>
-          <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;
-                    <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
+          <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
             👤 Stai prenotando come: <strong>${escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome)}</strong> 
             ${loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}
           </div>
@@ -1407,13 +1383,15 @@ function copiaLink() {
       adminMode = false;
       
       toggle.onchange = function() {
-        adminMode = this.checked;
-        if (adminMode) {
-          showToast('🔑 Modalità admin attivata');
+        if (this.checked) {
+          // Richiedi verifica 2FA prima di abilitare admin mode
+          openAdmin2FAVerification();
+          this.checked = false;
         } else {
+          adminMode = false;
           showToast('🔑 Modalità admin disattivata');
+          renderSlots();
         }
-        renderSlots();
       };
       
       usersBtn.onclick = function() {
@@ -1447,22 +1425,80 @@ function copiaLink() {
     }
   }
 
-  function setupAdmin2FAPanel() {
-    const adminBtn = document.getElementById('admin-2fa-btn');
-    if (!adminBtn) return;
+  async function openAdmin2FAVerification() {
+    const root = document.getElementById('modal-root');
     
-    if (loggedUser && loggedUser.is_admin) {
-      adminBtn.style.display = 'inline-block';
-      adminBtn.onclick = function() {
-        if (!adminMode) {
-          showToast('🔑 Attiva prima la modalità Admin (checkbox)');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
+          <h2>🔐 Verifica Admin</h2>
+          <p class="modal-subtitle">Inserisci il codice 2FA per abilitare la modalità admin.</p>
+          
+          <div class="name-field">
+            <label for="admin-verify-code">Codice 2FA (6 cifre)</label>
+            <input id="admin-verify-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" />
+          </div>
+          <div class="form-error" id="admin-verify-error"></div>
+          
+          <div class="modal-actions">
+            <button class="btn-cancel" id="admin-verify-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Annulla</button>
+            <button class="btn-confirm" id="admin-verify-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Abilita Admin</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('admin-verify-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if(e.target.id === 'overlay') closeModal();
+    });
+
+    document.getElementById('admin-verify-confirm').addEventListener('click', async function() {
+      const code = document.getElementById('admin-verify-code').value.trim();
+      const errorEl = document.getElementById('admin-verify-error');
+      const confirmBtn = document.getElementById('admin-verify-confirm');
+
+      if (!code || code.length !== 6) {
+        errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Verifico...';
+      errorEl.textContent = '';
+
+      try {
+        const res = await fetch('/api/2fa-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: loggedUser.id,
+            tipo: loggedUser.tipo,
+            code: code
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.authenticated) {
+          errorEl.textContent = data.error || '❌ Codice 2FA non valido';
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Abilita Admin';
           return;
         }
-        open2FAManagement();
-      };
-    } else {
-      adminBtn.style.display = 'none';
-    }
+
+        adminMode = true;
+        closeModal();
+        showToast('🔑 Modalità admin attivata (verificato con 2FA)');
+        renderSlots();
+
+      } catch(e) {
+        errorEl.textContent = 'Errore di connessione';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Abilita Admin';
+        console.error('❌ Errore:', e);
+      }
+    });
   }
 
   async function open2FAManagement() {
@@ -1495,18 +1531,16 @@ function copiaLink() {
   async function load2FAStatus() {
     try {
       const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-      const { data: user, error } = await supabase
-        .from(table)
-        .select('totp_enabled')
-        .eq('id', loggedUser.id)
-        .single();
+      const { data: user, error } = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
+        headers: { apikey: SUPABASE_KEY }
+      }).then(r => r.json()).then(data => ({ data: data[0], error: null })).catch(e => ({ data: null, error: e }));
 
-      if (error) throw error;
+      if (error || !user) throw error || new Error('Utente non trovato');
 
       const statusContainer = document.getElementById('2fa-status-container');
       const setupContainer = document.getElementById('2fa-setup-container');
 
-      if (user && user.totp_enabled) {
+      if (user.totp_enabled) {
         statusContainer.innerHTML = `
           <div style="background:#D9E9E1;border:1px solid #2B6E5A;border-radius:8px;padding:14px;margin-bottom:16px;">
             <p style="margin:0;color:#2B6E5A;font-weight:600;">✅ 2FA Attivo</p>
@@ -1519,8 +1553,7 @@ function copiaLink() {
         document.getElementById('2fa-disable-btn').addEventListener('click', open2FADisableModal);
       } else {
         statusContainer.innerHTML = `
-          <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:
-                    <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:14px;margin-bottom:16px;">
+          <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:14px;margin-bottom:16px;">
             <p style="margin:0;color:#8a6a1a;font-weight:600;">⚠️ 2FA Non Attivo</p>
             <p style="margin:4px 0 0;font-size:13px;color:#8a6a1a;">Attiva l'autenticazione a due fattori per proteggere il tuo account admin.</p>
           </div>
@@ -2373,8 +2406,7 @@ function copiaLink() {
       if (!res.ok) {
         let errorMsg = '';
         try {
-          const errBody
-                    const errBody = await res.json();
+          const errBody = await res.json();
           errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
         } catch(_) {
           errorMsg = res.status + ' ' + res.statusText;
@@ -2400,7 +2432,8 @@ function copiaLink() {
           <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
           <div class="name-field">
             <label for="guest-nome">Nome *</label>
-            <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
+            <input id
+                        <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
           </div>
           <div class="name-field">
             <label for="guest-cognome">Cognome *</label>
@@ -2548,7 +2581,11 @@ function copiaLink() {
 
       if (utente.is_admin && utente.totp_enabled) {
         console.log('🔐 Admin richiede 2FA');
-        pendingLogin2FA = {
+        
+        loginSection.style.display = 'none';
+        bookingSection.style.display = 'block';
+        
+        loggedUser = {
           id: utente.id,
           nome: utente.nome,
           cognome: utente.cognome,
@@ -2558,14 +2595,26 @@ function copiaLink() {
           is_padel_member: utente.is_padel_member || false,
           is_admin: utente.is_admin || false,
           scadenza: utente.scadenza || null,
-          auth_id: utente.auth_id
+          authenticated: false,
+          accessToken: null
         };
+
+        const tipoLabel = loggedUser.tipo === 'tesserato' 
+          ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
+          : '<span class="badge-ospite">Ospite</span>';
+        document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
+        document.getElementById('user-badge').innerHTML = tipoLabel;
+        renderGuestExpiry();
+        setupAdminToggle();
+        renderTesseratoExpiry();
         
-        document.getElementById('login-box').style.display = 'none';
-        document.getElementById('2fa-modal').style.display = 'block';
-        document.getElementById('2fa-code').value = '';
-        document.getElementById('2fa-error').textContent = '';
-        document.getElementById('2fa-code').focus();
+        setAccent('tennis');
+        renderFieldNote();
+        renderDow();
+        renderCalendar();
+        deleteOldBookings();
+
+        showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
         errorEl.textContent = '';
         loginBtn.disabled = false;
         return;
@@ -2578,68 +2627,6 @@ function copiaLink() {
       loginBtn.disabled = false;
       console.error('❌ Errore:', e);
     }
-  }
-
-  async function verify2FA() {
-    if (!pendingLogin2FA) {
-      showToast('❌ Sessione scaduta, riprova il login');
-      return;
-    }
-
-    const code = document.getElementById('2fa-code').value.trim();
-    const errorEl = document.getElementById('2fa-error');
-    const verifyBtn = document.getElementById('2fa-verify');
-
-    if (!code || code.length < 6) {
-      errorEl.textContent = 'Inserisci un codice valido (6 cifre o 8 caratteri backup)';
-      return;
-    }
-
-    verifyBtn.disabled = true;
-    verifyBtn.textContent = 'Verifica...';
-    errorEl.textContent = '';
-
-    try {
-      const res = await fetch('/api/2fa-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: pendingLogin2FA.id,
-          tipo: pendingLogin2FA.tipo,
-          code: code
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.authenticated) {
-        errorEl.textContent = data.error || '❌ Codice 2FA non valido';
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verifica';
-        return;
-      }
-
-      if (data.warning) {
-        showToast('⚠️ ' + data.warning);
-      }
-
-      await completeLogin(pendingLogin2FA, pendingLogin2FA.tipo);
-      pendingLogin2FA = null;
-
-    } catch(e) {
-      errorEl.textContent = 'Errore di connessione';
-      verifyBtn.disabled = false;
-      verifyBtn.textContent = 'Verifica';
-      console.error('❌ Errore 2FA:', e);
-    }
-  }
-
-  function cancel2FA() {
-    document.getElementById('2fa-modal').style.display = 'none';
-    document.getElementById('login-box').style.display = 'block';
-    document.getElementById('login-codice').value = '';
-    document.getElementById('login-error').textContent = '';
-    pendingLogin2FA = null;
   }
 
   async function completeLogin(utente, tipo) {
@@ -2675,7 +2662,6 @@ function copiaLink() {
     
     loginSection.style.display = 'none';
     bookingSection.style.display = 'block';
-    document.getElementById('2fa-modal').style.display = 'none';
     
     const tipoLabel = loggedUser.tipo === 'tesserato' 
       ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
@@ -2684,7 +2670,6 @@ function copiaLink() {
     document.getElementById('user-badge').innerHTML = tipoLabel;
     renderGuestExpiry();
     setupAdminToggle();
-    setupAdmin2FAPanel();
     renderTesseratoExpiry();
     
     setAccent('tennis');
@@ -2700,6 +2685,7 @@ function copiaLink() {
 
   function handleLogout() {
     loggedUser = null;
+    adminMode = false;
     loginSection.style.display = 'block';
     bookingSection.style.display = 'none';
     document.getElementById('login-codice').value = '';
@@ -2762,12 +2748,6 @@ function copiaLink() {
     showToast('🧹 Prenotazioni vecchie cancellate!');
     updateBookingDots();
     renderSlots();
-  });
-
-  document.getElementById('2fa-verify').addEventListener('click', verify2FA);
-  document.getElementById('2fa-cancel').addEventListener('click', cancel2FA);
-  document.getElementById('2fa-code').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') verify2FA();
   });
 
 })();
