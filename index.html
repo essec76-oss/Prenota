@@ -1367,6 +1367,7 @@ function copiaLink() {
     }
   }
 
+  // CORRETTA GESTIONE DEL TOGGLE ADMIN CON 2FA
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
@@ -1382,15 +1383,41 @@ function copiaLink() {
       toggle.checked = false;
       adminMode = false;
       
+      // IMPORTANTE: Gestione corretta del toggle
       toggle.onchange = function() {
         if (this.checked) {
-          // Richiedi verifica 2FA prima di abilitare admin mode
-          openAdmin2FAVerification();
-          this.checked = false;
+          // Se admin ha 2FA attivo, richiedi verifica
+          if (loggedUser.totp_enabled) {
+            // Richiedi verifica 2FA
+            openAdmin2FAVerification(function(success) {
+              if (success) {
+                // Verifica riuscita: attiva adminMode
+                adminMode = true;
+                showToast('🔑 Modalità admin attivata (verificato con 2FA)');
+                renderSlots();
+                // Mantieni il checkbox spuntato
+                toggle.checked = true;
+              } else {
+                // Verifica fallita: deseleziona il checkbox
+                toggle.checked = false;
+                adminMode = false;
+                // Non mostrare messaggio di errore perché openAdmin2FAVerification lo mostra già
+              }
+            });
+          } else {
+            // Admin senza 2FA: attiva direttamente
+            adminMode = true;
+            showToast('🔑 Modalità admin attivata');
+            renderSlots();
+            // Mantieni il checkbox spuntato
+            toggle.checked = true;
+          }
         } else {
+          // Disattivazione admin mode
           adminMode = false;
           showToast('🔑 Modalità admin disattivata');
           renderSlots();
+          // Il checkbox rimane deselezionato
         }
       };
       
@@ -1425,7 +1452,8 @@ function copiaLink() {
     }
   }
 
-  async function openAdmin2FAVerification() {
+  // Funzione modificata per accettare un callback
+  function openAdmin2FAVerification(callback) {
     const root = document.getElementById('modal-root');
     
     root.innerHTML = `
@@ -1448,9 +1476,17 @@ function copiaLink() {
       </div>
     `;
 
-    document.getElementById('admin-verify-cancel').addEventListener('click', closeModal);
+    document.getElementById('admin-verify-cancel').addEventListener('click', function() {
+      closeModal();
+      // Chiamata callback con success=false
+      if (typeof callback === 'function') callback(false);
+    });
+    
     document.getElementById('overlay').addEventListener('click', function(e) {
-      if(e.target.id === 'overlay') closeModal();
+      if(e.target.id === 'overlay') {
+        closeModal();
+        if (typeof callback === 'function') callback(false);
+      }
     });
 
     document.getElementById('admin-verify-confirm').addEventListener('click', async function() {
@@ -1487,10 +1523,9 @@ function copiaLink() {
           return;
         }
 
-        adminMode = true;
+        // Verifica riuscita
         closeModal();
-        showToast('🔑 Modalità admin attivata (verificato con 2FA)');
-        renderSlots();
+        if (typeof callback === 'function') callback(true);
 
       } catch(e) {
         errorEl.textContent = 'Errore di connessione';
@@ -2432,8 +2467,7 @@ function copiaLink() {
           <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
           <div class="name-field">
             <label for="guest-nome">Nome *</label>
-            <input id
-                        <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
+            <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
           </div>
           <div class="name-field">
             <label for="guest-cognome">Cognome *</label>
@@ -2595,6 +2629,7 @@ function copiaLink() {
           is_padel_member: utente.is_padel_member || false,
           is_admin: utente.is_admin || false,
           scadenza: utente.scadenza || null,
+          totp_enabled: utente.totp_enabled || false,
           authenticated: false,
           accessToken: null
         };
@@ -2651,6 +2686,7 @@ function copiaLink() {
       is_padel_member: utente.is_padel_member || false,
       is_admin: utente.is_admin || false,
       scadenza: utente.scadenza || null,
+      totp_enabled: utente.totp_enabled || false,
       authenticated: !!accessToken,
       accessToken: accessToken
     };
