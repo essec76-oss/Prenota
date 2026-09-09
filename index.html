@@ -284,7 +284,8 @@
   .modal .modal-subtitle{color:var(--ink-soft);font-size:13px;margin-bottom:16px;}
   .name-field{margin-bottom:12px;}
   .name-field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:5px;}
-  .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(--surface);}
+  .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(
+      .name-field input,.name-field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:inherit;background:var(--surface);}
   .name-field input:focus-visible,.name-field select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .modal-actions{display:flex;gap:10px;margin-top:18px;}
   .modal-actions button{flex:1;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--line);}
@@ -551,7 +552,7 @@
     <h1>Prenota il tuo campo</h1>
     <p class="sub">Accedi con il tuo codice ID</p>
     
-    <div class="login-box">
+    <div id="login-box" class="login-box">
       <div class="name-field">
         <label for="login-codice">Codice ID (es. t1234 o o5678)</label>
         <input id="login-codice" type="password" placeholder="Inserisci il tuo codice" />
@@ -560,11 +561,30 @@
       <button class="btn-confirm" id="login-btn">🔓 Accedi</button>
     </div>
 
+    <!-- MODAL 2FA (nascosto inizialmente) -->
+    <div id="2fa-modal" style="display:none;">
+      <div class="login-box" style="margin-top:20px;border:2px solid var(--accent);">
+        <h3 style="margin:0 0 12px;font-family:'Fraunces',serif;font-size:18px;">🔐 Verifica 2FA</h3>
+        <p style="color:var(--ink-soft);font-size:14px;margin:0 0 16px;">Inserisci il codice a 6 cifre da Proton Authenticator</p>
+        <div class="name-field">
+          <label for="2fa-code">Codice 2FA</label>
+          <input id="2fa-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" />
+        </div>
+        <p style="color:var(--ink-soft);font-size:12px;margin:8px 0;">O usa un backup code (8 caratteri)</p>
+        <div class="form-error" id="2fa-error"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;">
+          <button class="btn-cancel" id="2fa-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Indietro</button>
+          <button class="btn-confirm" id="2fa-verify" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Verifica</button>
+        </div>
+      </div>
+    </div>
+
     <div class="qr-share-box">
       <p class="qr-share-title">Condividi il link di prenotazione</p>
       <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
       <button class="btn-copy-link" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
-      <div id="messaggio-copia" class="qr-copy-msg"></div>
+      <div id="messaggio-copia"
+              <div id="messaggio-copia" class="qr-copy-msg"></div>
     </div>
 
     <div class="guest-register-box">
@@ -588,6 +608,7 @@
       </div>
       <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
       <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
+      <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
       <button class="logout-btn" id="logout-btn">🚪 Esci</button>
       <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
     </div>
@@ -660,6 +681,7 @@ function copiaLink() {
 
   let currentField = 'tennis';
   let loggedUser = null;
+  let pendingLogin2FA = null;
   let keyboxCodeTennis = null;
   let keyboxCodePadel = null;
   const today = new Date(); today.setHours(0,0,0,0);
@@ -670,9 +692,6 @@ function copiaLink() {
   let bookingsCache = {};
   let adminMode = false;
   let currentUserTab = 'tesserati';
-  // Cache dei record utente mostrati nella tabella admin, chiave "Tabella:id".
-  // Evita di dover passare nome/cognome/id come stringhe interpolate dentro
-  // attributi onclick (vettore di XSS se il nome contiene apici/HTML).
   const userDataCache = {};
 
   function attachUserActionListeners(container){
@@ -700,10 +719,6 @@ function copiaLink() {
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function fmtTime(h){const hh=Math.floor(h), mm=Math.round((h-hh)*60); return pad(hh)+':'+pad(mm);}
 
-  // Previene XSS: converte caratteri HTML speciali in entità sicure.
-  // Va usata SEMPRE quando un dato che arriva da un utente (nome, cognome,
-  // nomi giocatori, ecc.) viene inserito nella pagina tramite innerHTML
-  // o template string.
   function escapeHtml(str){
     if (str === null || str === undefined) return '';
     return String(str)
@@ -858,6 +873,8 @@ function copiaLink() {
   }
 
   function renderDow(){
+    document.getElementById('cal-dow').innerHTML = DOW.map(d=>`<div class
+      function renderDow(){
     document.getElementById('cal-dow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   }
 
@@ -1112,7 +1129,6 @@ function copiaLink() {
       ]);
       const tesserati = tessRes.ok ? await tessRes.json() : [];
       const ospiti = ospRes.ok ? await ospRes.json() : [];
-      // Filtra ospiti scaduti
       const oggi = dateKey(new Date());
       const ospitiValidi = ospiti.filter(o => !o.scadenza || o.scadenza >= oggi);
       return { tesserati, ospiti: ospitiValidi };
@@ -1149,7 +1165,8 @@ function copiaLink() {
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
           <h2 id="modal-title">${f.label}</h2>
           <div class="meta">${new Date(selectedDate+'T00:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'})} · ${slot.label}</div>
-          <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
+          <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;
+                    <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
             👤 Stai prenotando come: <strong>${escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome)}</strong> 
             ${loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}
           </div>
@@ -1167,7 +1184,6 @@ function copiaLink() {
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> confirmBooking(timeId, requiredCount, nameCount));
 
-    // Carica giocatori e inizializza Tom Select
     loadAllPlayersForSelect().then(({ tesserati, ospiti }) => {
       const options = [];
       tesserati.forEach(u => {
@@ -1380,11 +1396,13 @@ function copiaLink() {
     const toggle = document.getElementById('admin-toggle');
     const usersBtn = document.getElementById('admin-users-btn');
     const keyboxBtn = document.getElementById('admin-keybox-btn');
+    const twoFABtn = document.getElementById('admin-2fa-btn');
     
     if (loggedUser && loggedUser.is_admin === true) {
       container.style.display = 'flex';
       usersBtn.style.display = 'inline-block';
       keyboxBtn.style.display = 'inline-block';
+      twoFABtn.style.display = 'inline-block';
       toggle.checked = false;
       adminMode = false;
       
@@ -1413,11 +1431,275 @@ function copiaLink() {
         }
         openKeyboxManagement();
       };
+
+      twoFABtn.onclick = function() {
+        if (!adminMode) {
+          showToast('🔑 Attiva prima la modalità Admin (checkbox)');
+          return;
+        }
+        open2FAManagement();
+      };
     } else {
       container.style.display = 'none';
       usersBtn.style.display = 'none';
       keyboxBtn.style.display = 'none';
+      twoFABtn.style.display = 'none';
     }
+  }
+
+  function setupAdmin2FAPanel() {
+    const adminBtn = document.getElementById('admin-2fa-btn');
+    if (!adminBtn) return;
+    
+    if (loggedUser && loggedUser.is_admin) {
+      adminBtn.style.display = 'inline-block';
+      adminBtn.onclick = function() {
+        if (!adminMode) {
+          showToast('🔑 Attiva prima la modalità Admin (checkbox)');
+          return;
+        }
+        open2FAManagement();
+      };
+    } else {
+      adminBtn.style.display = 'none';
+    }
+  }
+
+  async function open2FAManagement() {
+    const root = document.getElementById('modal-root');
+    
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" style="max-width:520px;">
+          <h2>🔐 Gestione 2FA</h2>
+          <p class="modal-subtitle">Configura l'autenticazione a due fattori con Proton Authenticator.</p>
+          
+          <div id="2fa-status-container"></div>
+          <div id="2fa-setup-container" style="display:none;"></div>
+          
+          <div class="modal-actions" style="margin-top:16px;">
+            <button class="btn-cancel" id="2fa-close" style="flex:none;width:100%;">Chiudi</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('2fa-close').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if(e.target.id === 'overlay') closeModal();
+    });
+    
+    await load2FAStatus();
+  }
+
+  async function load2FAStatus() {
+    try {
+      const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
+      const { data: user, error } = await supabase
+        .from(table)
+        .select('totp_enabled')
+        .eq('id', loggedUser.id)
+        .single();
+
+      if (error) throw error;
+
+      const statusContainer = document.getElementById('2fa-status-container');
+      const setupContainer = document.getElementById('2fa-setup-container');
+
+      if (user && user.totp_enabled) {
+        statusContainer.innerHTML = `
+          <div style="background:#D9E9E1;border:1px solid #2B6E5A;border-radius:8px;padding:14px;margin-bottom:16px;">
+            <p style="margin:0;color:#2B6E5A;font-weight:600;">✅ 2FA Attivo</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#2B6E5A;">Proton Authenticator è configurato per il tuo account.</p>
+          </div>
+          <button class="clean-btn" id="2fa-disable-btn" style="width:100%;background:#F4DFD2;color:#B84B1E;border:1px solid #D9A583;margin-bottom:12px;">🔓 Disabilita 2FA</button>
+        `;
+        setupContainer.style.display = 'none';
+        
+        document.getElementById('2fa-disable-btn').addEventListener('click', open2FADisableModal);
+      } else {
+        statusContainer.innerHTML = `
+          <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:
+                    <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:14px;margin-bottom:16px;">
+            <p style="margin:0;color:#8a6a1a;font-weight:600;">⚠️ 2FA Non Attivo</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#8a6a1a;">Attiva l'autenticazione a due fattori per proteggere il tuo account admin.</p>
+          </div>
+          <button class="btn-confirm" id="2fa-setup-btn" style="width:100%;margin-bottom:12px;">🔐 Configura 2FA</button>
+        `;
+        setupContainer.style.display = 'none';
+        
+        document.getElementById('2fa-setup-btn').addEventListener('click', start2FASetup);
+      }
+    } catch(e) {
+      console.error('❌ Errore caricamento 2FA status:', e);
+      document.getElementById('2fa-status-container').innerHTML = '<p style="color:var(--tennis);">❌ Errore nel caricamento</p>';
+    }
+  }
+
+  async function start2FASetup() {
+    const setupContainer = document.getElementById('2fa-setup-container');
+    setupContainer.style.display = 'block';
+    setupContainer.innerHTML = '<p style="text-align:center;color:var(--ink-soft);">⏳ Genero QR code...</p>';
+
+    try {
+      const res = await fetch('/api/2fa-setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: loggedUser.id,
+          tipo: loggedUser.tipo
+        })
+      });
+
+      if (!res.ok) throw new Error('Errore setup 2FA');
+
+      const data = await res.json();
+
+      setupContainer.innerHTML = `
+        <div style="background:var(--accent-soft);border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
+          <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft);font-weight:600;">Scansiona con Proton Authenticator</p>
+          <img src="${data.qrCode}" style="width:200px;height:200px;border-radius:8px;border:2px solid var(--accent);" alt="QR Code 2FA" />
+          <p style="margin:12px 0 0;font-size:12px;color:var(--ink-soft);">O inserisci manualmente:</p>
+          <code style="display:block;background:var(--surface);padding:8px;border-radius:6px;margin:8px 0;font-family:monospace;font-size:12px;word-break:break-all;color:var(--ink);">${data.secret}</code>
+        </div>
+        
+        <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:12px;margin-bottom:16px;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#8a6a1a;">📋 Backup Codes (salva in un luogo sicuro)</p>
+          <div style="background:var(--surface);padding:10px;border-radius:6px;font-family:monospace;font-size:12px;color:var(--ink);line-height:1.6;">
+            ${data.backupCodes.map(code => '<div>' + code + '</div>').join('')}
+          </div>
+        </div>
+        
+        <div class="name-field">
+          <label for="2fa-confirm-code">Inserisci il codice a 6 cifre da Proton Authenticator</label>
+          <input id="2fa-confirm-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" />
+        </div>
+        <div class="form-error" id="2fa-setup-error"></div>
+        
+        <div style="display:flex;gap:10px;margin-top:12px;">
+          <button class="btn-cancel" id="2fa-setup-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Annulla</button>
+          <button class="btn-confirm" id="2fa-setup-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Attiva 2FA</button>
+        </div>
+      `;
+
+      document.getElementById('2fa-setup-cancel').addEventListener('click', function() {
+        setupContainer.style.display = 'none';
+      });
+
+      document.getElementById('2fa-setup-confirm').addEventListener('click', async function() {
+        const code = document.getElementById('2fa-confirm-code').value.trim();
+        const errorEl = document.getElementById('2fa-setup-error');
+        const confirmBtn = document.getElementById('2fa-setup-confirm');
+
+        if (!code || code.length !== 6) {
+          errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
+          return;
+        }
+
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Attivo...';
+        errorEl.textContent = '';
+
+        try {
+          const verifyRes = await fetch('/api/2fa-verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: loggedUser.id,
+              tipo: loggedUser.tipo,
+              code: code
+            })
+          });
+
+          if (!verifyRes.ok) {
+            const errData = await verifyRes.json();
+            throw new Error(errData.error || 'Verifica fallita');
+          }
+
+          showToast('✅ 2FA attivato con successo!');
+          setupContainer.style.display = 'none';
+          await load2FAStatus();
+
+        } catch(e) {
+          errorEl.textContent = '❌ ' + e.message;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Attiva 2FA';
+        }
+      });
+
+    } catch(e) {
+      console.error('❌ Errore setup:', e);
+      setupContainer.innerHTML = '<p style="color:var(--tennis);">❌ Errore: ' + e.message + '</p>';
+    }
+  }
+
+  async function open2FADisableModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
+          <h2>🔓 Disabilita 2FA</h2>
+          <p class="modal-subtitle">Inserisci il codice da Proton Authenticator per confermare la disabilitazione.</p>
+          
+          <div class="name-field">
+            <label for="2fa-disable-code">Codice 2FA</label>
+            <input id="2fa-disable-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" />
+          </div>
+          <div class="form-error" id="2fa-disable-error"></div>
+          
+          <div class="modal-actions">
+            <button class="btn-cancel" id="2fa-disable-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Annulla</button>
+            <button class="btn-confirm" id="2fa-disable-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:#B84B1E;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Disabilita</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('2fa-disable-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if(e.target.id === 'overlay') closeModal();
+    });
+
+    document.getElementById('2fa-disable-confirm').addEventListener('click', async function() {
+      const code = document.getElementById('2fa-disable-code').value.trim();
+      const errorEl = document.getElementById('2fa-disable-error');
+      const confirmBtn = document.getElementById('2fa-disable-confirm');
+
+      if (!code || code.length < 6) {
+        errorEl.textContent = 'Inserisci un codice valido';
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Disabilito...';
+      errorEl.textContent = '';
+
+      try {
+        const res = await fetch('/api/2fa-disable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: loggedUser.id,
+            tipo: loggedUser.tipo,
+            code: code
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Disabilitazione fallita');
+        }
+
+        showToast('✅ 2FA disabilitato');
+        closeModal();
+        await open2FAManagement();
+
+      } catch(e) {
+        errorEl.textContent = '❌ ' + e.message;
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Disabilita';
+      }
+    });
   }
 
   function showCodeModal(code){
@@ -1472,9 +1754,6 @@ function copiaLink() {
     }, 300);
   }
 
-  // ============================================================
-  // GESTIONE UTENTI - COMPLETA
-  // ============================================================
   async function openKeyboxManagement() {
     const root = document.getElementById('modal-root');
 
@@ -1886,7 +2165,6 @@ function copiaLink() {
           errorDetail = insertRes.status + ' ' + insertRes.statusText;
         }
         
-        // Retry su duplicato codice
         if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
           const newCodice = await generateUniqueCodeFrontend(tipo);
           insertPayload.codice = newCodice;
@@ -1949,11 +2227,7 @@ function copiaLink() {
     saveBtn.textContent = '💾 Crea utente';
   }
 
-  // ============================================================
-  // EDIT USER - CORRETTO CON TOKEN JWT
-  // ============================================================
   window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, isTennis, isPadel) {
-    // Converti correttamente i booleani
     const tennis = isTennis === true || isTennis === 'true';
     const padel = isPadel === true || isPadel === 'true';
     
@@ -2071,9 +2345,6 @@ function copiaLink() {
     });
   };
 
-  // ============================================================
-  // DELETE USER - CORRETTO CON TOKEN JWT
-  // ============================================================
   window.deleteUser = async function(table, id, nome) {
     if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
     
@@ -2102,7 +2373,8 @@ function copiaLink() {
       if (!res.ok) {
         let errorMsg = '';
         try {
-          const errBody = await res.json();
+          const errBody
+                    const errBody = await res.json();
           errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
         } catch(_) {
           errorMsg = res.status + ' ' + res.statusText;
@@ -2119,11 +2391,6 @@ function copiaLink() {
     }
   };
 
-  // ============================================================
-  // AUTO-CREAZIONE PROFILO OSPITE (self-register)
-  // Ora chiama l'endpoint server /api/create-guest che usa la
-  // SERVICE_ROLE_KEY lato server, bypassando l'RLS in sicurezza.
-  // ============================================================
   function openGuestRegisterModal() {
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -2219,19 +2486,15 @@ function copiaLink() {
     `;
     document.getElementById('guest-code-ok').addEventListener('click', function(){
       closeModal();
-      // Precompila il campo login
       const loginInput = document.getElementById('login-codice');
       if (loginInput) {
         loginInput.value = codice;
-        loginInput.type = 'text'; // mostra il codice appena creato
+        loginInput.type = 'text';
       }
       showToast('Ora puoi accedere con il tuo codice');
     });
   }
 
-  // ============================================================
-  // LOGIN
-  // ============================================================
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
     const errorEl = document.getElementById('login-error');
@@ -2256,7 +2519,7 @@ function copiaLink() {
       
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id'
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id,totp_enabled'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
@@ -2283,64 +2546,155 @@ function copiaLink() {
       
       const utente = data[0];
 
-      let accessToken = null;
-      if (utente.auth_id) {
-        try {
-          const authData = await signInWithSupabaseAuth(codice + '@circolo.local', codice);
-          accessToken = authData.access_token;
-          console.log('🔐 Login Supabase Auth riuscito per', codice);
-        } catch(authErr) {
-          errorEl.textContent = '❌ Errore di autenticazione. Contatta il circolo.';
-          loginBtn.disabled = false;
-          return;
-        }
+      if (utente.is_admin && utente.totp_enabled) {
+        console.log('🔐 Admin richiede 2FA');
+        pendingLogin2FA = {
+          id: utente.id,
+          nome: utente.nome,
+          cognome: utente.cognome,
+          codice: utente.codice,
+          tipo: tipo,
+          is_tennis_member: utente.is_tennis_member || false,
+          is_padel_member: utente.is_padel_member || false,
+          is_admin: utente.is_admin || false,
+          scadenza: utente.scadenza || null,
+          auth_id: utente.auth_id
+        };
+        
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('2fa-modal').style.display = 'block';
+        document.getElementById('2fa-code').value = '';
+        document.getElementById('2fa-error').textContent = '';
+        document.getElementById('2fa-code').focus();
+        errorEl.textContent = '';
+        loginBtn.disabled = false;
+        return;
       }
 
-      loggedUser = {
-        id: utente.id,
-        nome: utente.nome,
-        cognome: utente.cognome,
-        codice: utente.codice,
-        tipo: tipo,
-        is_tennis_member: utente.is_tennis_member || false,
-        is_padel_member: utente.is_padel_member || false,
-        is_admin: utente.is_admin || false,
-        scadenza: utente.scadenza || null,
-        authenticated: !!accessToken,
-        accessToken: accessToken
-      };
-      
-      console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
-      
-      errorEl.textContent = '';
-      loginBtn.disabled = false;
-      
-      loginSection.style.display = 'none';
-      bookingSection.style.display = 'block';
-      
-      const tipoLabel = loggedUser.tipo === 'tesserato' 
-        ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
-        : '<span class="badge-ospite">Ospite</span>';
-      document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
-      document.getElementById('user-badge').innerHTML = tipoLabel;
-      renderGuestExpiry();
-      setupAdminToggle();
-      renderTesseratoExpiry();
-      
-      setAccent('tennis');
-      renderFieldNote();
-      renderDow();
-      renderCalendar();
-      deleteOldBookings();
-
-      if (accessToken) {
-        setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + codice); }, 400);
-      }
+      await completeLogin(utente, tipo);
       
     } catch(e) {
       errorEl.textContent = 'Errore di connessione. Riprova.';
       loginBtn.disabled = false;
       console.error('❌ Errore:', e);
+    }
+  }
+
+  async function verify2FA() {
+    if (!pendingLogin2FA) {
+      showToast('❌ Sessione scaduta, riprova il login');
+      return;
+    }
+
+    const code = document.getElementById('2fa-code').value.trim();
+    const errorEl = document.getElementById('2fa-error');
+    const verifyBtn = document.getElementById('2fa-verify');
+
+    if (!code || code.length < 6) {
+      errorEl.textContent = 'Inserisci un codice valido (6 cifre o 8 caratteri backup)';
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifica...';
+    errorEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/2fa-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: pendingLogin2FA.id,
+          tipo: pendingLogin2FA.tipo,
+          code: code
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.authenticated) {
+        errorEl.textContent = data.error || '❌ Codice 2FA non valido';
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = 'Verifica';
+        return;
+      }
+
+      if (data.warning) {
+        showToast('⚠️ ' + data.warning);
+      }
+
+      await completeLogin(pendingLogin2FA, pendingLogin2FA.tipo);
+      pendingLogin2FA = null;
+
+    } catch(e) {
+      errorEl.textContent = 'Errore di connessione';
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verifica';
+      console.error('❌ Errore 2FA:', e);
+    }
+  }
+
+  function cancel2FA() {
+    document.getElementById('2fa-modal').style.display = 'none';
+    document.getElementById('login-box').style.display = 'block';
+    document.getElementById('login-codice').value = '';
+    document.getElementById('login-error').textContent = '';
+    pendingLogin2FA = null;
+  }
+
+  async function completeLogin(utente, tipo) {
+    let accessToken = null;
+    if (utente.auth_id) {
+      try {
+        const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
+        accessToken = authData.access_token;
+        console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
+      } catch(authErr) {
+        console.warn('⚠️ Auth Supabase non disponibile, continuo senza token');
+      }
+    }
+
+    loggedUser = {
+      id: utente.id,
+      nome: utente.nome,
+      cognome: utente.cognome,
+      codice: utente.codice,
+      tipo: tipo,
+      is_tennis_member: utente.is_tennis_member || false,
+      is_padel_member: utente.is_padel_member || false,
+      is_admin: utente.is_admin || false,
+      scadenza: utente.scadenza || null,
+      authenticated: !!accessToken,
+      accessToken: accessToken
+    };
+    
+    console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
+    
+    document.getElementById('login-error').textContent = '';
+    document.getElementById('login-btn').disabled = false;
+    
+    loginSection.style.display = 'none';
+    bookingSection.style.display = 'block';
+    document.getElementById('2fa-modal').style.display = 'none';
+    
+    const tipoLabel = loggedUser.tipo === 'tesserato' 
+      ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
+      : '<span class="badge-ospite">Ospite</span>';
+    document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
+    document.getElementById('user-badge').innerHTML = tipoLabel;
+    renderGuestExpiry();
+    setupAdminToggle();
+    setupAdmin2FAPanel();
+    renderTesseratoExpiry();
+    
+    setAccent('tennis');
+    renderFieldNote();
+    renderDow();
+    renderCalendar();
+    deleteOldBookings();
+
+    if (accessToken) {
+      setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + loggedUser.codice); }, 400);
     }
   }
 
@@ -2408,6 +2762,12 @@ function copiaLink() {
     showToast('🧹 Prenotazioni vecchie cancellate!');
     updateBookingDots();
     renderSlots();
+  });
+
+  document.getElementById('2fa-verify').addEventListener('click', verify2FA);
+  document.getElementById('2fa-cancel').addEventListener('click', cancel2FA);
+  document.getElementById('2fa-code').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') verify2FA();
   });
 
 })();
