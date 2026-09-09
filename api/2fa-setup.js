@@ -6,6 +6,16 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+function generateBase32Secret(length = 32) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; // Base32 standard (RFC 4648)
+  const bytes = crypto.randomBytes(length);
+  let secret = '';
+  for (let i = 0; i < length; i++) {
+    secret += alphabet[bytes[i] % 32];
+  }
+  return secret;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -13,28 +23,22 @@ module.exports = async (req, res) => {
 
   try {
     const { userId, tipo } = req.body;
-    
+
     if (!userId || !tipo) {
       return res.status(400).json({ error: 'userId e tipo obbligatori' });
     }
 
-    // Genera secret TOTP casuale (32 caratteri base32)
-    const secret = crypto.randomBytes(20).toString('base64')
-      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    const secret = generateBase32Secret();
 
-    // Genera QR code per Proton Authenticator
     const otpauthUrl = `otpauth://totp/TennisClubNulvi:admin-${userId}?secret=${secret}&issuer=TennisClubNulvi&algorithm=SHA1&digits=6&period=30`;
-    
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
-    // Genera 5 backup codes
-    const backupCodes = Array.from({ length: 5 }, () => 
+    const backupCodes = Array.from({ length: 5 }, () =>
       crypto.randomBytes(4).toString('hex').toUpperCase()
     );
 
-    // Salva secret e backup codes (non ancora attivati)
     const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-    await supabase
+    const { error: updateErr } = await supabase
       .from(table)
       .update({
         totp_secret: secret,
@@ -42,6 +46,11 @@ module.exports = async (req, res) => {
         totp_enabled: false
       })
       .eq('id', userId);
+
+    if (updateErr) {
+      console.error('❌ Errore salvataggio 2FA setup:', updateErr);
+      return res.status(500).json({ error: updateErr.message });
+    }
 
     res.json({
       success: true,
