@@ -1,28 +1,23 @@
 const { createClient } = require('@supabase/supabase-js');
-const totp = require('totp-generator');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-function verifyTOTP(secret, code, window = 1) {
-  try {
-    const now = Math.floor(Date.now() / 1000);
-    
-    for (let i = -window; i <= window; i++) {
-      const timeCounter = Math.floor((now + i * 30) / 30);
-      const expectedCode = totp(secret);
-      
-      if (code === expectedCode) {
-        return true;
-      }
+async function verifyTOTP(secret, code, window = 1) {
+  const { TOTP } = await import('totp-generator'); // import dinamico: totp-generator v2 è ESM-only
+  const now = Date.now();
+
+  for (let i = -window; i <= window; i++) {
+    const timestamp = now + i * 30000; // offset di ±30s in millisecondi
+    try {
+      const { otp } = await TOTP.generate(secret, { timestamp });
+      if (String(code) === String(otp)) return true;
+    } catch(e) {
+      console.error('❌ Errore generazione TOTP:', e);
     }
-    
-    return false;
-  } catch(e) {
-    console.error('❌ Errore verifica TOTP:', e);
-    return false;
   }
+  return false;
 }
 
 module.exports = async (req, res) => {
@@ -38,7 +33,7 @@ module.exports = async (req, res) => {
     }
 
     const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-    
+
     const { data: user, error: fetchErr } = await supabase
       .from(table)
       .select('totp_secret, totp_enabled')
@@ -53,7 +48,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: '2FA non configurato' });
     }
 
-    const isValid = verifyTOTP(user.totp_secret, code);
+    const isValid = await verifyTOTP(user.totp_secret, code);
 
     if (!isValid) {
       return res.status(401).json({ error: 'Codice 2FA non valido' });
