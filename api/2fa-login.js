@@ -1,28 +1,23 @@
 const { createClient } = require('@supabase/supabase-js');
-const totp = require('totp-generator');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-function verifyTOTP(secret, code, window = 1) {
-  try {
-    const now = Math.floor(Date.now() / 1000);
-    
-    for (let i = -window; i <= window; i++) {
-      const timeCounter = Math.floor((now + i * 30) / 30);
-      const expectedCode = totp(secret);
-      
-      if (code === expectedCode) {
-        return true;
-      }
+async function verifyTOTP(secret, code, window = 1) {
+  const { TOTP } = await import('totp-generator');
+  const now = Date.now();
+
+  for (let i = -window; i <= window; i++) {
+    const timestamp = now + i * 30000;
+    try {
+      const { otp } = await TOTP.generate(secret, { timestamp });
+      if (String(code) === String(otp)) return true;
+    } catch(e) {
+      console.error('❌ Errore generazione TOTP:', e);
     }
-    
-    return false;
-  } catch(e) {
-    console.error('❌ Errore verifica TOTP:', e);
-    return false;
   }
+  return false;
 }
 
 module.exports = async (req, res) => {
@@ -57,13 +52,13 @@ module.exports = async (req, res) => {
       return res.json({ success: true, requires2fa: false });
     }
 
-    const isValidTOTP = verifyTOTP(user.totp_secret, code);
+    const isValidTOTP = await verifyTOTP(user.totp_secret, code);
 
     if (isValidTOTP) {
       return res.json({ success: true, authenticated: true });
     }
 
-    const backupCodes = (user.totp_backup_codes || '').split(',').map(c => c.trim());
+    const backupCodes = (user.totp_backup_codes || '').split(',').map(c => c.trim()).filter(Boolean);
     const backupIndex = backupCodes.indexOf(code.toUpperCase());
 
     if (backupIndex !== -1) {
@@ -73,8 +68,8 @@ module.exports = async (req, res) => {
         .update({ totp_backup_codes: backupCodes.join(',') })
         .eq('id', userId);
 
-      return res.json({ 
-        success: true, 
+      return res.json({
+        success: true,
         authenticated: true,
         warning: 'Hai usato un backup code. Rimangono ' + backupCodes.length + ' codici.'
       });
