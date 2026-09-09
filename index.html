@@ -541,6 +541,10 @@
       right:-4px;
     }
   }
+  
+  .badge-2fa-enabled{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
+  .badge-2fa-disabled{background:#B84B1E;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
+  .admin-2fa-status{font-size:12px;color:var(--ink-soft);margin-left:6px;}
 </style>
 </head>
 <body>
@@ -585,6 +589,7 @@
           <input type="checkbox" id="admin-toggle">
           🔑 Admin
         </label>
+        <span id="admin-2fa-status" class="admin-2fa-status"></span>
       </div>
       <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
       <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
@@ -672,6 +677,7 @@ function copiaLink() {
   let adminMode = false;
   let currentUserTab = 'tesserati';
   const userDataCache = {};
+  let pending2FACallback = null;
 
   function attachUserActionListeners(container){
     container.querySelectorAll('button[data-action]').forEach(btn => {
@@ -1367,13 +1373,14 @@ function copiaLink() {
     }
   }
 
-  // CORRETTA GESTIONE DEL TOGGLE ADMIN CON 2FA
+  // GESTIONE ADMIN TOGGLE CON 2FA
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
     const usersBtn = document.getElementById('admin-users-btn');
     const keyboxBtn = document.getElementById('admin-keybox-btn');
     const twoFABtn = document.getElementById('admin-2fa-btn');
+    const statusEl = document.getElementById('admin-2fa-status');
     
     if (loggedUser && loggedUser.is_admin === true) {
       container.style.display = 'flex';
@@ -1383,25 +1390,29 @@ function copiaLink() {
       toggle.checked = false;
       adminMode = false;
       
-      // IMPORTANTE: Gestione corretta del toggle
+      // Mostra stato 2FA
+      if (loggedUser.totp_enabled) {
+        statusEl.innerHTML = '<span class="badge-2fa-enabled">🔐 2FA ON</span>';
+      } else {
+        statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
+      }
+      
+      // Gestione toggle checkbox
       toggle.onchange = function() {
         if (this.checked) {
           // Se admin ha 2FA attivo, richiedi verifica
           if (loggedUser.totp_enabled) {
-            // Richiedi verifica 2FA
             openAdmin2FAVerification(function(success) {
+              const toggle = document.getElementById('admin-toggle');
               if (success) {
-                // Verifica riuscita: attiva adminMode
                 adminMode = true;
-                showToast('🔑 Modalità admin attivata (verificato con 2FA)');
+                showToast('🔑 Modalità admin attivata (2FA verificato)');
                 renderSlots();
-                // Mantieni il checkbox spuntato
                 toggle.checked = true;
               } else {
-                // Verifica fallita: deseleziona il checkbox
-                toggle.checked = false;
                 adminMode = false;
-                // Non mostrare messaggio di errore perché openAdmin2FAVerification lo mostra già
+                toggle.checked = false;
+                // Non mostrare ulteriori messaggi perché openAdmin2FAVerification già li mostra
               }
             });
           } else {
@@ -1409,7 +1420,6 @@ function copiaLink() {
             adminMode = true;
             showToast('🔑 Modalità admin attivata');
             renderSlots();
-            // Mantieni il checkbox spuntato
             toggle.checked = true;
           }
         } else {
@@ -1417,7 +1427,7 @@ function copiaLink() {
           adminMode = false;
           showToast('🔑 Modalità admin disattivata');
           renderSlots();
-          // Il checkbox rimane deselezionato
+          toggle.checked = false;
         }
       };
       
@@ -1449,10 +1459,11 @@ function copiaLink() {
       usersBtn.style.display = 'none';
       keyboxBtn.style.display = 'none';
       twoFABtn.style.display = 'none';
+      statusEl.innerHTML = '';
     }
   }
 
-  // Funzione modificata per accettare un callback
+  // VERIFICA 2FA PER ATTIVAZIONE ADMIN - USANDO L'ENDPOINT API
   function openAdmin2FAVerification(callback) {
     const root = document.getElementById('modal-root');
     
@@ -1460,7 +1471,7 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
           <h2>🔐 Verifica Admin</h2>
-          <p class="modal-subtitle">Inserisci il codice 2FA per abilitare la modalità admin.</p>
+          <p class="modal-subtitle">Inserisci il codice 2FA da Proton Authenticator per abilitare la modalità admin.</p>
           
           <div class="name-field">
             <label for="admin-verify-code">Codice 2FA (6 cifre)</label>
@@ -1470,7 +1481,7 @@ function copiaLink() {
           
           <div class="modal-actions">
             <button class="btn-cancel" id="admin-verify-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Annulla</button>
-            <button class="btn-confirm" id="admin-verify-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Abilita Admin</button>
+            <button class="btn-confirm" id="admin-verify-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">🔓 Verifica</button>
           </div>
         </div>
       </div>
@@ -1478,13 +1489,14 @@ function copiaLink() {
 
     document.getElementById('admin-verify-cancel').addEventListener('click', function() {
       closeModal();
-      // Chiamata callback con success=false
+      showToast('❌ Verifica 2FA annullata');
       if (typeof callback === 'function') callback(false);
     });
     
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') {
         closeModal();
+        showToast('❌ Verifica 2FA annullata');
         if (typeof callback === 'function') callback(false);
       }
     });
@@ -1494,7 +1506,7 @@ function copiaLink() {
       const errorEl = document.getElementById('admin-verify-error');
       const confirmBtn = document.getElementById('admin-verify-confirm');
 
-      if (!code || code.length !== 6) {
+      if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
         errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
         return;
       }
@@ -1504,6 +1516,7 @@ function copiaLink() {
       errorEl.textContent = '';
 
       try {
+        // Chiamata all'API 2FA
         const res = await fetch('/api/2fa-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1519,23 +1532,24 @@ function copiaLink() {
         if (!res.ok || !data.authenticated) {
           errorEl.textContent = data.error || '❌ Codice 2FA non valido';
           confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Abilita Admin';
+          confirmBtn.textContent = '🔓 Verifica';
           return;
         }
 
-        // Verifica riuscita
         closeModal();
+        showToast('✅ Verifica 2FA riuscita!');
         if (typeof callback === 'function') callback(true);
 
       } catch(e) {
-        errorEl.textContent = 'Errore di connessione';
+        console.error('❌ Errore verifica 2FA:', e);
+        errorEl.textContent = 'Errore di connessione al server';
         confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Abilita Admin';
-        console.error('❌ Errore:', e);
+        confirmBtn.textContent = '🔓 Verifica';
       }
     });
   }
 
+  // GESTIONE 2FA COMPLETA
   async function open2FAManagement() {
     const root = document.getElementById('modal-root');
     
@@ -1543,10 +1557,11 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:520px;">
           <h2>🔐 Gestione 2FA</h2>
-          <p class="modal-subtitle">Configura l'autenticazione a due fattori con Proton Authenticator.</p>
+          <p class="modal-subtitle">Configura l'autenticazione a due fattori per proteggere il tuo account admin.</p>
           
           <div id="2fa-status-container"></div>
           <div id="2fa-setup-container" style="display:none;"></div>
+          <div id="2fa-disable-container" style="display:none;"></div>
           
           <div class="modal-actions" style="margin-top:16px;">
             <button class="btn-cancel" id="2fa-close" style="flex:none;width:100%;">Chiudi</button>
@@ -1566,37 +1581,49 @@ function copiaLink() {
   async function load2FAStatus() {
     try {
       const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-      const { data: user, error } = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
         headers: { apikey: SUPABASE_KEY }
-      }).then(r => r.json()).then(data => ({ data: data[0], error: null })).catch(e => ({ data: null, error: e }));
+      });
+      
+      if (!response.ok) throw new Error('Errore caricamento status');
+      
+      const data = await response.json();
+      const user = data[0];
 
-      if (error || !user) throw error || new Error('Utente non trovato');
+      if (!user) throw new Error('Utente non trovato');
 
       const statusContainer = document.getElementById('2fa-status-container');
       const setupContainer = document.getElementById('2fa-setup-container');
+      const disableContainer = document.getElementById('2fa-disable-container');
 
       if (user.totp_enabled) {
         statusContainer.innerHTML = `
           <div style="background:#D9E9E1;border:1px solid #2B6E5A;border-radius:8px;padding:14px;margin-bottom:16px;">
             <p style="margin:0;color:#2B6E5A;font-weight:600;">✅ 2FA Attivo</p>
-            <p style="margin:4px 0 0;font-size:13px;color:#2B6E5A;">Proton Authenticator è configurato per il tuo account.</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#2B6E5A;">Il tuo account è protetto con autenticazione a due fattori.</p>
           </div>
-          <button class="clean-btn" id="2fa-disable-btn" style="width:100%;background:#F4DFD2;color:#B84B1E;border:1px solid #D9A583;margin-bottom:12px;">🔓 Disabilita 2FA</button>
+          <button class="clean-btn" id="2fa-disable-btn" style="width:100%;background:#F4DFD2;color:#B84B1E;border:1px solid #D9A583;">🔓 Disabilita 2FA</button>
         `;
         setupContainer.style.display = 'none';
+        disableContainer.style.display = 'none';
         
-        document.getElementById('2fa-disable-btn').addEventListener('click', open2FADisableModal);
+        document.getElementById('2fa-disable-btn').addEventListener('click', function() {
+          open2FADisableModal();
+        });
       } else {
         statusContainer.innerHTML = `
           <div style="background:#FFF4E0;border:1px solid #E8C989;border-radius:8px;padding:14px;margin-bottom:16px;">
             <p style="margin:0;color:#8a6a1a;font-weight:600;">⚠️ 2FA Non Attivo</p>
             <p style="margin:4px 0 0;font-size:13px;color:#8a6a1a;">Attiva l'autenticazione a due fattori per proteggere il tuo account admin.</p>
           </div>
-          <button class="btn-confirm" id="2fa-setup-btn" style="width:100%;margin-bottom:12px;">🔐 Configura 2FA</button>
+          <button class="btn-confirm" id="2fa-setup-btn" style="width:100%;">🔐 Configura 2FA</button>
         `;
         setupContainer.style.display = 'none';
+        disableContainer.style.display = 'none';
         
-        document.getElementById('2fa-setup-btn').addEventListener('click', start2FASetup);
+        document.getElementById('2fa-setup-btn').addEventListener('click', function() {
+          start2FASetup();
+        });
       }
     } catch(e) {
       console.error('❌ Errore caricamento 2FA status:', e);
@@ -1607,7 +1634,7 @@ function copiaLink() {
   async function start2FASetup() {
     const setupContainer = document.getElementById('2fa-setup-container');
     setupContainer.style.display = 'block';
-    setupContainer.innerHTML = '<p style="text-align:center;color:var(--ink-soft);">⏳ Genero QR code...</p>';
+    setupContainer.innerHTML = '<p style="text-align:center;color:var(--ink-soft);">⏳ Preparo setup 2FA...</p>';
 
     try {
       const res = await fetch('/api/2fa-setup', {
@@ -1619,13 +1646,16 @@ function copiaLink() {
         })
       });
 
-      if (!res.ok) throw new Error('Errore setup 2FA');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Errore setup 2FA');
+      }
 
       const data = await res.json();
 
       setupContainer.innerHTML = `
         <div style="background:var(--accent-soft);border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
-          <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft);font-weight:600;">Scansiona con Proton Authenticator</p>
+          <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft);font-weight:600;">📱 Scansiona con Proton Authenticator</p>
           <img src="${data.qrCode}" style="width:200px;height:200px;border-radius:8px;border:2px solid var(--accent);" alt="QR Code 2FA" />
           <p style="margin:12px 0 0;font-size:12px;color:var(--ink-soft);">O inserisci manualmente:</p>
           <code style="display:block;background:var(--surface);padding:8px;border-radius:6px;margin:8px 0;font-family:monospace;font-size:12px;word-break:break-all;color:var(--ink);">${data.secret}</code>
@@ -1646,7 +1676,7 @@ function copiaLink() {
         
         <div style="display:flex;gap:10px;margin-top:12px;">
           <button class="btn-cancel" id="2fa-setup-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Annulla</button>
-          <button class="btn-confirm" id="2fa-setup-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Attiva 2FA</button>
+          <button class="btn-confirm" id="2fa-setup-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">✅ Attiva 2FA</button>
         </div>
       `;
 
@@ -1659,7 +1689,7 @@ function copiaLink() {
         const errorEl = document.getElementById('2fa-setup-error');
         const confirmBtn = document.getElementById('2fa-setup-confirm');
 
-        if (!code || code.length !== 6) {
+        if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
           errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
           return;
         }
@@ -1685,13 +1715,19 @@ function copiaLink() {
           }
 
           showToast('✅ 2FA attivato con successo!');
+          loggedUser.totp_enabled = true;
           setupContainer.style.display = 'none';
           await load2FAStatus();
+          // Aggiorna lo stato nel badge
+          const statusEl = document.getElementById('admin-2fa-status');
+          if (statusEl) {
+            statusEl.innerHTML = '<span class="badge-2fa-enabled">🔐 2FA ON</span>';
+          }
 
         } catch(e) {
           errorEl.textContent = '❌ ' + e.message;
           confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Attiva 2FA';
+          confirmBtn.textContent = '✅ Attiva 2FA';
         }
       });
 
@@ -1710,14 +1746,14 @@ function copiaLink() {
           <p class="modal-subtitle">Inserisci il codice da Proton Authenticator per confermare la disabilitazione.</p>
           
           <div class="name-field">
-            <label for="2fa-disable-code">Codice 2FA</label>
+            <label for="2fa-disable-code">Codice 2FA (6 cifre)</label>
             <input id="2fa-disable-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" />
           </div>
           <div class="form-error" id="2fa-disable-error"></div>
           
           <div class="modal-actions">
             <button class="btn-cancel" id="2fa-disable-cancel" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-weight:600;">Annulla</button>
-            <button class="btn-confirm" id="2fa-disable-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:#B84B1E;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Disabilita</button>
+            <button class="btn-confirm" id="2fa-disable-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:#B84B1E;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">🔓 Disabilita</button>
           </div>
         </div>
       </div>
@@ -1733,8 +1769,8 @@ function copiaLink() {
       const errorEl = document.getElementById('2fa-disable-error');
       const confirmBtn = document.getElementById('2fa-disable-confirm');
 
-      if (!code || code.length < 6) {
-        errorEl.textContent = 'Inserisci un codice valido';
+      if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+        errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
         return;
       }
 
@@ -1759,13 +1795,20 @@ function copiaLink() {
         }
 
         showToast('✅ 2FA disabilitato');
+        loggedUser.totp_enabled = false;
         closeModal();
         await open2FAManagement();
+        
+        // Aggiorna lo stato nel badge
+        const statusEl = document.getElementById('admin-2fa-status');
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
+        }
 
       } catch(e) {
         errorEl.textContent = '❌ ' + e.message;
         confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Disabilita';
+        confirmBtn.textContent = '🔓 Disabilita';
       }
     });
   }
