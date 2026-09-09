@@ -1066,10 +1066,10 @@ function copiaLink() {
   async function loadAllPlayersForSelect(){
     try{
       const [tessRes, ospRes] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', {
+        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         }),
-        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', {
+        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         })
       ]);
@@ -1135,11 +1135,11 @@ function copiaLink() {
       const options = [];
       tesserati.forEach(u => {
         const label = u.nome + ' ' + u.cognome;
-        options.push({ value: label, text: label + ' (' + u.codice + ')', optgroup: 'tesserati' });
+        options.push({ value: label, text: label, optgroup: 'tesserati' });
       });
       ospiti.forEach(u => {
         const label = u.nome + ' ' + u.cognome;
-        options.push({ value: label, text: label + ' (' + u.codice + ')', optgroup: 'ospiti' });
+        options.push({ value: label, text: label, optgroup: 'ospiti' });
       });
 
       for (let i = 1; i < nameCount; i++) {
@@ -2080,6 +2080,8 @@ function copiaLink() {
 
   // ============================================================
   // AUTO-CREAZIONE PROFILO OSPITE (self-register)
+  // Ora chiama l'endpoint server /api/create-guest che usa la
+  // SERVICE_ROLE_KEY lato server, bypassando l'RLS in sicurezza.
   // ============================================================
   function openGuestRegisterModal() {
     const root = document.getElementById('modal-root');
@@ -2134,65 +2136,20 @@ function copiaLink() {
     errorEl.textContent = '';
 
     try {
-      const codice = await generateUniqueCodeFrontend('ospite');
-      const scadenzaDate = new Date();
-      scadenzaDate.setDate(scadenzaDate.getDate() + 7);
-      const scadenza = dateKey(scadenzaDate);
-
-      const payload = {
-        nome,
-        cognome,
-        codice,
-        is_tennis_member: sport === 'tennis' || sport === 'both',
-        is_padel_member: sport === 'padel' || sport === 'both',
-        attivo: true,
-        scadenza: scadenza
-      };
-
-      const insertRes = await fetch(SUPABASE_URL + '/rest/v1/Ospiti', {
+      const res = await fetch('/api/create-guest', {
         method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation'
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, cognome, sport })
       });
 
-      if (!insertRes.ok) {
-        let detail = '';
-        try {
-          const errBody = await insertRes.json();
-          detail = errBody.message || errBody.details || JSON.stringify(errBody);
-        } catch(_) {
-          detail = insertRes.status + ' ' + insertRes.statusText;
-        }
-        // Retry on duplicate
-        if (detail.includes('duplicate key') || detail.includes('_codice_key')) {
-          const newCodice = await generateUniqueCodeFrontend('ospite');
-          payload.codice = newCodice;
-          const retryRes = await fetch(SUPABASE_URL + '/rest/v1/Ospiti', {
-            method: 'POST',
-            headers: {
-              apikey: SUPABASE_KEY,
-              'Content-Type': 'application/json',
-              Prefer: 'return=representation'
-            },
-            body: JSON.stringify(payload)
-          });
-          if (!retryRes.ok) throw new Error('Creazione fallita dopo retry');
-          const created = await retryRes.json();
-          closeModal();
-          showGuestCodeModal(created[0] ? created[0].codice : newCodice, nome, cognome, scadenza);
-          return;
-        }
-        throw new Error(detail);
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Creazione fallita');
       }
 
-      const created = await insertRes.json();
-      const finalCode = (created[0] && created[0].codice) || codice;
       closeModal();
-      showGuestCodeModal(finalCode, nome, cognome, scadenza);
+      showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
 
     } catch(e) {
       console.error('❌ Errore creazione ospite self:', e);
