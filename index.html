@@ -670,6 +670,28 @@ function copiaLink() {
   let bookingsCache = {};
   let adminMode = false;
   let currentUserTab = 'tesserati';
+  // Cache dei record utente mostrati nella tabella admin, chiave "Tabella:id".
+  // Evita di dover passare nome/cognome/id come stringhe interpolate dentro
+  // attributi onclick (vettore di XSS se il nome contiene apici/HTML).
+  const userDataCache = {};
+
+  function attachUserActionListeners(container){
+    container.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', function(){
+        const action = btn.dataset.action;
+        const table = btn.dataset.table;
+        const id = btn.dataset.id;
+        const record = userDataCache[table + ':' + id];
+        if (!record) { showToast('❌ Utente non trovato, ricarica la lista.'); return; }
+        const nomeCompleto = record.nome + ' ' + record.cognome;
+        if (action === 'edit') {
+          editUser(table, id, nomeCompleto, record.scadenza || '', record.attivo !== undefined ? record.attivo : true, record.is_tennis_member, record.is_padel_member);
+        } else if (action === 'delete') {
+          deleteUser(table, id, nomeCompleto);
+        }
+      });
+    });
+  }
 
   const loginSection = document.getElementById('login-section');
   const bookingSection = document.getElementById('booking-section');
@@ -677,6 +699,20 @@ function copiaLink() {
   function pad(n){return n.toString().padStart(2,'0');}
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function fmtTime(h){const hh=Math.floor(h), mm=Math.round((h-hh)*60); return pad(hh)+':'+pad(mm);}
+
+  // Previene XSS: converte caratteri HTML speciali in entità sicure.
+  // Va usata SEMPRE quando un dato che arriva da un utente (nome, cognome,
+  // nomi giocatori, ecc.) viene inserito nella pagina tramite innerHTML
+  // o template string.
+  function escapeHtml(str){
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   async function signInWithSupabaseAuth(email, password){
     const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
@@ -964,10 +1000,11 @@ function copiaLink() {
   }
 
   function formatNamesDisplay(names, field){
-    if(field === 'tennis' && names.length === 1) return names[0] + '<span class="match-type">Allenamento</span>';
-    if(field === 'tennis' && names.length === 2) return names[0] + ' vs ' + names[1] + '<span class="match-type">Singolo</span>';
-    if(names.length === 4) return names[0] + ', ' + names[1] + ' vs ' + names[2] + ', ' + names[3] + (field === 'tennis' ? '<span class="match-type">Doppio</span>' : '');
-    return names.join(', ');
+    const n = names.map(escapeHtml);
+    if(field === 'tennis' && n.length === 1) return n[0] + '<span class="match-type">Allenamento</span>';
+    if(field === 'tennis' && n.length === 2) return n[0] + ' vs ' + n[1] + '<span class="match-type">Singolo</span>';
+    if(n.length === 4) return n[0] + ', ' + n[1] + ' vs ' + n[2] + ', ' + n[3] + (field === 'tennis' ? '<span class="match-type">Doppio</span>' : '');
+    return n.join(', ');
   }
 
   async function renderSlots(){
@@ -1013,7 +1050,7 @@ function copiaLink() {
         left.innerHTML = `
           <div class="time">${s.label}</div>
           <div class="status">${formatNamesDisplay(booking.names, currentField)}</div>
-          <div class="prenotato-da">👤 Prenotato da: <strong>${booking.prenotato_da}</strong> ${badge}</div>
+          <div class="prenotato-da">👤 Prenotato da: <strong>${escapeHtml(booking.prenotato_da)}</strong> ${badge}</div>
           ${keyboxHtml}
           ${ownCodeHtml}
         `;
@@ -1100,7 +1137,7 @@ function copiaLink() {
     const nameCount = f.maxNames;
     const requiredCount = f.minNames;
     
-    const prenotanteName = loggedUser.nome + ' ' + loggedUser.cognome;
+    const prenotanteName = escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome);
     let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
     for(let i=1;i<nameCount;i++){
       const isRequired = i < requiredCount;
@@ -1113,7 +1150,7 @@ function copiaLink() {
           <h2 id="modal-title">${f.label}</h2>
           <div class="meta">${new Date(selectedDate+'T00:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'})} · ${slot.label}</div>
           <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
-            👤 Stai prenotando come: <strong>${loggedUser.nome} ${loggedUser.cognome}</strong> 
+            👤 Stai prenotando come: <strong>${escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome)}</strong> 
             ${loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}
           </div>
           ${fieldsHtml}
@@ -1402,7 +1439,7 @@ function copiaLink() {
 
   function showToast(msg){
     const root = document.getElementById('toast-root');
-    root.innerHTML = '<div class="toast">' + msg + '</div>';
+    root.innerHTML = '<div class="toast">' + escapeHtml(msg) + '</div>';
     setTimeout(()=>{ root.innerHTML=''; }, 2600);
   }
 
@@ -1668,6 +1705,7 @@ function copiaLink() {
         html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
         
         data.forEach(u => {
+          userDataCache['Tesserati:' + u.id] = u;
           const sports = [];
           if (u.is_tennis_member) sports.push('🎾');
           if (u.is_padel_member) sports.push('🏸');
@@ -1676,15 +1714,15 @@ function copiaLink() {
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           
           html += `<tr>
-            <td><strong>${u.codice}</strong></td>
-            <td>${u.nome} ${u.cognome}</td>
+            <td><strong>${escapeHtml(u.codice)}</strong></td>
+            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
             <td>${sportLabel}</td>
             <td>${scadenza}</td>
             <td>${attivo}</td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('Tesserati','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},${u.is_tennis_member},${u.is_padel_member})">✏️</button>
-                <button class="btn-delete" onclick="deleteUser('Tesserati','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
+                <button class="btn-edit" data-action="edit" data-table="Tesserati" data-id="${escapeHtml(u.id)}">✏️</button>
+                <button class="btn-delete" data-action="delete" data-table="Tesserati" data-id="${escapeHtml(u.id)}">🗑️</button>
               </div>
             </td>
           </tr>`;
@@ -1692,6 +1730,7 @@ function copiaLink() {
         
         html += '</tbody></table>';
         container.innerHTML = html;
+        attachUserActionListeners(container);
         
       } else {
         const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
@@ -1709,6 +1748,7 @@ function copiaLink() {
         html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
         
         data.forEach(u => {
+          userDataCache['Ospiti:' + u.id] = u;
           const sports = [];
           if (u.is_tennis_member) sports.push('🎾');
           if (u.is_padel_member) sports.push('🏸');
@@ -1717,15 +1757,15 @@ function copiaLink() {
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           
           html += `<tr>
-            <td><strong>${u.codice}</strong></td>
-            <td>${u.nome} ${u.cognome}</td>
+            <td><strong>${escapeHtml(u.codice)}</strong></td>
+            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
             <td>${sportLabel}</td>
             <td>${scadenza}</td>
             <td>${attivo}</td>
             <td>
               <div class="user-actions">
-                <button class="btn-edit" onclick="editUser('Ospiti','${u.id}','${u.nome} ${u.cognome}','${u.scadenza || ''}',${u.attivo !== undefined ? u.attivo : true},${u.is_tennis_member},${u.is_padel_member})">✏️</button>
-                <button class="btn-delete" onclick="deleteUser('Ospiti','${u.id}','${u.nome} ${u.cognome}')">🗑️</button>
+                <button class="btn-edit" data-action="edit" data-table="Ospiti" data-id="${escapeHtml(u.id)}">✏️</button>
+                <button class="btn-delete" data-action="delete" data-table="Ospiti" data-id="${escapeHtml(u.id)}">🗑️</button>
               </div>
             </td>
           </tr>`;
@@ -1733,6 +1773,7 @@ function copiaLink() {
         
         html += '</tbody></table>';
         container.innerHTML = html;
+        attachUserActionListeners(container);
       }
     } catch(e) {
       container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
@@ -1929,7 +1970,7 @@ function copiaLink() {
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
-          <h2>✏️ Modifica ${nome}</h2>
+          <h2>✏️ Modifica ${escapeHtml(nome)}</h2>
           <p class="modal-subtitle">Aggiorna sport, scadenza e stato dell'utente.</p>
           
           <div class="name-field">
@@ -2166,7 +2207,7 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true">
           <h2>Profilo ospite creato!</h2>
-          <p class="modal-subtitle">Ciao <strong>${nome} ${cognome}</strong>, il tuo profilo è attivo fino al <strong>${dataFmt}</strong>.</p>
+          <p class="modal-subtitle">Ciao <strong>${escapeHtml(nome + ' ' + cognome)}</strong>, il tuo profilo è attivo fino al <strong>${dataFmt}</strong>.</p>
           <p style="text-align:center;margin:8px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso:</p>
           <div class="booking-code">${codice}</div>
           <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare.</p>
