@@ -1,2 +1,11 @@
-npm install totp-generator qrcode
+{
+  "name": "prenota",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "qrcode": "^1.5.4",
+    "totp-generator": "^2.0.1"
+  }
+}
 
