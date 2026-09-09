@@ -18,7 +18,7 @@ async function generateUniqueCode(tentativi = 0) {
   const codice = 'o' + numero;
 
   const checkRes = await fetch(
-    `\( {SUPABASE_URL}/rest/v1/Ospiti?codice=eq. \){codice}&select=id`,
+    `${SUPABASE_URL}/rest/v1/Ospiti?codice=eq.${codice}&select=id`,
     {
       headers: {
         apikey: SERVICE_ROLE_KEY,
@@ -83,7 +83,7 @@ module.exports = async function handler(req, res) {
     const yyyy = scadenzaDate.getFullYear();
     const mm = String(scadenzaDate.getMonth() + 1).padStart(2, '0');
     const dd = String(scadenzaDate.getDate()).padStart(2, '0');
-    const scadenza = `\( {yyyy}- \){mm}-${dd}`;
+    const scadenza = `${yyyy}-${mm}-${dd}`;
 
     // ------------------------------------------------------------
     // 4) Prepara payload
