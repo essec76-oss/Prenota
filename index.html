@@ -2519,4 +2519,428 @@ function copiaLink() {
       
       try {
         const tableName = table;
-        const paylo
+        const payload = {
+          is_tennis_member: sport === 'tennis' || sport === 'both',
+          is_padel_member: sport === 'padel' || sport === 'both',
+          scadenza: nuovaScadenza,
+          attivo: nuovoAttivo
+        };
+        if (isTesserato && specialEl) {
+          payload.can_book_special = specialEl.checked;
+        }
+        
+        const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
+          method: 'PATCH',
+          headers: {
+            apikey: SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+            Authorization: 'Bearer ' + loggedUser.accessToken
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res.ok) {
+          let errorMsg = '';
+          try {
+            const errBody = await res.json();
+            errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
+          } catch(_) {
+            errorMsg = res.status + ' ' + res.statusText;
+          }
+          throw new Error(errorMsg);
+        }
+        
+        closeModal();
+        showToast('✅ Modifiche salvate per ' + nome);
+        await loadUserList(currentUserTab);
+        
+      } catch(e) {
+        console.error('❌ Errore:', e);
+        errorEl.textContent = '❌ Errore: ' + e.message;
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Salva modifiche';
+      }
+    });
+  };
+
+  window.deleteUser = async function(table, id, nome) {
+    if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
+    
+    if (!loggedUser || !loggedUser.accessToken) {
+      showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
+      return;
+    }
+    if (!adminMode) {
+      showToast('❌ Attiva prima la modalità Admin (checkbox).');
+      return;
+    }
+    
+    try {
+      const tableName = table;
+      
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        }
+      });
+      
+      if (!res.ok) {
+        let errorMsg = '';
+        try {
+          const errBody = await res.json();
+          errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
+        } catch(_) {
+          errorMsg = res.status + ' ' + res.statusText;
+        }
+        throw new Error(errorMsg);
+      }
+      
+      showToast('✅ ' + nome + ' eliminato con successo');
+      await loadUserList(currentUserTab);
+      
+    } catch(e) {
+      console.error('❌ Errore eliminazione:', e);
+      showToast('❌ Errore: ' + e.message);
+    }
+  };
+
+  function openGuestRegisterModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
+          <h2 id="guest-reg-title">Crea profilo ospite</h2>
+          <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
+          <div class="name-field">
+            <label for="guest-nome">Nome *</label>
+            <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
+          </div>
+          <div class="name-field">
+            <label for="guest-cognome">Cognome *</label>
+            <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
+          </div>
+          <div class="name-field">
+            <label for="guest-sport">Sport</label>
+            <select id="guest-sport">
+              <option value="both">Tennis + Padel</option>
+              <option value="tennis">Solo Tennis</option>
+              <option value="padel">Solo Padel</option>
+            </select>
+          </div>
+          <div class="form-error" id="guest-reg-error"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
+            <button class="btn-confirm" id="guest-reg-save">Crea profilo</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('guest-reg-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
+    document.getElementById('guest-reg-save').addEventListener('click', handleSelfCreateGuest);
+  }
+
+  async function handleSelfCreateGuest() {
+    const errorEl = document.getElementById('guest-reg-error');
+    const nome = document.getElementById('guest-nome').value.trim();
+    const cognome = document.getElementById('guest-cognome').value.trim();
+    const sport = document.getElementById('guest-sport').value;
+    const saveBtn = document.getElementById('guest-reg-save');
+
+    if (!nome || !cognome) {
+      errorEl.textContent = 'Nome e Cognome sono obbligatori.';
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Creo...';
+    errorEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/create-guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, cognome, sport })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Creazione fallita');
+      }
+
+      closeModal();
+      showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
+      loadGuestSlotsCounter();
+
+    } catch(e) {
+      console.error('❌ Errore creazione ospite self:', e);
+      errorEl.textContent = '❌ Errore: ' + (e.message || 'creazione fallita');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Crea profilo';
+    }
+  }
+
+  function showGuestCodeModal(codice, nome, cognome, scadenza) {
+    const dataFmt = new Date(scadenza + 'T00:00:00').toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true">
+          <h2>Profilo ospite creato!</h2>
+          <p class="modal-subtitle">Ciao <strong>${escapeHtml(nome + ' ' + cognome)}</strong>, il tuo profilo è attivo fino al <strong>${dataFmt}</strong>.</p>
+          <p style="text-align:center;margin:8px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso:</p>
+          <div class="booking-code">${codice}</div>
+          <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare.</p>
+          <div class="modal-actions">
+            <button class="btn-confirm" id="guest-code-ok" style="flex:none;width:100%;">Ho salvato il codice</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('guest-code-ok').addEventListener('click', function(){
+      closeModal();
+      const loginInput = document.getElementById('login-codice');
+      if (loginInput) {
+        loginInput.value = codice;
+        loginInput.type = 'text';
+      }
+      showToast('Ora puoi accedere con il tuo codice');
+    });
+  }
+
+  async function handleLogin() {
+    const codice = document.getElementById('login-codice').value.trim().toLowerCase();
+    const errorEl = document.getElementById('login-error');
+    const loginBtn = document.getElementById('login-btn');
+    
+    if (!codice) {
+      errorEl.textContent = 'Inserisci il tuo codice ID.';
+      return;
+    }
+    
+    if (!/^[to]\d{4}$/.test(codice)) {
+      errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
+      return;
+    }
+    
+    errorEl.textContent = 'Verifica in corso...';
+    loginBtn.disabled = true;
+    
+    try {
+      let url;
+      let tipo;
+      
+      if (codice.startsWith('t')) {
+        tipo = 'tesserato';
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id,totp_enabled,can_book_special'
+          + '&codice=eq.' + encodeURIComponent(codice);
+      } else {
+        tipo = 'ospite';
+        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
+          + '&codice=eq.' + encodeURIComponent(codice)
+          + '&attivo=eq.true'
+          + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
+      }
+      
+      console.log('🔍 Cerco utente con codice:', codice);
+      
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      
+      if (!res.ok) throw new Error('Errore di connessione');
+      
+      const data = await res.json();
+      console.log('📦 Dati ricevuti:', data);
+      
+      if (data.length === 0) {
+        errorEl.textContent = '❌ Codice non valido o utente disattivato. Contatta il circolo.';
+        loginBtn.disabled = false;
+        return;
+      }
+      
+      const utente = data[0];
+
+      if (utente.is_admin && utente.totp_enabled) {
+        console.log('🔐 Admin richiede 2FA');
+        
+        loginSection.style.display = 'none';
+        bookingSection.style.display = 'block';
+        
+        loggedUser = {
+          id: utente.id,
+          nome: utente.nome,
+          cognome: utente.cognome,
+          codice: utente.codice,
+          tipo: tipo,
+          is_tennis_member: utente.is_tennis_member || false,
+          is_padel_member: utente.is_padel_member || false,
+          is_admin: utente.is_admin || false,
+          can_book_special: utente.can_book_special || false,
+          scadenza: utente.scadenza || null,
+          totp_enabled: utente.totp_enabled || false,
+          authenticated: false,
+          accessToken: null
+        };
+
+        const tipoLabel = loggedUser.tipo === 'tesserato' 
+          ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
+          : '<span class="badge-ospite">Ospite</span>';
+        document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
+        document.getElementById('user-badge').innerHTML = tipoLabel;
+        renderGuestExpiry();
+        setupAdminToggle();
+        renderTesseratoExpiry();
+        
+        setAccent('tennis');
+        renderFieldNote();
+        renderDow();
+        renderCalendar();
+        deleteOldBookings();
+
+        showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
+        errorEl.textContent = '';
+        loginBtn.disabled = false;
+        return;
+      }
+
+      await completeLogin(utente, tipo);
+      
+    } catch(e) {
+      errorEl.textContent = 'Errore di connessione. Riprova.';
+      loginBtn.disabled = false;
+      console.error('❌ Errore:', e);
+    }
+  }
+
+  async function completeLogin(utente, tipo) {
+    let accessToken = null;
+    if (utente.auth_id) {
+      try {
+        const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
+        accessToken = authData.access_token;
+        console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
+      } catch(authErr) {
+        console.warn('⚠️ Auth Supabase non disponibile, continuo senza token');
+      }
+    }
+
+    loggedUser = {
+      id: utente.id,
+      nome: utente.nome,
+      cognome: utente.cognome,
+      codice: utente.codice,
+      tipo: tipo,
+      is_tennis_member: utente.is_tennis_member || false,
+      is_padel_member: utente.is_padel_member || false,
+      is_admin: utente.is_admin || false,
+      can_book_special: utente.can_book_special || false,
+      scadenza: utente.scadenza || null,
+      totp_enabled: utente.totp_enabled || false,
+      authenticated: !!accessToken,
+      accessToken: accessToken
+    };
+    
+    console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
+    
+    document.getElementById('login-error').textContent = '';
+    document.getElementById('login-btn').disabled = false;
+    
+    loginSection.style.display = 'none';
+    bookingSection.style.display = 'block';
+    
+    const tipoLabel = loggedUser.tipo === 'tesserato' 
+      ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
+      : '<span class="badge-ospite">Ospite</span>';
+    document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
+    document.getElementById('user-badge').innerHTML = tipoLabel;
+    renderGuestExpiry();
+    setupAdminToggle();
+    renderTesseratoExpiry();
+    
+    setAccent('tennis');
+    renderFieldNote();
+    renderDow();
+    renderCalendar();
+    deleteOldBookings();
+
+    if (accessToken) {
+      setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + loggedUser.codice); }, 400);
+    }
+  }
+
+  function handleLogout() {
+    loggedUser = null;
+    adminMode = false;
+    loginSection.style.display = 'block';
+    bookingSection.style.display = 'none';
+    document.getElementById('login-codice').value = '';
+    document.getElementById('login-error').textContent = '';
+    document.getElementById('guest-expiry').style.display = 'none';
+    document.getElementById('tesserato-expiry').style.display = 'none';
+    selectedDate = null;
+    document.getElementById('slots-section').style.display = 'none';
+  }
+
+  document.getElementById('login-btn').addEventListener('click', handleLogin);
+  document.getElementById('login-codice').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
+  document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
+  
+  document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
+  document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
+  
+  document.getElementById('prev-month').addEventListener('click', function(){
+    if(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth()) return;
+    viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
+    renderCalendar();
+  });
+  
+  document.getElementById('next-month').addEventListener('click', function(){
+    if(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth()) return;
+    viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
+    renderCalendar();
+  });
+
+  (function setupCalendarSwipe(){
+    const calGrid = document.getElementById('cal-grid');
+    let touchStartX = 0, touchStartY = 0;
+    calGrid.addEventListener('touchstart', function(e){
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+    calGrid.addEventListener('touchend', function(e){
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if (dx < 0) {
+        if (!(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth())) {
+          viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
+          renderCalendar();
+        }
+      } else {
+        if (!(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth())) {
+          viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
+          renderCalendar();
+        }
+      }
+    }, { passive: true });
+  })();
+
+  document.getElementById('clean-btn').addEventListener('click', async function() {
+    await deleteOldBookings();
+    showToast('🧹 Prenotazioni vecchie cancellate!');
+    updateBookingDots();
+    renderSlots();
+  });
+
+})();
+</script>
+</body>
+</html>
