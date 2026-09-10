@@ -5,7 +5,7 @@ import { authenticator } from 'otplib';
 // Inizializza Supabase con le variabili d'ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, SUPABASE_SERVICE_KEY);
 
 // Configura otplib per generare/verificare codici TOTP
 authenticator.options = {
@@ -48,6 +48,17 @@ export default async function handler(req, res) {
 
     if (!isValid) {
       return res.status(401).json({ error: 'Codice 2FA non valido' });
+    }
+
+    // Attiva il 2FA per l'utente dopo verifica riuscita
+    const { error: updateError } = await supabase
+      .from(tableName)
+      .update({ totp_enabled: true })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Errore attivazione 2FA:', updateError);
+      return res.status(500).json({ error: 'Verifica riuscita ma attivazione fallita' });
     }
 
     // Se il codice è valido, restituisci una risposta di successo
