@@ -195,6 +195,12 @@
   .cal-day.past{color:#C7C4B8;background:#F5F5F0;border-color:#E8E5DC;cursor:not-allowed;opacity:0.7;}
   .cal-day:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   
+  .cal-day.has-torneo{border-color:#8A5A2A;box-shadow:inset 0 0 0 2px #F4E8D0;}
+  .cal-day.has-torneo:not(.selected){background:#FBF3E4;}
+  .cal-day.has-allenamento{border-color:#6B5FA8;box-shadow:inset 0 0 0 2px #E4DEF4;}
+  .cal-day.has-allenamento:not(.selected){background:#F3F0FB;}
+  .cal-day.has-torneo.has-allenamento:not(.selected){background:linear-gradient(135deg,#FBF3E4 50%,#F3F0FB 50%);}
+
   .slots-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:26px 0 12px;}
   .slot-list{display:flex;flex-direction:column;gap:10px;}
   
@@ -390,6 +396,9 @@
   .slot .prenotato-da{font-size:18px !important;margin-top:6px !important;}
   .slot .badge-tesserato,.slot .badge-ospite{font-size:16px !important;padding:3px 12px !important;}
   .match-type{display:inline-block;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8A5A2A;background:#F4E8D0;border-radius:8px;padding:3px 10px;margin-left:8px;vertical-align:middle;}
+  .special-mode-badge{display:inline-block;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-radius:8px;padding:3px 10px;margin-left:8px;vertical-align:middle;}
+  .special-mode-badge.torneo{color:#8A5A2A;background:#F4E8D0;}
+  .special-mode-badge.allenamento{color:#4A3F80;background:#E4DEF4;}
   .clean-btn{margin-top:16px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink-soft);transition:all .15s;}
   .clean-btn:hover{border-color:var(--accent);color:var(--accent);}
   .field-note.warning{background:#F4DFD2;color:#8a3a15;font-weight:600;}
@@ -408,6 +417,23 @@
   }
   .slot .book-btn.admin-delete:hover{background:#8A3A15;}
   .slot.booked.admin-visible{border:2px solid #B84B1E;background:#FDF0EA;}
+
+  .mode-selector{display:flex;gap:8px;margin-bottom:16px;}
+  .mode-selector button{
+    flex:1;
+    padding:10px 8px;
+    border:2px solid var(--line);
+    border-radius:8px;
+    background:var(--surface);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .mode-selector button.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+  .mode-selector button:hover:not(.active){border-color:var(--accent);}
 
   .user-list-table{
     width:100%;
@@ -726,7 +752,7 @@ function copiaLink() {
         if (!record) { showToast('❌ Utente non trovato, ricarica la lista.'); return; }
         const nomeCompleto = record.nome + ' ' + record.cognome;
         if (action === 'edit') {
-          editUser(table, id, nomeCompleto, record.scadenza || '', record.attivo !== undefined ? record.attivo : true, record.is_tennis_member, record.is_padel_member);
+          editUser(table, id, nomeCompleto, record.scadenza || '', record.attivo !== undefined ? record.attivo : true, record.is_tennis_member, record.is_padel_member, record.can_book_special);
         } else if (action === 'delete') {
           deleteUser(table, id, nomeCompleto);
         }
@@ -940,14 +966,18 @@ function copiaLink() {
     const end = nextMonth.getFullYear()+'-'+pad(nextMonth.getMonth()+1)+'-01';
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=date&field=eq.' + encodeURIComponent(field)
+        + '?select=date,modalita&field=eq.' + encodeURIComponent(field)
         + '&date=gte.' + start + '&date=lt.' + end;
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if(!res.ok) return new Map();
       const rows = await res.json();
       const countMap = new Map();
       rows.forEach(r => {
-        countMap.set(r.date, (countMap.get(r.date) || 0) + 1);
+        const entry = countMap.get(r.date) || { count: 0, torneo: false, allenamento: false };
+        entry.count += 1;
+        if (r.modalita === 'torneo') entry.torneo = true;
+        if (r.modalita === 'allenamento') entry.allenamento = true;
+        countMap.set(r.date, entry);
       });
       return countMap;
     }catch(e){
@@ -960,7 +990,8 @@ function copiaLink() {
     const bookingCounts = await loadMonthDates(currentField, year, month);
     document.querySelectorAll('.cal-day[data-date]').forEach(cell=>{
       const date = cell.dataset.date;
-      const count = bookingCounts.get(date) || 0;
+      const info = bookingCounts.get(date) || { count: 0, torneo: false, allenamento: false };
+      const count = info.count;
       if(count > 0){
         cell.classList.add('has-booking');
         cell.setAttribute('data-count', count);
@@ -977,6 +1008,8 @@ function copiaLink() {
         if(badge) badge.remove();
         cell.removeAttribute('data-count');
       }
+      cell.classList.toggle('has-torneo', !!info.torneo);
+      cell.classList.toggle('has-allenamento', !!info.allenamento);
     });
   }
 
@@ -998,7 +1031,7 @@ function copiaLink() {
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,code'
+        + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,code,modalita'
         + '&field=eq.' + encodeURIComponent(currentField)
         + '&date=eq.' + encodeURIComponent(key);
       const res = await fetch(url, {
@@ -1015,7 +1048,8 @@ function copiaLink() {
           tipo_prenotante: r.tipo_prenotante || 'ospite',
           tesserato_id: r.tesserato_id,
           ospite_id: r.ospite_id,
-          code: r.code || ''
+          code: r.code || '',
+          modalita: r.modalita || null
         };
       });
       bookingsCache[key] = data;
@@ -1036,8 +1070,12 @@ function copiaLink() {
     return slots;
   }
 
-  function formatNamesDisplay(names, field){
+  function formatNamesDisplay(names, field, modalita){
     const n = names.map(escapeHtml);
+    if (modalita === 'torneo' || modalita === 'allenamento') {
+      const label = modalita === 'torneo' ? 'Torneo' : 'Allenamento';
+      return n.join(', ') + '<span class="special-mode-badge ' + modalita + '">' + label + '</span>';
+    }
     if(field === 'tennis' && n.length === 1) return n[0] + '<span class="match-type">Allenamento</span>';
     if(field === 'tennis' && n.length === 2) return n[0] + ' vs ' + n[1] + '<span class="match-type">Singolo</span>';
     if(n.length === 4) return n[0] + ', ' + n[1] + ' vs ' + n[2] + ', ' + n[3] + (field === 'tennis' ? '<span class="match-type">Doppio</span>' : '');
@@ -1077,16 +1115,16 @@ function copiaLink() {
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
         const keyboxCode = currentField === 'tennis' ? keyboxCodeTennis : keyboxCodePadel;
-        const keyboxHtml = keyboxCode
+        const keyboxHtml = (booking.modalita === 'allenamento') ? '' : (keyboxCode
           ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
-          : '';
+          : '');
         const ownCodeHtml = (isOwnBooking(booking) && booking.code)
           ? '<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>' + booking.code + '</strong></div>'
           : '';
         
         left.innerHTML = `
           <div class="time">${s.label}</div>
-          <div class="status">${formatNamesDisplay(booking.names, currentField)}</div>
+          <div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div>
           <div class="prenotato-da">👤 Prenotato da: <strong>${escapeHtml(booking.prenotato_da)}</strong> ${badge}</div>
           ${keyboxHtml}
           ${ownCodeHtml}
@@ -1158,6 +1196,12 @@ function copiaLink() {
     }
   }
 
+  let selectedModalita = null;
+
+  function canUseSpecialModes(){
+    return !!(loggedUser && loggedUser.tipo === 'tesserato' && loggedUser.can_book_special);
+  }
+
   function openBookingModal(slot, timeId){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1168,6 +1212,7 @@ function copiaLink() {
       return;
     }
     
+    selectedModalita = null;
     const f = FIELDS[currentField];
     const root = document.getElementById('modal-root');
     const nameCount = f.maxNames;
@@ -1177,8 +1222,16 @@ function copiaLink() {
     let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
     for(let i=1;i<nameCount;i++){
       const isRequired = i < requiredCount;
-      fieldsHtml += '<div class="name-field">\n        <label for="name-' + i + '">Giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
+      fieldsHtml += '<div class="name-field" id="name-field-' + i + '">\n        <label for="name-' + i + '">Giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
     }
+
+    const modeSelectorHtml = canUseSpecialModes()
+      ? `<div class="mode-selector" id="mode-selector">
+          <button type="button" class="active" data-mode="">Normale</button>
+          <button type="button" data-mode="torneo">🏆 Torneo</button>
+          <button type="button" data-mode="allenamento">🎯 Allenamento</button>
+        </div>`
+      : '';
     
     root.innerHTML = `
       <div class="overlay" id="overlay">
@@ -1189,6 +1242,7 @@ function copiaLink() {
             👤 Stai prenotando come: <strong>${escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome)}</strong> 
             ${loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}
           </div>
+          ${modeSelectorHtml}
           ${fieldsHtml}
           <div class="form-error" id="form-error"></div>
           <div class="modal-actions">
@@ -1202,6 +1256,18 @@ function copiaLink() {
     document.getElementById('btn-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> confirmBooking(timeId, requiredCount, nameCount));
+
+    const modeSelectorEl = document.getElementById('mode-selector');
+    if (modeSelectorEl) {
+      modeSelectorEl.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', function(){
+          modeSelectorEl.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedModalita = btn.dataset.mode || null;
+          applyModalitaToNameFields(nameCount);
+        });
+      });
+    }
 
     loadAllPlayersForSelect().then(({ tesserati, ospiti }) => {
       const options = [];
@@ -1237,6 +1303,14 @@ function copiaLink() {
     });
   }
 
+  function applyModalitaToNameFields(nameCount){
+    for (let i = 1; i < nameCount; i++) {
+      const fieldEl = document.getElementById('name-field-' + i);
+      if (!fieldEl) continue;
+      fieldEl.style.display = (selectedModalita === 'allenamento') ? 'none' : '';
+    }
+  }
+
   async function confirmBooking(timeId, requiredCount, nameCount){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1249,13 +1323,18 @@ function copiaLink() {
     }
     
     const errorEl = document.getElementById('form-error');
+    const isAllenamento = selectedModalita === 'allenamento';
     const names = [];
-    for(let i=0;i<nameCount;i++){
-      const val = document.getElementById('name-'+i).value.trim();
-      if(val) names.push(val);
+    if (isAllenamento) {
+      names.push(document.getElementById('name-0').value.trim());
+    } else {
+      for(let i=0;i<nameCount;i++){
+        const val = document.getElementById('name-'+i).value.trim();
+        if(val) names.push(val);
+      }
     }
     
-    if(names.length < requiredCount){
+    if(!isAllenamento && names.length < requiredCount){
       errorEl.textContent = currentField==='padel'
         ? 'Servono esattamente 4 nomi per prenotare il padel.'
         : 'Serve almeno il tuo nome per prenotare il tennis.';
@@ -1284,7 +1363,8 @@ function copiaLink() {
         names: names.join(', '),
         code: bookingCode,
         prenotato_da: loggedUser.nome + ' ' + loggedUser.cognome,
-        tipo_prenotante: loggedUser.tipo
+        tipo_prenotante: loggedUser.tipo,
+        modalita: selectedModalita || null
       };
       
       if (loggedUser.tipo === 'tesserato') {
@@ -1990,6 +2070,12 @@ function copiaLink() {
                 <option value="padel">Padel</option>
               </select>
             </div>
+            <div class="name-field" id="create-special-field" style="display:none;">
+              <label for="create-special">
+                <input type="checkbox" id="create-special" style="width:auto;margin-right:6px;vertical-align:middle;" />
+                Può prenotare in modalità Torneo / Allenamento
+              </label>
+            </div>
             <div class="name-field">
               <label for="create-scadenza">Scadenza (lasciare vuoto per default)</label>
               <input id="create-scadenza" type="date" />
@@ -2070,6 +2156,11 @@ function copiaLink() {
 
   function toggleCreateFields() {
     document.getElementById('create-sport-field').style.display = 'block';
+    const tipo = document.getElementById('create-tipo').value;
+    const specialField = document.getElementById('create-special-field');
+    if (specialField) {
+      specialField.style.display = (tipo === 'tesserato') ? 'block' : 'none';
+    }
   }
 
   async function loadUserList(tipo) {
@@ -2080,7 +2171,7 @@ function copiaLink() {
       let data = [];
       
       if (tipo === 'tesserati') {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo&order=cognome.asc', {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo,can_book_special&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento tesserati');
@@ -2092,7 +2183,7 @@ function copiaLink() {
         }
         
         let html = '<div class="user-list-section-title">⭐ Tesserati</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Torneo/Allen.</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
         
         data.forEach(u => {
           userDataCache['Tesserati:' + u.id] = u;
@@ -2102,11 +2193,13 @@ function copiaLink() {
           const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
+          const specialLabel = u.can_book_special ? '✅' : '—';
           
           html += `<tr>
             <td><strong>${escapeHtml(u.codice)}</strong></td>
             <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
             <td>${sportLabel}</td>
+            <td>${specialLabel}</td>
             <td>${scadenza}</td>
             <td>${attivo}</td>
             <td>
@@ -2206,6 +2299,7 @@ function copiaLink() {
     const nome = document.getElementById('create-nome').value.trim();
     const cognome = document.getElementById('create-cognome').value.trim();
     const sport = document.getElementById('create-sport').value;
+    const canBookSpecial = tipo === 'tesserato' && document.getElementById('create-special').checked;
     const scadenza = document.getElementById('create-scadenza').value || null;
     const attivo = document.getElementById('create-attivo').value === 'true';
     const saveBtn = document.getElementById('create-save');
@@ -2240,6 +2334,7 @@ function copiaLink() {
           is_tennis_member: sport === 'tennis' || sport === 'both',
           is_padel_member: sport === 'padel' || sport === 'both',
           is_admin: false,
+          can_book_special: canBookSpecial,
           scadenza: scadenza || null,
           attivo: attivo
         };
@@ -2338,9 +2433,10 @@ function copiaLink() {
     saveBtn.textContent = '💾 Crea utente';
   }
 
-  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, isTennis, isPadel) {
+  window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, isTennis, isPadel, canBookSpecialCorrente){
     const tennis = isTennis === true || isTennis === 'true';
     const padel = isPadel === true || isPadel === 'true';
+    const specialCorrente = canBookSpecialCorrente === true || canBookSpecialCorrente === 'true';
     
     let sportCorrente = 'both';
     if (tennis && padel) sportCorrente = 'both';
@@ -2349,6 +2445,7 @@ function copiaLink() {
     
     const dataInput = scadenzaCorrente || '';
     const attivoChecked = attivoCorrente === true || attivoCorrente === 'true';
+    const isTesserato = table === 'Tesserati';
     
     const root = document.getElementById('modal-root');
     
@@ -2366,6 +2463,13 @@ function copiaLink() {
               <option value="padel" ${sportCorrente === 'padel' ? 'selected' : ''}>Padel</option>
             </select>
           </div>
+          ${isTesserato ? `
+          <div class="name-field">
+            <label for="edit-special">
+              <input type="checkbox" id="edit-special" style="width:auto;margin-right:6px;vertical-align:middle;" ${specialCorrente ? 'checked' : ''} />
+              Può prenotare in modalità Torneo / Allenamento
+            </label>
+          </div>` : ''}
           <div class="name-field">
             <label for="edit-scadenza">Scadenza</label>
             <input id="edit-scadenza" type="date" value="${dataInput}" />
@@ -2395,6 +2499,7 @@ function copiaLink() {
     document.getElementById('edit-save').addEventListener('click', async function() {
       const errorEl = document.getElementById('edit-error');
       const sport = document.getElementById('edit-sport').value;
+      const specialEl = document.getElementById('edit-special');
       const nuovaScadenza = document.getElementById('edit-scadenza').value || null;
       const nuovoAttivo = document.getElementById('edit-attivo').value === 'true';
       const saveBtn = document.getElementById('edit-save');
@@ -2414,423 +2519,4 @@ function copiaLink() {
       
       try {
         const tableName = table;
-        const payload = {
-          is_tennis_member: sport === 'tennis' || sport === 'both',
-          is_padel_member: sport === 'padel' || sport === 'both',
-          scadenza: nuovaScadenza,
-          attivo: nuovoAttivo
-        };
-        
-        const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
-          method: 'PATCH',
-          headers: {
-            apikey: SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-            Authorization: 'Bearer ' + loggedUser.accessToken
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-          let errorMsg = '';
-          try {
-            const errBody = await res.json();
-            errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
-          } catch(_) {
-            errorMsg = res.status + ' ' + res.statusText;
-          }
-          throw new Error(errorMsg);
-        }
-        
-        closeModal();
-        showToast('✅ Modifiche salvate per ' + nome);
-        await loadUserList(currentUserTab);
-        
-      } catch(e) {
-        console.error('❌ Errore:', e);
-        errorEl.textContent = '❌ Errore: ' + e.message;
-        saveBtn.disabled = false;
-        saveBtn.textContent = '💾 Salva modifiche';
-      }
-    });
-  };
-
-  window.deleteUser = async function(table, id, nome) {
-    if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
-    
-    if (!loggedUser || !loggedUser.accessToken) {
-      showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
-      return;
-    }
-    if (!adminMode) {
-      showToast('❌ Attiva prima la modalità Admin (checkbox).');
-      return;
-    }
-    
-    try {
-      const tableName = table;
-      
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
-          Authorization: 'Bearer ' + loggedUser.accessToken
-        }
-      });
-      
-      if (!res.ok) {
-        let errorMsg = '';
-        try {
-          const errBody = await res.json();
-          errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
-        } catch(_) {
-          errorMsg = res.status + ' ' + res.statusText;
-        }
-        throw new Error(errorMsg);
-      }
-      
-      showToast('✅ ' + nome + ' eliminato con successo');
-      await loadUserList(currentUserTab);
-      
-    } catch(e) {
-      console.error('❌ Errore eliminazione:', e);
-      showToast('❌ Errore: ' + e.message);
-    }
-  };
-
-  function openGuestRegisterModal() {
-    const root = document.getElementById('modal-root');
-    root.innerHTML = `
-      <div class="overlay" id="overlay">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
-          <h2 id="guest-reg-title">Crea profilo ospite</h2>
-          <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
-          <div class="name-field">
-            <label for="guest-nome">Nome *</label>
-            <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
-          </div>
-          <div class="name-field">
-            <label for="guest-cognome">Cognome *</label>
-            <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
-          </div>
-          <div class="name-field">
-            <label for="guest-sport">Sport</label>
-            <select id="guest-sport">
-              <option value="both">Tennis + Padel</option>
-              <option value="tennis">Solo Tennis</option>
-              <option value="padel">Solo Padel</option>
-            </select>
-          </div>
-          <div class="form-error" id="guest-reg-error"></div>
-          <div class="modal-actions">
-            <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
-            <button class="btn-confirm" id="guest-reg-save">Crea profilo</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('guest-reg-cancel').addEventListener('click', closeModal);
-    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
-    document.getElementById('guest-reg-save').addEventListener('click', handleSelfCreateGuest);
-  }
-
-  async function handleSelfCreateGuest() {
-    const errorEl = document.getElementById('guest-reg-error');
-    const nome = document.getElementById('guest-nome').value.trim();
-    const cognome = document.getElementById('guest-cognome').value.trim();
-    const sport = document.getElementById('guest-sport').value;
-    const saveBtn = document.getElementById('guest-reg-save');
-
-    if (!nome || !cognome) {
-      errorEl.textContent = 'Nome e Cognome sono obbligatori.';
-      return;
-    }
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Creo...';
-    errorEl.textContent = '';
-
-    try {
-      const res = await fetch('/api/create-guest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, cognome, sport })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Creazione fallita');
-      }
-
-      closeModal();
-      showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
-      loadGuestSlotsCounter();
-
-    } catch(e) {
-      console.error('❌ Errore creazione ospite self:', e);
-      errorEl.textContent = '❌ Errore: ' + (e.message || 'creazione fallita');
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Crea profilo';
-    }
-  }
-
-  function showGuestCodeModal(codice, nome, cognome, scadenza) {
-    const dataFmt = new Date(scadenza + 'T00:00:00').toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
-    const root = document.getElementById('modal-root');
-    root.innerHTML = `
-      <div class="overlay" id="overlay">
-        <div class="modal" role="dialog" aria-modal="true">
-          <h2>Profilo ospite creato!</h2>
-          <p class="modal-subtitle">Ciao <strong>${escapeHtml(nome + ' ' + cognome)}</strong>, il tuo profilo è attivo fino al <strong>${dataFmt}</strong>.</p>
-          <p style="text-align:center;margin:8px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso:</p>
-          <div class="booking-code">${codice}</div>
-          <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare.</p>
-          <div class="modal-actions">
-            <button class="btn-confirm" id="guest-code-ok" style="flex:none;width:100%;">Ho salvato il codice</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('guest-code-ok').addEventListener('click', function(){
-      closeModal();
-      const loginInput = document.getElementById('login-codice');
-      if (loginInput) {
-        loginInput.value = codice;
-        loginInput.type = 'text';
-      }
-      showToast('Ora puoi accedere con il tuo codice');
-    });
-  }
-
-  async function handleLogin() {
-    const codice = document.getElementById('login-codice').value.trim().toLowerCase();
-    const errorEl = document.getElementById('login-error');
-    const loginBtn = document.getElementById('login-btn');
-    
-    if (!codice) {
-      errorEl.textContent = 'Inserisci il tuo codice ID.';
-      return;
-    }
-    
-    if (!/^[to]\d{4}$/.test(codice)) {
-      errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
-      return;
-    }
-    
-    errorEl.textContent = 'Verifica in corso...';
-    loginBtn.disabled = true;
-    
-    try {
-      let url;
-      let tipo;
-      
-      if (codice.startsWith('t')) {
-        tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id,totp_enabled'
-          + '&codice=eq.' + encodeURIComponent(codice);
-      } else {
-        tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
-          + '&codice=eq.' + encodeURIComponent(codice)
-          + '&attivo=eq.true'
-          + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
-      }
-      
-      console.log('🔍 Cerco utente con codice:', codice);
-      
-      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
-      
-      if (!res.ok) throw new Error('Errore di connessione');
-      
-      const data = await res.json();
-      console.log('📦 Dati ricevuti:', data);
-      
-      if (data.length === 0) {
-        errorEl.textContent = '❌ Codice non valido o utente disattivato. Contatta il circolo.';
-        loginBtn.disabled = false;
-        return;
-      }
-      
-      const utente = data[0];
-
-      if (utente.is_admin && utente.totp_enabled) {
-        console.log('🔐 Admin richiede 2FA');
-        
-        loginSection.style.display = 'none';
-        bookingSection.style.display = 'block';
-        
-        loggedUser = {
-          id: utente.id,
-          nome: utente.nome,
-          cognome: utente.cognome,
-          codice: utente.codice,
-          tipo: tipo,
-          is_tennis_member: utente.is_tennis_member || false,
-          is_padel_member: utente.is_padel_member || false,
-          is_admin: utente.is_admin || false,
-          scadenza: utente.scadenza || null,
-          totp_enabled: utente.totp_enabled || false,
-          authenticated: false,
-          accessToken: null
-        };
-
-        const tipoLabel = loggedUser.tipo === 'tesserato' 
-          ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
-          : '<span class="badge-ospite">Ospite</span>';
-        document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
-        document.getElementById('user-badge').innerHTML = tipoLabel;
-        renderGuestExpiry();
-        setupAdminToggle();
-        renderTesseratoExpiry();
-        
-        setAccent('tennis');
-        renderFieldNote();
-        renderDow();
-        renderCalendar();
-        deleteOldBookings();
-
-        showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
-        errorEl.textContent = '';
-        loginBtn.disabled = false;
-        return;
-      }
-
-      await completeLogin(utente, tipo);
-      
-    } catch(e) {
-      errorEl.textContent = 'Errore di connessione. Riprova.';
-      loginBtn.disabled = false;
-      console.error('❌ Errore:', e);
-    }
-  }
-
-  async function completeLogin(utente, tipo) {
-    let accessToken = null;
-    if (utente.auth_id) {
-      try {
-        const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
-        accessToken = authData.access_token;
-        console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
-      } catch(authErr) {
-        console.warn('⚠️ Auth Supabase non disponibile, continuo senza token');
-      }
-    }
-
-    loggedUser = {
-      id: utente.id,
-      nome: utente.nome,
-      cognome: utente.cognome,
-      codice: utente.codice,
-      tipo: tipo,
-      is_tennis_member: utente.is_tennis_member || false,
-      is_padel_member: utente.is_padel_member || false,
-      is_admin: utente.is_admin || false,
-      scadenza: utente.scadenza || null,
-      totp_enabled: utente.totp_enabled || false,
-      authenticated: !!accessToken,
-      accessToken: accessToken
-    };
-    
-    console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
-    
-    document.getElementById('login-error').textContent = '';
-    document.getElementById('login-btn').disabled = false;
-    
-    loginSection.style.display = 'none';
-    bookingSection.style.display = 'block';
-    
-    const tipoLabel = loggedUser.tipo === 'tesserato' 
-      ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
-      : '<span class="badge-ospite">Ospite</span>';
-    document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
-    document.getElementById('user-badge').innerHTML = tipoLabel;
-    renderGuestExpiry();
-    setupAdminToggle();
-    renderTesseratoExpiry();
-    
-    setAccent('tennis');
-    renderFieldNote();
-    renderDow();
-    renderCalendar();
-    deleteOldBookings();
-
-    if (accessToken) {
-      setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + loggedUser.codice); }, 400);
-    }
-  }
-
-  function handleLogout() {
-    loggedUser = null;
-    adminMode = false;
-    loginSection.style.display = 'block';
-    bookingSection.style.display = 'none';
-    document.getElementById('login-codice').value = '';
-    document.getElementById('login-error').textContent = '';
-    document.getElementById('guest-expiry').style.display = 'none';
-    document.getElementById('tesserato-expiry').style.display = 'none';
-    selectedDate = null;
-    document.getElementById('slots-section').style.display = 'none';
-  }
-
-  document.getElementById('login-btn').addEventListener('click', handleLogin);
-  document.getElementById('login-codice').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleLogin();
-  });
-  document.getElementById('logout-btn').addEventListener('click', handleLogout);
-  document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
-  
-  document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
-  document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
-  
-  document.getElementById('prev-month').addEventListener('click', function(){
-    if(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth()) return;
-    viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
-    renderCalendar();
-  });
-  
-  document.getElementById('next-month').addEventListener('click', function(){
-    if(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth()) return;
-    viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
-    renderCalendar();
-  });
-
-  (function setupCalendarSwipe(){
-    const calGrid = document.getElementById('cal-grid');
-    let touchStartX = 0, touchStartY = 0;
-    calGrid.addEventListener('touchstart', function(e){
-      touchStartX = e.changedTouches[0].clientX;
-      touchStartY = e.changedTouches[0].clientY;
-    }, { passive: true });
-    calGrid.addEventListener('touchend', function(e){
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-      if (dx < 0) {
-        if (!(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth())) {
-          viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
-          renderCalendar();
-        }
-      } else {
-        if (!(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth())) {
-          viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
-          renderCalendar();
-        }
-      }
-    }, { passive: true });
-  })();
-
-  document.getElementById('clean-btn').addEventListener('click', async function() {
-    await deleteOldBookings();
-    showToast('🧹 Prenotazioni vecchie cancellate!');
-    updateBookingDots();
-    renderSlots();
-  });
-
-})();
-</script>
-</body>
-</html>
+        const paylo
