@@ -103,6 +103,19 @@
     transform:translateY(-1px);
     box-shadow:0 5px 14px rgba(43,110,90,0.4);
   }
+  .guest-slots-counter{
+    font-size:14px;
+    font-weight:700;
+    color:var(--tennis);
+    background:var(--tennis-soft);
+    border-radius:8px;
+    padding:8px 12px;
+    margin-bottom:14px;
+  }
+  .guest-slots-counter.esaurito{
+    color:#8a3a15;
+    background:#F4DFD2;
+  }
   .tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);}
   .tab{flex:1;text-align:center;padding:12px 8px;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink-soft);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -573,6 +586,7 @@
 
     <div class="guest-register-box">
       <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi.</p>
+      <div id="guest-slots-counter" class="guest-slots-counter"></div>
       <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
     </div>
   </div>
@@ -635,7 +649,27 @@ document.addEventListener('DOMContentLoaded', function(){
     var link = window.location.href;
     qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(link);
   }
+  loadGuestSlotsCounter();
 });
+
+async function loadGuestSlotsCounter() {
+  var el = document.getElementById('guest-slots-counter');
+  if (!el) return;
+  try {
+    var res = await fetch('/api/guest-slots');
+    var data = await res.json();
+    if (data.rimasti <= 0) {
+      el.textContent = '⛔ Limite giornaliero raggiunto. Riprova domani.';
+      el.classList.add('esaurito');
+    } else {
+      var plurale = data.rimasti === 1 ? 'o' : 'i';
+      el.textContent = '⏳ Rimangono ancora ' + data.rimasti + ' post' + plurale + ' disponibil' + plurale + ' per oggi, affrettati! Iscriviti subito.';
+      el.classList.remove('esaurito');
+    }
+  } catch(e) {
+    console.error('Errore caricamento posti rimasti:', e);
+  }
+}
 
 function copiaLink() {
   var link = window.location.href;
@@ -2534,6 +2568,7 @@ function copiaLink() {
 
       closeModal();
       showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
+      loadGuestSlotsCounter();
 
     } catch(e) {
       console.error('❌ Errore creazione ospite self:', e);
