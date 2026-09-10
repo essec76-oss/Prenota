@@ -4,6 +4,8 @@
 // Endpoint pubblico (nessun token richiesto).
 // Usa la SERVICE_ROLE_KEY solo lato server per bypassare le RLS
 // in modo sicuro. Genera codice univoco oXXXX e scadenza +7 giorni.
+// Applica un limite giornaliero di 5 auto-registrazioni (le creazioni
+// fatte dall'admin tramite create-user.js NON sono conteggiate).
 // ============================================================
 
 const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
@@ -39,6 +41,20 @@ async function generateUniqueCode(tentativi = 0) {
   return codice;
 }
 
+// Registra la creazione nella tabella daily_guest_profiles
+// (usata solo per il conteggio del limite giornaliero)
+async function trackGuestCreation(ospiteId) {
+  await fetch(`${SUPABASE_URL}/rest/v1/daily_guest_profiles`, {
+    method: 'POST',
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ profile_id: ospiteId })
+  });
+}
+
 module.exports = async function handler(req, res) {
   // Solo POST
   if (req.method !== 'POST') {
@@ -69,6 +85,34 @@ module.exports = async function handler(req, res) {
 
     const nomeClean = nome.trim();
     const cognomeClean = cognome.trim();
+
+    // ------------------------------------------------------------
+    // 1.5) Controllo limite giornaliero (max 5 auto-registrazioni/giorno)
+    // ------------------------------------------------------------
+    const dataItalia = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date());
+
+    const countRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/daily_guest_profiles?created_at=gte.${dataItalia}T00:00:00&select=id`,
+      {
+        headers: {
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+          Prefer: 'count=exact'
+        }
+      }
+    );
+
+    const contentRange = countRes.headers.get('content-range');
+    const totaleOggi = contentRange ? parseInt(contentRange.split('/')[1]) : 0;
+
+    if (totaleOggi >= 5) {
+      return res.status(429).json({
+        error: 'Limite giornaliero di 5 registrazioni ospiti raggiunto. Riprova domani.',
+        limiteRaggiunto: true
+      });
+    }
 
     // ------------------------------------------------------------
     // 2) Genera codice univoco
@@ -142,6 +186,8 @@ module.exports = async function handler(req, res) {
         }
 
         const created = await retryRes.json();
+        await trackGuestCreation(created[0].id);
+
         return res.status(201).json({
           success: true,
           codice: newCodice,
@@ -154,6 +200,7 @@ module.exports = async function handler(req, res) {
     }
 
     const created = await insertRes.json();
+    await trackGuestCreation(created[0].id);
 
     return res.status(201).json({
       success: true,
