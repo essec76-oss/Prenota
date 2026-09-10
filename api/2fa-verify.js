@@ -4,7 +4,7 @@ import { authenticator } from 'otplib';
 
 // Inizializza Supabase con le variabili d'ambiente
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Configura otplib per generare/verificare codici TOTP
