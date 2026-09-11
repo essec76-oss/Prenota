@@ -601,7 +601,6 @@
       </div>
       <div class="form-error" id="login-error"></div>
             <button class="btn-confirm" id="login-btn">🔓 Accedi</button>
-      <button class="btn-confirm" id="login-fingerprint-btn" style="display:none;margin-top:8px;">👆 Accedi con impronta</button>
     </div>
 
     <div class="qr-share-box">
@@ -635,7 +634,6 @@
       <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
       <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
       <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
-       <button class="admin-btn" id="webauthn-register-btn" style="display:none;">👆 Attiva impronta</button>
       <button class="logout-btn" id="logout-btn">🚪 Esci</button>
       <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
     </div>
@@ -2793,7 +2791,6 @@ function copiaLink() {
           : '<span class="badge-ospite">Ospite</span>';
         document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
 document.getElementById('user-badge').innerHTML = tipoLabel;
-document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
 try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
 renderGuestExpiry();
         setupAdminToggle();
@@ -2852,9 +2849,7 @@ renderGuestExpiry();
     
         document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
-    document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
     try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
-    
     loginSection.style.display = 'none';
     bookingSection.style.display = 'block';
     
@@ -2896,72 +2891,12 @@ renderGuestExpiry();
     if (e.key === 'Enter') handleLogin();
   });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
-  document.getElementById('webauthn-register-btn').addEventListener('click', registerFingerprint);
-  document.getElementById('login-fingerprint-btn').addEventListener('click', loginWithFingerprint);
-
-  document.getElementById('login-codice').addEventListener('input', () => {
-    const val = document.getElementById('login-codice').value.trim();
-    document.getElementById('login-fingerprint-btn').style.display =
-      (window.PublicKeyCredential && val.length >= 2) ? 'block' : 'none';
-  });
   function prefillLastCodice() {
   let saved = '';
   try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
   document.getElementById('login-codice').value = saved;
-  document.getElementById('login-fingerprint-btn').style.display =
-    (window.PublicKeyCredential && saved.length >= 2) ? 'block' : 'none';
 }
 prefillLastCodice();
-
-  async function loginWithFingerprint() {
-    const codice = document.getElementById('login-codice').value.trim().toLowerCase();
-    const errorEl = document.getElementById('login-error');
-    if (!codice) return;
-
-    try {
-      const optRes = await fetch('/api/webauthn-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codice })
-      });
-      const options = await optRes.json();
-      if (!optRes.ok) {
-        errorEl.textContent = options.error === 'Nessuna impronta registrata per questo utente'
-          ? 'Nessuna impronta attivata per questo codice. Accedi con il codice e attivala dalle impostazioni.'
-          : (options.error || 'Errore');
-        return;
-      }
-
-      options.challenge = bufferDecode(options.challenge);
-      options.allowCredentials = options.allowCredentials.map(c => ({
-        ...c,
-        id: bufferDecode(c.id)
-      }));
-
-      const assertion = await navigator.credentials.get({ publicKey: options });
-
-      const assertionResponse = {
-        id: assertion.id,
-        rawId: bufferEncode(assertion.rawId),
-        type: assertion.type,
-        response: {
-          clientDataJSON: bufferEncode(assertion.response.clientDataJSON),
-          authenticatorData: bufferEncode(assertion.response.authenticatorData),
-          signature: bufferEncode(assertion.response.signature),
-          userHandle: assertion.response.userHandle ? bufferEncode(assertion.response.userHandle) : null
-        }
-      };
-
-      const verifyRes = await fetch('/api/webauthn-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codice, response: assertionResponse })
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok) {
-        errorEl.textContent = verifyData.error || 'Verifica impronta fallita';
-        return;
-      }
 
       document.getElementById('login-codice').value = codice;
       await handleLogin();
