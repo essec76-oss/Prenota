@@ -2851,6 +2851,7 @@ function copiaLink() {
         document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
     document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
+    try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
     
     loginSection.style.display = 'none';
     bookingSection.style.display = 'block';
@@ -2880,7 +2881,7 @@ function copiaLink() {
     adminMode = false;
     loginSection.style.display = 'block';
     bookingSection.style.display = 'none';
-    document.getElementById('login-codice').value = '';
+    prefillLastCodice();
     document.getElementById('login-error').textContent = '';
     document.getElementById('guest-expiry').style.display = 'none';
     document.getElementById('tesserato-expiry').style.display = 'none';
@@ -2901,6 +2902,14 @@ function copiaLink() {
     document.getElementById('login-fingerprint-btn').style.display =
       (window.PublicKeyCredential && val.length >= 2) ? 'block' : 'none';
   });
+  function prefillLastCodice() {
+  let saved = '';
+  try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
+  document.getElementById('login-codice').value = saved;
+  document.getElementById('login-fingerprint-btn').style.display =
+    (window.PublicKeyCredential && saved.length >= 2) ? 'block' : 'none';
+}
+prefillLastCodice();
 
   async function loginWithFingerprint() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
