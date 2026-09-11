@@ -2898,32 +2898,6 @@ renderGuestExpiry();
 }
 prefillLastCodice();
 
-      document.getElementById('login-codice').value = codice;
-      await handleLogin();
-
-    } catch (err) {
-      console.error('❌ Errore login impronta:', err);
-      if (err.name !== 'NotAllowedError') {
-        errorEl.textContent = 'Errore durante l\'accesso con impronta.';
-      }
-    }
-  }
-  function bufferDecode(value) {
-    value = value.replace(/-/g, '+').replace(/_/g, '/');
-    const str = atob(value);
-    const buffer = new Uint8Array(str.length);
-    for (let i = 0; i < str.length; i++) buffer[i] = str.charCodeAt(i);
-    return buffer;
-  }
-
-  function bufferEncode(buffer) {
-    let str = '';
-    const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  }
-
-  async function registerFingerprint() {
     if (!window.PublicKeyCredential) {
       showToast('⚠️ Il tuo dispositivo/browser non supporta l\'accesso con impronta.');
       return;
