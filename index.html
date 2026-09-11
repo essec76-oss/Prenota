@@ -41,81 +41,15 @@
   .qr-share-title{font-size:14px;color:var(--ink-soft);margin:0 0 12px;}
   .qr-image{width:160px;height:160px;border-radius:8px;margin-bottom:12px;}
   .qr-copy-msg{font-size:13px;color:var(--padel);margin-top:8px;min-height:16px;}
-  .btn-copy-link{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    width:100%;
-    max-width:320px;
-    padding:14px 20px;
-    margin-top:4px;
-    background:var(--accent);
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    font-weight:700;
-    font-family:inherit;
-    cursor:pointer;
-    box-shadow:0 3px 10px rgba(184,75,30,0.3);
-    transition:all 0.2s ease;
-  }
-  .btn-copy-link:hover{
-    transform:translateY(-1px);
-    box-shadow:0 5px 14px rgba(184,75,30,0.4);
-  }
-  .btn-copy-link:active{
-    transform:translateY(1px);
-  }
-  .guest-register-box{
-    margin-top:24px;
-    padding:20px 18px;
-    border:2px dashed var(--line);
-    border-radius:14px;
-    background:var(--surface);
-    text-align:center;
-  }
-  .guest-register-box p{
-    margin:0 0 14px;
-    font-size:15px;
-    color:var(--ink-soft);
-    line-height:1.4;
-  }
-  .guest-register-box .btn-guest-register{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    padding:14px 28px;
-    background:var(--padel);
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    font-weight:700;
-    font-family:inherit;
-    cursor:pointer;
-    box-shadow:0 3px 10px rgba(43,110,90,0.3);
-    transition:all 0.2s ease;
-  }
-  .guest-register-box .btn-guest-register:hover{
-    transform:translateY(-1px);
-    box-shadow:0 5px 14px rgba(43,110,90,0.4);
-  }
-  .guest-slots-counter{
-    font-size:14px;
-    font-weight:700;
-    color:var(--tennis);
-    background:var(--tennis-soft);
-    border-radius:8px;
-    padding:8px 12px;
-    margin-bottom:14px;
-  }
-  .guest-slots-counter.esaurito{
-    color:#8a3a15;
-    background:#F4DFD2;
-  }
+  .btn-copy-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px;padding:14px 20px;margin-top:4px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 3px 10px rgba(184,75,30,0.3);transition:all 0.2s ease;}
+  .btn-copy-link:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(184,75,30,0.4);}
+  .btn-copy-link:active{transform:translateY(1px);}
+  .guest-register-box{margin-top:24px;padding:20px 18px;border:2px dashed var(--line);border-radius:14px;background:var(--surface);text-align:center;}
+  .guest-register-box p{margin:0 0 14px;font-size:15px;color:var(--ink-soft);line-height:1.4;}
+  .guest-register-box .btn-guest-register{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:var(--padel);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 3px 10px rgba(43,110,90,0.3);transition:all 0.2s ease;}
+  .guest-register-box .btn-guest-register:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(43,110,90,0.4);}
+  .guest-slots-counter{font-size:14px;font-weight:700;color:var(--tennis);background:var(--tennis-soft);border-radius:8px;padding:8px 12px;margin-bottom:14px;}
+  .guest-slots-counter.esaurito{color:#8a3a15;background:#F4DFD2;}
   .tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);}
   .tab{flex:1;text-align:center;padding:12px 8px;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink-soft);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -128,167 +62,38 @@
   .month-label{font-family:'Fraunces',serif;font-weight:600;font-size:19px;text-transform:capitalize;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:8px;}
   .cal-dow{text-align:center;font-size:12px;color:var(--ink-soft);padding-bottom:4px;}
-  
-  .cal-day{
-    aspect-ratio:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:12px;
-    border:2px solid var(--line);
-    background:var(--surface);
-    font-size:17px;
-    font-weight:500;
-    cursor:pointer;
-    color:var(--ink);
-    position:relative;
-    transition:all 0.2s ease;
-  }
-  .cal-day:not(.empty):not(.past):not(.selected):hover{
-    transform:scale(1.05);
-    border-color:var(--accent);
-    box-shadow:0 4px 12px rgba(0,0,0,0.1);
-  }
-  .cal-day.selected{
-    background:var(--accent);
-    border-color:var(--accent);
-    color:#fff;
-    font-weight:700;
-    transform:scale(1.08);
-    box-shadow:0 4px 16px rgba(184,75,30,0.35);
-  }
-  
-  .cal-day.has-booking .booking-count{
-    position:absolute;
-    top:-6px;
-    right:-6px;
-    background:#D64545;
-    color:#fff;
-    font-size:10px;
-    font-weight:700;
-    min-width:18px;
-    height:18px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:0 2px 6px rgba(214,69,69,0.4);
-    padding:0 4px;
-    font-family:'Source Sans 3',sans-serif;
-    z-index:2;
-  }
-  .cal-day.selected .booking-count{
-    background:#fff;
-    color:#B84B1E;
-    box-shadow:0 2px 6px rgba(0,0,0,0.2);
-  }
-  .cal-day.has-booking .booking-count{
-    animation:pulse-count 2s infinite;
-  }
-  @keyframes pulse-count{
-    0%{transform:scale(1);}
-    50%{transform:scale(1.1);}
-    100%{transform:scale(1);}
-  }
-  
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-size:17px;font-weight:500;cursor:pointer;color:var(--ink);position:relative;transition:all 0.2s ease;}
+  .cal-day:not(.empty):not(.past):not(.selected):hover{transform:scale(1.05);border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+  .cal-day.selected{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;transform:scale(1.08);box-shadow:0 4px 16px rgba(184,75,30,0.35);}
+  .cal-day.has-booking .booking-count{position:absolute;top:-6px;right:-6px;background:#D64545;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(214,69,69,0.4);padding:0 4px;font-family:'Source Sans 3',sans-serif;z-index:2;}
+  .cal-day.selected .booking-count{background:#fff;color:#B84B1E;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  .cal-day.has-booking .booking-count{animation:pulse-count 2s infinite;}
+  @keyframes pulse-count{0%{transform:scale(1);}50%{transform:scale(1.1);}100%{transform:scale(1);}}
   .cal-day.empty{border:none;background:none;cursor:default;}
   .cal-day.past{color:#C7C4B8;background:#F5F5F0;border-color:#E8E5DC;cursor:not-allowed;opacity:0.7;}
   .cal-day:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
-  
   .cal-day.has-torneo{border-color:#8A5A2A;box-shadow:inset 0 0 0 2px #F4E8D0;}
   .cal-day.has-torneo:not(.selected){background:#FBF3E4;}
   .cal-day.has-allenamento{border-color:#6B5FA8;box-shadow:inset 0 0 0 2px #E4DEF4;}
   .cal-day.has-allenamento:not(.selected){background:#F3F0FB;}
   .cal-day.has-torneo.has-allenamento:not(.selected){background:linear-gradient(135deg,#FBF3E4 50%,#F3F0FB 50%);}
-
   .slots-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:26px 0 12px;}
   .slot-list{display:flex;flex-direction:column;gap:10px;}
-  
-  .slot{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 18px;
-    border-radius:14px;
-    border:2px solid var(--line);
-    background:var(--surface);
-    font-size:15px;
-    transition:all 0.25s ease;
-    box-shadow:0 2px 8px rgba(0,0,0,0.04);
-    cursor:default;
-  }
-  .slot.available:hover{
-    border-color:var(--accent);
-    transform:translateY(-2px);
-    box-shadow:0 6px 20px rgba(0,0,0,0.08);
-  }
-  .slot.booked{
-    background:var(--booked);
-    border-color:#D5D0C4;
-    box-shadow:none;
-  }
-  .slot.past-slot{
-    background:#F8F7F2;
-    border-color:#D0CCC0;
-    opacity:0.5;
-  }
-  .slot .time{
-    font-weight:700;
-    font-size:16px;
-    color:var(--ink);
-  }
-  .slot .status{
-    font-size:14px;
-    padding:2px 10px;
-    border-radius:20px;
-    background:rgba(0,0,0,0.04);
-  }
-  .slot.available .status{
-    color:#2B6E5A;
-    background:#D9E9E1;
-    font-weight:600;
-  }
-  .slot.available .status::before{
-    content:'● ';
-    color:#2B6E5A;
-  }
-  .slot.booked .status{
-    color:#8A5A2A;
-    background:#F4E8D0;
-    font-weight:600;
-  }
-  .slot.booked .status::before{
-    content:'● ';
-    color:#B84B1E;
-  }
-  .slot.past-slot .status::before{
-    content:'⏰ ';
-  }
-  .slot .book-btn{
-    background:var(--accent);
-    color:#fff;
-    border:none;
-    border-radius:10px;
-    padding:14px 28px;
-    min-width:120px;
-    font-size:16px;
-    font-weight:700;
-    cursor:pointer;
-    transition:all 0.2s ease;
-  }
-  .slot .book-btn:hover:not(:disabled){
-    transform:scale(1.04);
-    box-shadow:0 4px 12px rgba(184,75,30,0.3);
-  }
-  .slot .book-btn:disabled{
-    background:#C7C4B8;
-    cursor:not-allowed;
-  }
-  .slot .cancel-btn{
-    background:var(--surface);
-    color:var(--ink-soft);
-    border:1px solid var(--line);
-  }
+  .slot{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:14px;border:2px solid var(--line);background:var(--surface);font-size:15px;transition:all 0.25s ease;box-shadow:0 2px 8px rgba(0,0,0,0.04);cursor:default;}
+  .slot.available:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+  .slot.booked{background:var(--booked);border-color:#D5D0C4;box-shadow:none;}
+  .slot.past-slot{background:#F8F7F2;border-color:#D0CCC0;opacity:0.5;}
+  .slot .time{font-weight:700;font-size:16px;color:var(--ink);}
+  .slot .status{font-size:14px;padding:2px 10px;border-radius:20px;background:rgba(0,0,0,0.04);}
+  .slot.available .status{color:#2B6E5A;background:#D9E9E1;font-weight:600;}
+  .slot.available .status::before{content:'● ';color:#2B6E5A;}
+  .slot.booked .status{color:#8A5A2A;background:#F4E8D0;font-weight:600;}
+  .slot.booked .status::before{content:'● ';color:#B84B1E;}
+  .slot.past-slot .status::before{content:'⏰ ';}
+  .slot .book-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px 28px;min-width:120px;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s ease;}
+  .slot .book-btn:hover:not(:disabled){transform:scale(1.04);box-shadow:0 4px 12px rgba(184,75,30,0.3);}
+  .slot .book-btn:disabled{background:#C7C4B8;cursor:not-allowed;}
+  .slot .cancel-btn{background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);}
   .slot:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .slot .status{font-size:13px;color:var(--ink-soft);}
   .slot.booked .status{color:var(--ink-soft);}
@@ -315,74 +120,19 @@
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;z-index:20;}
   @media (prefers-reduced-motion:no-preference){.modal{animation:up .18s ease-out;}}
   @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-
   .login-box{background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--line);margin-top:20px;}
   .login-box .btn-confirm{width:100%;margin-top:8px;padding:16px;border-radius:10px;font-size:17px;font-weight:700;box-shadow:0 3px 8px rgba(184,75,30,0.35);}
   .login-box .btn-confirm:active{transform:translateY(1px);box-shadow:0 1px 4px rgba(184,75,30,0.35);}
   #login-codice{background:#F1EEE4;border:2px solid var(--accent);font-size:17px;padding:14px 14px;}
   #login-codice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;background:var(--surface);}
-  
-  .user-badge{
-    background:var(--accent-soft);
-    border-radius:8px;
-    padding:10px 14px;
-    margin-bottom:16px;
-    font-size:14px;
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:8px;
-  }
-  .user-badge .logout-btn{
-    background:none;
-    border:none;
-    color:var(--accent);
-    cursor:pointer;
-    font-weight:600;
-    font-size:14px;
-  }
+  .user-badge{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+  .user-badge .logout-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;font-size:14px;}
   .user-badge .logout-btn:hover{text-decoration:underline;}
-  .user-badge .admin-btn{
-    background:#B84B1E;
-    color:#fff;
-    border:none;
-    border-radius:6px;
-    padding:4px 12px;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    transition:all 0.2s ease;
-  }
-  .user-badge .admin-btn:hover{
-    background:#8A3A15;
-    transform:scale(1.04);
-  }
-  
-  #admin-toggle-container{
-    display:none;
-    align-items:center;
-    gap:6px;
-    background:#FFF4E0;
-    padding:4px 10px;
-    border-radius:6px;
-    border:1px solid #E8C989;
-  }
-  #admin-toggle-container label{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:14px;
-    cursor:pointer;
-    color:#8a6a1a;
-    font-weight:600;
-  }
-  #admin-toggle-container input[type="checkbox"]{
-    width:18px;
-    height:18px;
-    cursor:pointer;
-    accent-color:#B84B1E;
-  }
-  
+  .user-badge .admin-btn{background:#B84B1E;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s ease;}
+  .user-badge .admin-btn:hover{background:#8A3A15;transform:scale(1.04);}
+  #admin-toggle-container{display:none;align-items:center;gap:6px;background:#FFF4E0;padding:4px 10px;border-radius:6px;border:1px solid #E8C989;}
+  #admin-toggle-container label{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;color:#8a6a1a;font-weight:600;}
+  #admin-toggle-container input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:#B84B1E;}
   .guest-expiry{background:#FFF4E0;border:1px solid #E8C989;color:#8a6a1a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:600;}
   .guest-expiry.urgent{background:#F4DFD2;border-color:#D9A583;color:#8a3a15;}
   .badge-tesserato{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;}
@@ -402,185 +152,33 @@
   .clean-btn{margin-top:16px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink-soft);transition:all .15s;}
   .clean-btn:hover{border-color:var(--accent);color:var(--accent);}
   .field-note.warning{background:#F4DFD2;color:#8a3a15;font-weight:600;}
-  
-  .slot .book-btn.admin-delete{
-    background:#B84B1E;
-    color:#fff;
-    border:none;
-    border-radius:7px;
-    padding:8px 14px;
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-    margin-right:6px;
-    transition:background 0.15s;
-  }
+  .slot .book-btn.admin-delete{background:#B84B1E;color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;margin-right:6px;transition:background 0.15s;}
   .slot .book-btn.admin-delete:hover{background:#8A3A15;}
   .slot.booked.admin-visible{border:2px solid #B84B1E;background:#FDF0EA;}
-
   .mode-selector{display:flex;gap:8px;margin-bottom:16px;}
-  .mode-selector button{
-    flex:1;
-    padding:10px 8px;
-    border:2px solid var(--line);
-    border-radius:8px;
-    background:var(--surface);
-    font-family:inherit;
-    font-size:13px;
-    font-weight:600;
-    color:var(--ink-soft);
-    cursor:pointer;
-    transition:all 0.15s;
-  }
+  .mode-selector button{flex:1;padding:10px 8px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all 0.15s;}
   .mode-selector button.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
   .mode-selector button:hover:not(.active){border-color:var(--accent);}
-
-  .user-list-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
-    margin-top:12px;
-  }
-  .user-list-table th{
-    text-align:left;
-    padding:8px 6px;
-    border-bottom:2px solid var(--line);
-    color:var(--ink-soft);
-    font-weight:600;
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:0.05em;
-  }
-  .user-list-table td{
-    padding:8px 6px;
-    border-bottom:1px solid var(--line);
-    vertical-align:middle;
-  }
-  .user-list-table .user-tag{
-    font-size:10px;
-    padding:2px 8px;
-    border-radius:10px;
-    font-weight:600;
-    display:inline-block;
-  }
+  .user-list-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
+  .user-list-table th{text-align:left;padding:8px 6px;border-bottom:2px solid var(--line);color:var(--ink-soft);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;}
+  .user-list-table td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .user-list-table .user-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;display:inline-block;}
   .user-list-table .user-tag.tesserato{background:#2B6E5A;color:#fff;}
   .user-list-table .user-tag.ospite{background:#B84B1E;color:#fff;}
-  .user-list-table .user-actions{
-    display:flex;
-    gap:4px;
-  }
-  .user-list-table .user-actions button{
-    background:none;
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:2px 8px;
-    font-size:11px;
-    cursor:pointer;
-    transition:all 0.15s;
-    font-family:inherit;
-  }
-  .user-list-table .user-actions .btn-edit{
-    color:var(--ink-soft);
-  }
-  .user-list-table .user-actions .btn-edit:hover{
-    border-color:var(--accent);
-    color:var(--accent);
-  }
-  .user-list-table .user-actions .btn-delete{
-    color:#B84B1E;
-  }
-  .user-list-table .user-actions .btn-delete:hover{
-    border-color:#B84B1E;
-    background:#F4DFD2;
-  }
-  .user-list-section-title{
-    font-family:'Fraunces',serif;
-    font-size:16px;
-    font-weight:600;
-    margin:18px 0 8px;
-    color:var(--ink);
-  }
-  .user-list-empty{
-    color:var(--ink-soft);
-    font-size:14px;
-    padding:12px 0;
-    text-align:center;
-  }
-  .user-modal-tabs{
-    display:flex;
-    gap:6px;
-    margin-bottom:16px;
-  }
-  .user-modal-tabs button{
-    flex:1;
-    padding:8px;
-    border:2px solid var(--line);
-    border-radius:8px;
-    background:var(--surface);
-    font-family:inherit;
-    font-size:14px;
-    font-weight:600;
-    color:var(--ink-soft);
-    cursor:pointer;
-    transition:all 0.15s;
-  }
-  .user-modal-tabs button.active{
-    border-color:var(--accent);
-    color:var(--accent);
-    background:var(--accent-soft);
-  }
-  .user-modal-tabs button:hover:not(.active){
-    border-color:var(--accent);
-  }
-  .user-modal-tabs .tab-icon{
-    margin-right:4px;
-  }
-
-  @media (max-width:480px){
-    .slot{
-      padding:12px 14px;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-    .slot .time{
-      font-size:15px;
-      width:100%;
-    }
-    .slot .status{
-      font-size:13px;
-    }
-    .slot .book-btn{
-      padding:14px 14px;
-      font-size:16px;
-      width:100%;
-      text-align:center;
-    }
-    .user-badge{
-      flex-direction:column;
-      align-items:stretch;
-    }
-    #admin-toggle-container{
-      justify-content:center;
-    }
-    .user-list-table{
-      font-size:12px;
-    }
-    .user-list-table th,
-    .user-list-table td{
-      padding:6px 4px;
-    }
-    .modal{
-      padding:16px;
-    }
-    .cal-day .booking-count{
-      font-size:8px;
-      min-width:14px;
-      height:14px;
-      top:-4px;
-      right:-4px;
-    }
-  }
-  
+  .user-list-table .user-actions{display:flex;gap:4px;}
+  .user-list-table .user-actions button{background:none;border:1px solid var(--line);border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;transition:all 0.15s;font-family:inherit;}
+  .user-list-table .user-actions .btn-edit{color:var(--ink-soft);}
+  .user-list-table .user-actions .btn-edit:hover{border-color:var(--accent);color:var(--accent);}
+  .user-list-table .user-actions .btn-delete{color:#B84B1E;}
+  .user-list-table .user-actions .btn-delete:hover{border-color:#B84B1E;background:#F4DFD2;}
+  .user-list-section-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:18px 0 8px;color:var(--ink);}
+  .user-list-empty{color:var(--ink-soft);font-size:14px;padding:12px 0;text-align:center;}
+  .user-modal-tabs{display:flex;gap:6px;margin-bottom:16px;}
+  .user-modal-tabs button{flex:1;padding:8px;border:2px solid var(--line);border-radius:8px;background:var(--surface);font-family:inherit;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all 0.15s;}
+  .user-modal-tabs button.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+  .user-modal-tabs button:hover:not(.active){border-color:var(--accent);}
+  .user-modal-tabs .tab-icon{margin-right:4px;}
+  @media (max-width:480px){.slot{padding:12px 14px;flex-wrap:wrap;gap:8px;}.slot .time{font-size:15px;width:100%;}.slot .status{font-size:13px;}.slot .book-btn{padding:14px 14px;font-size:16px;width:100%;text-align:center;}.user-badge{flex-direction:column;align-items:stretch;}#admin-toggle-container{justify-content:center;}.user-list-table{font-size:12px;}.user-list-table th,.user-list-table td{padding:6px 4px;}.modal{padding:16px;}.cal-day .booking-count{font-size:8px;min-width:14px;height:14px;top:-4px;right:-4px;}}
   .badge-2fa-enabled{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .badge-2fa-disabled{background:#B84B1E;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .admin-2fa-status{font-size:12px;color:var(--ink-soft);margin-left:6px;}
@@ -671,6 +269,7 @@
 <div id="toast-root"></div>
 
 <script>
+// INIZIO SCRIPT
 document.addEventListener('DOMContentLoaded', function(){
   var qrImg = document.getElementById('login-qr-code');
   if (qrImg) {
@@ -712,10 +311,8 @@ function copiaLink() {
 
 (function(){
   const FIELDS = {
-    tennis: { key:'tennis', label:'Campo da tennis', color:'--tennis', colorSoft:'--tennis-soft',
-      slotMinutes:60, start:7, end:23, minNames:1, maxNames:4 },
-    padel: { key:'padel', label:'Campo da padel', color:'--padel', colorSoft:'--padel-soft',
-      slotMinutes:90, start:6.5, end:23, minNames:4, maxNames:4 }
+    tennis: { key:'tennis', label:'Campo da tennis', color:'--tennis', colorSoft:'--tennis-soft', slotMinutes:60, start:7, end:23, minNames:1, maxNames:4 },
+    padel: { key:'padel', label:'Campo da padel', color:'--padel', colorSoft:'--padel-soft', slotMinutes:90, start:6.5, end:23, minNames:4, maxNames:4 }
   };
   const DOW = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
   const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -740,8 +337,6 @@ function copiaLink() {
   let currentUserTab = 'tesserati';
   const userDataCache = {};
 
-  // 2FA: codice segreto per il testing (in produzione verrebbe da Supabase)
-  // Per testare, usa il codice "123456"
   const TEST_2FA_CODE = "123456";
 
   function attachUserActionListeners(container){
@@ -771,21 +366,13 @@ function copiaLink() {
 
   function escapeHtml(str){
     if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   async function signInWithSupabaseAuth(email, password){
     const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
-      headers: {
-        apikey: SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      },
+      headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     if(!res.ok) throw new Error('auth_failed');
@@ -825,7 +412,6 @@ function copiaLink() {
     const scad = new Date(loggedUser.scadenza + 'T00:00:00');
     const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
     const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long'});
-
     let testo;
     if (giorniResidui <= 0) {
       testo = '⏳ Il tuo accesso come ospite scade oggi.';
@@ -834,7 +420,6 @@ function copiaLink() {
     } else {
       testo = '⏳ Il tuo accesso come ospite scade tra ' + giorniResidui + ' giorni (' + dataFmt + ').';
     }
-
     el.textContent = testo;
     el.classList.toggle('urgent', giorniResidui <= 1);
     el.style.display = 'block';
@@ -843,17 +428,14 @@ function copiaLink() {
   function renderTesseratoExpiry() {
     const el = document.getElementById('tesserato-expiry');
     if (!el) return;
-    
     if (!loggedUser || loggedUser.tipo !== 'tesserato' || !loggedUser.scadenza) {
       el.style.display = 'none';
       return;
     }
-    
     const oggi = new Date(); oggi.setHours(0,0,0,0);
     const scad = new Date(loggedUser.scadenza + 'T00:00:00');
     const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
     const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
-    
     let testo, colore;
     if (giorniResidui < 0) {
       testo = '⚠️ Tessera scaduta il ' + dataFmt;
@@ -871,7 +453,6 @@ function copiaLink() {
       testo = '✅ Tessera valida fino al ' + dataFmt;
       colore = '#2B6E5A';
     }
-    
     el.textContent = testo;
     el.style.color = colore;
     el.style.display = 'block';
@@ -882,16 +463,10 @@ function copiaLink() {
     const cutoffDateObj = new Date(today);
     cutoffDateObj.setDate(today.getDate() - CLEANUP_DAYS);
     const cutoffDate = dateKey(cutoffDateObj);
-    
     try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?date=lt.' + cutoffDate, {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?date=lt.' + cutoffDate, {
         method: 'DELETE',
-        headers: { 
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
-        }
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' }
       });
       if (res.ok) {
         console.log('✅ Prenotazioni più vecchie di ' + CLEANUP_DAYS + ' giorni cancellate');
@@ -912,7 +487,6 @@ function copiaLink() {
       ? 'Puoi prenotare slot da 1 ora. Basta anche solo il tuo nome (Allenamento), oppure aggiungi fino a 4 giocatori.'
       : 'Puoi prenotare slot da 1 ora e mezza. Servono esattamente 4 nomi per prenotare.';
     const noteEl = document.getElementById('field-note');
-
     if (loggedUser && !canBookField(currentField)) {
       noteEl.textContent = '⚠️ Non sei abilitato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + ': puoi vedere il calendario ma non prenotare questo campo.';
       noteEl.classList.add('warning');
@@ -967,9 +541,7 @@ function copiaLink() {
     const nextMonth = new Date(year, month+1, 1);
     const end = nextMonth.getFullYear()+'-'+pad(nextMonth.getMonth()+1)+'-01';
     try{
-      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=date,modalita&field=eq.' + encodeURIComponent(field)
-        + '&date=gte.' + start + '&date=lt.' + end;
+      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?select=date,modalita&field=eq.' + encodeURIComponent(field) + '&date=gte.' + start + '&date=lt.' + end;
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if(!res.ok) return new Map();
       const rows = await res.json();
@@ -1017,8 +589,7 @@ function copiaLink() {
 
   async function loadKeyboxCode(){
     try{
-      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
-        + '?select=codice_keybox_tennis,codice_keybox_padel&id=eq.1';
+      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS + '?select=codice_keybox_tennis,codice_keybox_padel&id=eq.1';
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if(!res.ok) throw new Error('fetch failed');
       const rows = await res.json();
@@ -1032,27 +603,13 @@ function copiaLink() {
 
   async function loadBookings(key){
     try{
-      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,code,modalita'
-        + '&field=eq.' + encodeURIComponent(currentField)
-        + '&date=eq.' + encodeURIComponent(key);
-      const res = await fetch(url, {
-        headers: { apikey: SUPABASE_KEY }
-      });
+      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,code,modalita&field=eq.' + encodeURIComponent(currentField) + '&date=eq.' + encodeURIComponent(key);
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if(!res.ok) throw new Error('fetch failed');
       const rows = await res.json();
       const data = {};
       rows.forEach(r=>{
-        data[r.time] = { 
-          id: r.id, 
-          names: (r.names||'').split(',').map(s=>s.trim()).filter(Boolean),
-          prenotato_da: r.prenotato_da || '',
-          tipo_prenotante: r.tipo_prenotante || 'ospite',
-          tesserato_id: r.tesserato_id,
-          ospite_id: r.ospite_id,
-          code: r.code || '',
-          modalita: r.modalita || null
-        };
+        data[r.time] = { id: r.id, names: (r.names||'').split(',').map(s=>s.trim()).filter(Boolean), prenotato_da: r.prenotato_da || '', tipo_prenotante: r.tipo_prenotante || 'ospite', tesserato_id: r.tesserato_id, ospite_id: r.ospite_id, code: r.code || '', modalita: r.modalita || null };
       });
       bookingsCache[key] = data;
       return data;
@@ -1111,26 +668,12 @@ function copiaLink() {
       } else if (booking) {
         const isTesserato = booking.tipo_prenotante === 'tesserato';
         row.className = 'slot booked ' + (isTesserato ? 'slot-tesserato' : 'slot-ospite');
-        
         const left = document.createElement('div');
-        const badge = isTesserato 
-          ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
-          : '<span class="badge-ospite">Ospite</span>';
+        const badge = isTesserato ? '<span class="badge-tesserato">⭐ Tesserato</span>' : '<span class="badge-ospite">Ospite</span>';
         const keyboxCode = currentField === 'tennis' ? keyboxCodeTennis : keyboxCodePadel;
-        const keyboxHtml = (booking.modalita === 'allenamento') ? '' : (keyboxCode
-          ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
-          : '');
-        const ownCodeHtml = (isOwnBooking(booking) && booking.code)
-          ? '<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>' + booking.code + '</strong></div>'
-          : '';
-        
-        left.innerHTML = `
-          <div class="time">${s.label}</div>
-          <div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div>
-          <div class="prenotato-da">👤 Prenotato da: <strong>${escapeHtml(booking.prenotato_da)}</strong> ${badge}</div>
-          ${keyboxHtml}
-          ${ownCodeHtml}
-        `;
+        const keyboxHtml = (booking.modalita === 'allenamento') ? '' : (keyboxCode ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>' : '');
+        const ownCodeHtml = (isOwnBooking(booking) && booking.code) ? '<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>' + booking.code + '</strong></div>' : '';
+        left.innerHTML = `<div class="time">${s.label}</div><div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div><div class="prenotato-da">👤 Prenotato da: <strong>${escapeHtml(booking.prenotato_da)}</strong> ${badge}</div>${keyboxHtml}${ownCodeHtml}`;
         row.appendChild(left);
         
         if (adminMode && loggedUser && loggedUser.is_admin) {
@@ -1142,7 +685,6 @@ function copiaLink() {
           adminBtn.title = 'Cancella come admin (senza codice)';
           adminBtn.addEventListener('click', ()=> doAdminCancel(booking.id, s.label));
           row.appendChild(adminBtn);
-          
           const normalBtn = document.createElement('button');
           normalBtn.className = 'book-btn cancel-btn';
           normalBtn.textContent = 'Cancella';
@@ -1172,7 +714,6 @@ function copiaLink() {
         }
         row.appendChild(btn);
       }
-      
       list.appendChild(row);
     });
   }
@@ -1180,12 +721,8 @@ function copiaLink() {
   async function loadAllPlayersForSelect(){
     try{
       const [tessRes, ospRes] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        })
+        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', { headers: { apikey: SUPABASE_KEY } }),
+        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', { headers: { apikey: SUPABASE_KEY } })
       ]);
       const tesserati = tessRes.ok ? await tessRes.json() : [];
       const ospiti = ospRes.ok ? await ospRes.json() : [];
@@ -1221,18 +758,14 @@ function copiaLink() {
     const requiredCount = f.minNames;
     
     const prenotanteName = escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome);
-    let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
+    let fieldsHtml = '<div class="name-field"><label for="name-0">Prenotante</label><input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly /></div>';
     for(let i=1;i<nameCount;i++){
       const isRequired = i < requiredCount;
-      fieldsHtml += '<div class="name-field" id="name-field-' + i + '">\n        <label for="name-' + i + '">Giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
+      fieldsHtml += '<div class="name-field" id="name-field-' + i + '"><label for="name-' + i + '">Giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label><select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select></div>';
     }
 
     const modeSelectorHtml = canUseSpecialModes()
-      ? `<div class="mode-selector" id="mode-selector">
-          <button type="button" class="active" data-mode="">Normale</button>
-          <button type="button" data-mode="torneo">🏆 Torneo</button>
-          <button type="button" data-mode="allenamento">🎯 Allenamento</button>
-        </div>`
+      ? `<div class="mode-selector" id="mode-selector"><button type="button" class="active" data-mode="">Normale</button><button type="button" data-mode="torneo">🏆 Torneo</button><button type="button" data-mode="allenamento">🎯 Allenamento</button></div>`
       : '';
     
     root.innerHTML = `
@@ -1240,10 +773,7 @@ function copiaLink() {
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
           <h2 id="modal-title">${f.label}</h2>
           <div class="meta">${new Date(selectedDate+'T00:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'})} · ${slot.label}</div>
-          <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
-            👤 Stai prenotando come: <strong>${escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome)}</strong> 
-            ${loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}
-          </div>
+          <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">👤 Stai prenotando come: <strong>${escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome)}</strong> ${loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}</div>
           ${modeSelectorHtml}
           ${fieldsHtml}
           <div class="form-error" id="form-error"></div>
@@ -1337,9 +867,7 @@ function copiaLink() {
     }
     
     if(!isAllenamento && names.length < requiredCount){
-      errorEl.textContent = currentField==='padel'
-        ? 'Servono esattamente 4 nomi per prenotare il padel.'
-        : 'Serve almeno il tuo nome per prenotare il tennis.';
+      errorEl.textContent = currentField==='padel' ? 'Servono esattamente 4 nomi per prenotare il padel.' : 'Serve almeno il tuo nome per prenotare il tennis.';
       return;
     }
     
@@ -1357,7 +885,6 @@ function copiaLink() {
       }
       
       const bookingCode = String(Math.floor(1000 + Math.random() * 9000));
-      
       const payload = {
         field: currentField,
         date: selectedDate,
@@ -1379,11 +906,7 @@ function copiaLink() {
       
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE, {
         method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
-        },
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify(payload)
       });
       
@@ -1397,7 +920,6 @@ function copiaLink() {
       showCodeModal(bookingCode);
       renderSlots();
       updateBookingDots();
-      
     }catch(e){
       errorEl.textContent = 'Errore: ' + (e && e.message ? e.message : 'salvataggio non riuscito');
       confirmBtn.disabled = false;
@@ -1440,9 +962,7 @@ function copiaLink() {
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Cancello…';
     try{
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?id=eq.' + encodeURIComponent(booking.id)
-        + '&code=eq.' + encodeURIComponent(typedCode), {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?id=eq.' + encodeURIComponent(booking.id) + '&code=eq.' + encodeURIComponent(typedCode), {
         method: 'DELETE',
         headers: { apikey: SUPABASE_KEY, Prefer: 'return=representation' }
       });
@@ -1469,17 +989,11 @@ function copiaLink() {
     if (!confirm('⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n' + slotLabel)) {
       return;
     }
-    
     try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?id=eq.' + encodeURIComponent(bookingId), {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE + '?id=eq.' + encodeURIComponent(bookingId), {
         method: 'DELETE',
-        headers: {
-          apikey: SUPABASE_KEY,
-          Prefer: 'return=minimal'
-        }
+        headers: { apikey: SUPABASE_KEY, Prefer: 'return=minimal' }
       });
-      
       if (res.ok) {
         showToast('✅ Prenotazione cancellata (admin)');
         renderSlots();
@@ -1492,7 +1006,6 @@ function copiaLink() {
     }
   }
 
-  // GESTIONE ADMIN TOGGLE CON 2FA - VERSIONE SEMPLIFICATA
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
@@ -1509,19 +1022,16 @@ function copiaLink() {
       toggle.checked = false;
       adminMode = false;
       
-      // Mostra stato 2FA
       if (loggedUser.totp_enabled) {
         statusEl.innerHTML = '<span class="badge-2fa-enabled">🔐 2FA ON</span>';
       } else {
         statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
       }
       
-      // Gestione toggle checkbox - FUNZIONE CORRETTA
       toggle.onchange = function() {
         console.log('🔑 Toggle admin cambiato:', this.checked);
         
         if (this.checked) {
-          // Se admin ha 2FA attivo, richiedi verifica
           if (loggedUser.totp_enabled) {
             console.log('🔐 Admin con 2FA attivo, richiedo verifica');
             openAdmin2FAVerification(function(success) {
@@ -1535,11 +1045,9 @@ function copiaLink() {
               } else {
                 adminMode = false;
                 toggleEl.checked = false;
-                // Il messaggio di errore viene già mostrato da openAdmin2FAVerification
               }
             });
           } else {
-            // Admin senza 2FA: attiva direttamente
             console.log('🔓 Admin senza 2FA, attivo direttamente');
             adminMode = true;
             showToast('🔑 Modalità admin attivata');
@@ -1547,7 +1055,6 @@ function copiaLink() {
             this.checked = true;
           }
         } else {
-          // Disattivazione admin mode
           console.log('🔒 Disattivo modalità admin');
           adminMode = false;
           showToast('🔑 Modalità admin disattivata');
@@ -1588,8 +1095,7 @@ function copiaLink() {
     }
   }
 
-  // VERIFICA 2FA PER ATTIVAZIONE ADMIN - VERSIONE SEMPLIFICATA CON CODICE DI TEST
-   function openAdmin2FAVerification(callback) {
+  function openAdmin2FAVerification(callback) {
     const root = document.getElementById('modal-root');
 
     root.innerHTML = `
@@ -1654,6 +1160,13 @@ function copiaLink() {
           return;
         }
 
+        // 🔑 CORREZIONE: Imposta l'accessToken dopo verifica 2FA riuscita
+        if (data.accessToken) {
+          loggedUser.accessToken = data.accessToken;
+          loggedUser.authenticated = true;
+          console.log('✅ AccessToken impostato dopo verifica 2FA');
+        }
+
         closeModal();
         showToast('✅ Verifica 2FA riuscita!' + (data.warning ? ' ' + data.warning : ''));
         if (typeof callback === 'function') callback(true);
@@ -1666,7 +1179,13 @@ function copiaLink() {
       }
     });
   }
-  // GESTIONE 2FA COMPLETA - SEMPLIFICATA
+
+// Continua nella PARTE 2...
+</script>
+</body>
+</html>
+  // CONTINUAZIONE DALLA PARTE 1
+
   async function open2FAManagement() {
     const root = document.getElementById('modal-root');
     
@@ -1693,7 +1212,7 @@ function copiaLink() {
     await load2FAStatus();
   }
 
-   async function load2FAStatus() {
+  async function load2FAStatus() {
     try {
       const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
@@ -1895,6 +1414,7 @@ function copiaLink() {
       }
     });
   }
+
   function showCodeModal(code){
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -1949,7 +1469,6 @@ function copiaLink() {
 
   async function openKeyboxManagement() {
     const root = document.getElementById('modal-root');
-
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="keybox-title">
@@ -2031,71 +1550,31 @@ function copiaLink() {
 
   async function openUserManagement() {
     const root = document.getElementById('modal-root');
-    
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:620px;">
           <h2>👥 Gestione Utenti</h2>
           <p class="modal-subtitle">Crea nuovi utenti o gestisci quelli esistenti.</p>
-          
           <div class="user-modal-tabs">
             <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
             <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
             <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
           </div>
-          
-          <div id="user-list-container">
-            <div class="user-list-empty">⏳ Caricamento utenti...</div>
-          </div>
-          
+          <div id="user-list-container"><div class="user-list-empty">⏳ Caricamento utenti...</div></div>
           <div id="user-create-form" style="display:none;">
-            <div class="name-field">
-              <label for="create-tipo">Tipo utente</label>
-              <select id="create-tipo">
-                <option value="tesserato">⭐ Tesserato</option>
-                <option value="ospite">👤 Ospite</option>
-              </select>
-            </div>
-            <div class="name-field">
-              <label for="create-nome">Nome *</label>
-              <input id="create-nome" type="text" placeholder="Nome" />
-            </div>
-            <div class="name-field">
-              <label for="create-cognome">Cognome *</label>
-              <input id="create-cognome" type="text" placeholder="Cognome" />
-            </div>
-            <div class="name-field" id="create-sport-field">
-              <label for="create-sport">Sport</label>
-              <select id="create-sport">
-                <option value="both">Tennis + Padel</option>
-                <option value="tennis">Tennis</option>
-                <option value="padel">Padel</option>
-              </select>
-            </div>
-            <div class="name-field" id="create-special-field" style="display:none;">
-              <label for="create-special">
-                <input type="checkbox" id="create-special" style="width:auto;margin-right:6px;vertical-align:middle;" />
-                Può prenotare in modalità Torneo / Allenamento
-              </label>
-            </div>
-            <div class="name-field">
-              <label for="create-scadenza">Scadenza (lasciare vuoto per default)</label>
-              <input id="create-scadenza" type="date" />
-            </div>
-            <div class="name-field">
-              <label for="create-attivo">Attivo</label>
-              <select id="create-attivo">
-                <option value="true">✅ Attivo</option>
-                <option value="false">❌ Inattivo</option>
-              </select>
-            </div>
+            <div class="name-field"><label for="create-tipo">Tipo utente</label><select id="create-tipo"><option value="tesserato">⭐ Tesserato</option><option value="ospite">👤 Ospite</option></select></div>
+            <div class="name-field"><label for="create-nome">Nome *</label><input id="create-nome" type="text" placeholder="Nome" /></div>
+            <div class="name-field"><label for="create-cognome">Cognome *</label><input id="create-cognome" type="text" placeholder="Cognome" /></div>
+            <div class="name-field" id="create-sport-field"><label for="create-sport">Sport</label><select id="create-sport"><option value="both">Tennis + Padel</option><option value="tennis">Tennis</option><option value="padel">Padel</option></select></div>
+            <div class="name-field" id="create-special-field" style="display:none;"><label for="create-special"><input type="checkbox" id="create-special" style="width:auto;margin-right:6px;vertical-align:middle;" />Può prenotare in modalità Torneo / Allenamento</label></div>
+            <div class="name-field"><label for="create-scadenza">Scadenza (lasciare vuoto per default)</label><input id="create-scadenza" type="date" /></div>
+            <div class="name-field"><label for="create-attivo">Attivo</label><select id="create-attivo"><option value="true">✅ Attivo</option><option value="false">❌ Inattivo</option></select></div>
             <div class="form-error" id="create-error"></div>
             <div class="modal-actions">
               <button class="btn-cancel" id="create-cancel">Annulla</button>
               <button class="btn-confirm" id="create-save">💾 Crea utente</button>
             </div>
           </div>
-          
           <div class="modal-actions" style="margin-top:12px;">
             <button class="btn-cancel" id="user-close" style="flex:none;width:100%;">Chiudi</button>
           </div>
@@ -2103,32 +1582,14 @@ function copiaLink() {
       </div>
     `;
     
-    document.getElementById('tab-tesserati').addEventListener('click', function() {
-      switchUserTab('tesserati');
-    });
-    document.getElementById('tab-ospiti').addEventListener('click', function() {
-      switchUserTab('ospiti');
-    });
-    document.getElementById('tab-crea').addEventListener('click', function() {
-      switchUserTab('crea');
-    });
-    
-    document.getElementById('create-tipo').addEventListener('change', function() {
-      toggleCreateFields();
-    });
-    
-    document.getElementById('create-cancel').addEventListener('click', function() {
-      switchUserTab(currentUserTab);
-    });
-    
-    document.getElementById('create-save').addEventListener('click', function() {
-      handleCreateUser();
-    });
-    
+    document.getElementById('tab-tesserati').addEventListener('click', function() { switchUserTab('tesserati'); });
+    document.getElementById('tab-ospiti').addEventListener('click', function() { switchUserTab('ospiti'); });
+    document.getElementById('tab-crea').addEventListener('click', function() { switchUserTab('crea'); });
+    document.getElementById('create-tipo').addEventListener('change', function() { toggleCreateFields(); });
+    document.getElementById('create-cancel').addEventListener('click', function() { switchUserTab(currentUserTab); });
+    document.getElementById('create-save').addEventListener('click', function() { handleCreateUser(); });
     document.getElementById('user-close').addEventListener('click', closeModal);
-    document.getElementById('overlay').addEventListener('click', function(e) {
-      if(e.target.id === 'overlay') closeModal();
-    });
+    document.getElementById('overlay').addEventListener('click', function(e) { if(e.target.id === 'overlay') closeModal(); });
     
     toggleCreateFields();
     await loadUserList('tesserati');
@@ -2136,16 +1597,11 @@ function copiaLink() {
 
   function switchUserTab(tab) {
     currentUserTab = tab;
-    
-    document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
-      btn.classList.remove('active');
-    });
+    document.querySelectorAll('.user-modal-tabs button').forEach(btn => { btn.classList.remove('active'); });
     const tabBtn = document.getElementById('tab-' + tab);
     if (tabBtn) tabBtn.classList.add('active');
-    
     const listContainer = document.getElementById('user-list-container');
     const createForm = document.getElementById('user-create-form');
-    
     if (tab === 'crea') {
       listContainer.style.display = 'none';
       createForm.style.display = 'block';
@@ -2173,9 +1629,7 @@ function copiaLink() {
       let data = [];
       
       if (tipo === 'tesserati') {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo,can_book_special&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        });
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo,can_book_special&order=cognome.asc', { headers: { apikey: SUPABASE_KEY } });
         if (!res.ok) throw new Error('Errore caricamento tesserati');
         data = await res.json();
         
@@ -2197,20 +1651,7 @@ function copiaLink() {
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           const specialLabel = u.can_book_special ? '✅' : '—';
           
-          html += `<tr>
-            <td><strong>${escapeHtml(u.codice)}</strong></td>
-            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
-            <td>${sportLabel}</td>
-            <td>${specialLabel}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
-            <td>
-              <div class="user-actions">
-                <button class="btn-edit" data-action="edit" data-table="Tesserati" data-id="${escapeHtml(u.id)}">✏️</button>
-                <button class="btn-delete" data-action="delete" data-table="Tesserati" data-id="${escapeHtml(u.id)}">🗑️</button>
-              </div>
-            </td>
-          </tr>`;
+          html += `<tr><td><strong>${escapeHtml(u.codice)}</strong></td><td>${escapeHtml(u.nome + ' ' + u.cognome)}</td><td>${sportLabel}</td><td>${specialLabel}</td><td>${scadenza}</td><td>${attivo}</td><td><div class="user-actions"><button class="btn-edit" data-action="edit" data-table="Tesserati" data-id="${escapeHtml(u.id)}">✏️</button><button class="btn-delete" data-action="delete" data-table="Tesserati" data-id="${escapeHtml(u.id)}">🗑️</button></div></td></tr>`;
         });
         
         html += '</tbody></table>';
@@ -2218,9 +1659,7 @@ function copiaLink() {
         attachUserActionListeners(container);
         
       } else {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        });
+        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', { headers: { apikey: SUPABASE_KEY } });
         if (!res.ok) throw new Error('Errore caricamento ospiti');
         data = await res.json();
         
@@ -2241,19 +1680,7 @@ function copiaLink() {
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           
-          html += `<tr>
-            <td><strong>${escapeHtml(u.codice)}</strong></td>
-            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
-            <td>${sportLabel}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
-            <td>
-              <div class="user-actions">
-                <button class="btn-edit" data-action="edit" data-table="Ospiti" data-id="${escapeHtml(u.id)}">✏️</button>
-                <button class="btn-delete" data-action="delete" data-table="Ospiti" data-id="${escapeHtml(u.id)}">🗑️</button>
-              </div>
-            </td>
-          </tr>`;
+          html += `<tr><td><strong>${escapeHtml(u.codice)}</strong></td><td>${escapeHtml(u.nome + ' ' + u.cognome)}</td><td>${sportLabel}</td><td>${scadenza}</td><td>${attivo}</td><td><div class="user-actions"><button class="btn-edit" data-action="edit" data-table="Ospiti" data-id="${escapeHtml(u.id)}">✏️</button><button class="btn-delete" data-action="delete" data-table="Ospiti" data-id="${escapeHtml(u.id)}">🗑️</button></div></td></tr>`;
         });
         
         html += '</tbody></table>';
@@ -2266,32 +1693,16 @@ function copiaLink() {
   }
 
   async function generateUniqueCodeFrontend(tipo, tentativi = 0) {
-    if (tentativi >= 20) {
-      throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
-    }
-    
+    if (tentativi >= 20) throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
     const numero = String(Math.floor(1000 + Math.random() * 9000));
     const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
-    
     const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
-      headers: { 
-        apikey: SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!checkRes.ok) {
-      throw new Error('Errore verifica codice');
-    }
-    
+    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', { headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' } });
+    if (!checkRes.ok) throw new Error('Errore verifica codice');
     const existing = await checkRes.json();
-    
     if (existing && existing.length > 0) {
-      console.log('🔄 Codice ' + codice + ' già esistente, ritento...');
       return generateUniqueCodeFrontend(tipo, tentativi + 1);
     }
-    
     return codice;
   }
 
@@ -2310,7 +1721,6 @@ function copiaLink() {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
     }
-    
     if (!loggedUser || !loggedUser.accessToken) {
       errorEl.textContent = '❌ Solo un admin con login sicuro attivo può creare utenti. Rifai il login.';
       return;
@@ -2326,13 +1736,10 @@ function copiaLink() {
     
     try {
       const codice = await generateUniqueCodeFrontend(tipo);
-      
       let insertPayload;
       if (tipo === 'tesserato') {
         insertPayload = {
-          nome,
-          cognome,
-          codice,
+          nome, cognome, codice,
           is_tennis_member: sport === 'tennis' || sport === 'both',
           is_padel_member: sport === 'padel' || sport === 'both',
           is_admin: false,
@@ -2342,9 +1749,7 @@ function copiaLink() {
         };
       } else {
         insertPayload = {
-          nome,
-          cognome,
-          codice,
+          nome, cognome, codice,
           is_tennis_member: sport === 'tennis' || sport === 'both',
           is_padel_member: sport === 'padel' || sport === 'both',
           attivo: attivo,
@@ -2355,12 +1760,7 @@ function copiaLink() {
       const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation',
-          Authorization: 'Bearer ' + loggedUser.accessToken
-        },
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation', Authorization: 'Bearer ' + loggedUser.accessToken },
         body: JSON.stringify(insertPayload)
       });
       
@@ -2376,20 +1776,13 @@ function copiaLink() {
         if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
           const newCodice = await generateUniqueCodeFrontend(tipo);
           insertPayload.codice = newCodice;
-          
           const retryRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
             method: 'POST',
-            headers: {
-              apikey: SUPABASE_KEY,
-              'Content-Type': 'application/json',
-              Prefer: 'return=representation',
-              Authorization: 'Bearer ' + loggedUser.accessToken
-            },
+            headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation', Authorization: 'Bearer ' + loggedUser.accessToken },
             body: JSON.stringify(insertPayload)
           });
           
           if (retryRes.ok) {
-            const created = await retryRes.json();
             const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
             showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + newCodice);
             document.getElementById('create-nome').value = '';
@@ -2400,30 +1793,17 @@ function copiaLink() {
             saveBtn.disabled = false;
             saveBtn.textContent = '💾 Crea utente';
             return;
-          } else {
-            let retryError = '';
-            try {
-              const errBody = await retryRes.json();
-              retryError = errBody.message || errBody.details || JSON.stringify(errBody);
-            } catch(_) {
-              retryError = retryRes.status + ' ' + retryRes.statusText;
-            }
-            throw new Error('Ritentativo fallito: ' + retryError);
           }
         }
-        
         throw new Error(errorDetail);
       }
       
-      const created = await insertRes.json();
       const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
       showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + codice);
-      
       document.getElementById('create-nome').value = '';
       document.getElementById('create-cognome').value = '';
       document.getElementById('create-scadenza').value = '';
       document.getElementById('create-attivo').value = 'true';
-      
       await loadUserList(currentUserTab);
       
     } catch(e) {
@@ -2439,16 +1819,13 @@ function copiaLink() {
     const tennis = isTennis === true || isTennis === 'true';
     const padel = isPadel === true || isPadel === 'true';
     const specialCorrente = canBookSpecialCorrente === true || canBookSpecialCorrente === 'true';
-    
     let sportCorrente = 'both';
     if (tennis && padel) sportCorrente = 'both';
     else if (tennis) sportCorrente = 'tennis';
     else if (padel) sportCorrente = 'padel';
-    
     const dataInput = scadenzaCorrente || '';
     const attivoChecked = attivoCorrente === true || attivoCorrente === 'true';
     const isTesserato = table === 'Tesserati';
-    
     const root = document.getElementById('modal-root');
     
     root.innerHTML = `
@@ -2456,34 +1833,10 @@ function copiaLink() {
         <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
           <h2>✏️ Modifica ${escapeHtml(nome)}</h2>
           <p class="modal-subtitle">Aggiorna sport, scadenza e stato dell'utente.</p>
-          
-          <div class="name-field">
-            <label for="edit-sport">Sport</label>
-            <select id="edit-sport">
-              <option value="both" ${sportCorrente === 'both' ? 'selected' : ''}>Tennis + Padel</option>
-              <option value="tennis" ${sportCorrente === 'tennis' ? 'selected' : ''}>Tennis</option>
-              <option value="padel" ${sportCorrente === 'padel' ? 'selected' : ''}>Padel</option>
-            </select>
-          </div>
-          ${isTesserato ? `
-          <div class="name-field">
-            <label for="edit-special">
-              <input type="checkbox" id="edit-special" style="width:auto;margin-right:6px;vertical-align:middle;" ${specialCorrente ? 'checked' : ''} />
-              Può prenotare in modalità Torneo / Allenamento
-            </label>
-          </div>` : ''}
-          <div class="name-field">
-            <label for="edit-scadenza">Scadenza</label>
-            <input id="edit-scadenza" type="date" value="${dataInput}" />
-          </div>
-          <div class="name-field">
-            <label for="edit-attivo">Stato</label>
-            <select id="edit-attivo">
-              <option value="true" ${attivoChecked ? 'selected' : ''}>✅ Attivo</option>
-              <option value="false" ${!attivoChecked ? 'selected' : ''}>❌ Inattivo</option>
-            </select>
-          </div>
-          
+          <div class="name-field"><label for="edit-sport">Sport</label><select id="edit-sport"><option value="both" ${sportCorrente === 'both' ? 'selected' : ''}>Tennis + Padel</option><option value="tennis" ${sportCorrente === 'tennis' ? 'selected' : ''}>Tennis</option><option value="padel" ${sportCorrente === 'padel' ? 'selected' : ''}>Padel</option></select></div>
+          ${isTesserato ? `<div class="name-field"><label for="edit-special"><input type="checkbox" id="edit-special" style="width:auto;margin-right:6px;vertical-align:middle;" ${specialCorrente ? 'checked' : ''} />Può prenotare in modalità Torneo / Allenamento</label></div>` : ''}
+          <div class="name-field"><label for="edit-scadenza">Scadenza</label><input id="edit-scadenza" type="date" value="${dataInput}" /></div>
+          <div class="name-field"><label for="edit-attivo">Stato</label><select id="edit-attivo"><option value="true" ${attivoChecked ? 'selected' : ''}>✅ Attivo</option><option value="false" ${!attivoChecked ? 'selected' : ''}>❌ Inattivo</option></select></div>
           <div class="form-error" id="edit-error"></div>
           <div class="modal-actions">
             <button class="btn-cancel" id="edit-cancel">Annulla</button>
@@ -2494,9 +1847,7 @@ function copiaLink() {
     `;
     
     document.getElementById('edit-cancel').addEventListener('click', closeModal);
-    document.getElementById('overlay').addEventListener('click', function(e) {
-      if(e.target.id === 'overlay') closeModal();
-    });
+    document.getElementById('overlay').addEventListener('click', function(e) { if(e.target.id === 'overlay') closeModal(); });
     
     document.getElementById('edit-save').addEventListener('click', async function() {
       const errorEl = document.getElementById('edit-error');
@@ -2533,30 +1884,19 @@ function copiaLink() {
         
         const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
           method: 'PATCH',
-          headers: {
-            apikey: SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-            Authorization: 'Bearer ' + loggedUser.accessToken
-          },
+          headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal', Authorization: 'Bearer ' + loggedUser.accessToken },
           body: JSON.stringify(payload)
         });
         
         if (!res.ok) {
           let errorMsg = '';
-          try {
-            const errBody = await res.json();
-            errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
-          } catch(_) {
-            errorMsg = res.status + ' ' + res.statusText;
-          }
+          try { const errBody = await res.json(); errorMsg = errBody.message || errBody.details || JSON.stringify(errBody); }catch(_) { errorMsg = res.status + ' ' + res.statusText; }
           throw new Error(errorMsg);
         }
         
         closeModal();
         showToast('✅ Modifiche salvate per ' + nome);
         await loadUserList(currentUserTab);
-        
       } catch(e) {
         console.error('❌ Errore:', e);
         errorEl.textContent = '❌ Errore: ' + e.message;
@@ -2568,7 +1908,6 @@ function copiaLink() {
 
   window.deleteUser = async function(table, id, nome) {
     if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
-    
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
       return;
@@ -2577,34 +1916,18 @@ function copiaLink() {
       showToast('❌ Attiva prima la modalità Admin (checkbox).');
       return;
     }
-    
     try {
-      const tableName = table;
-      
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
-          Authorization: 'Bearer ' + loggedUser.accessToken
-        }
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal', Authorization: 'Bearer ' + loggedUser.accessToken }
       });
-      
       if (!res.ok) {
         let errorMsg = '';
-        try {
-          const errBody = await res.json();
-          errorMsg = errBody.message || errBody.details || JSON.stringify(errBody);
-        } catch(_) {
-          errorMsg = res.status + ' ' + res.statusText;
-        }
+        try { const errBody = await res.json(); errorMsg = errBody.message || errBody.details || JSON.stringify(errBody); }catch(_) { errorMsg = res.status + ' ' + res.statusText; }
         throw new Error(errorMsg);
       }
-      
       showToast('✅ ' + nome + ' eliminato con successo');
       await loadUserList(currentUserTab);
-      
     } catch(e) {
       console.error('❌ Errore eliminazione:', e);
       showToast('❌ Errore: ' + e.message);
@@ -2618,22 +1941,9 @@ function copiaLink() {
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
           <h2 id="guest-reg-title">Crea profilo ospite</h2>
           <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
-          <div class="name-field">
-            <label for="guest-nome">Nome *</label>
-            <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
-          </div>
-          <div class="name-field">
-            <label for="guest-cognome">Cognome *</label>
-            <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
-          </div>
-          <div class="name-field">
-            <label for="guest-sport">Sport</label>
-            <select id="guest-sport">
-              <option value="both">Tennis + Padel</option>
-              <option value="tennis">Solo Tennis</option>
-              <option value="padel">Solo Padel</option>
-            </select>
-          </div>
+          <div class="name-field"><label for="guest-nome">Nome *</label><input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" /></div>
+          <div class="name-field"><label for="guest-cognome">Cognome *</label><input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" /></div>
+          <div class="name-field"><label for="guest-sport">Sport</label><select id="guest-sport"><option value="both">Tennis + Padel</option><option value="tennis">Solo Tennis</option><option value="padel">Solo Padel</option></select></div>
           <div class="form-error" id="guest-reg-error"></div>
           <div class="modal-actions">
             <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
@@ -2739,24 +2049,17 @@ function copiaLink() {
       
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id,totp_enabled,can_book_special'
-          + '&codice=eq.' + encodeURIComponent(codice);
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id,totp_enabled,can_book_special&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
-          + '&codice=eq.' + encodeURIComponent(codice)
-          + '&attivo=eq.true'
-          + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
+        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&codice=eq.' + encodeURIComponent(codice) + '&attivo=eq.true&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
       }
-      
-      console.log('🔍 Cerco utente con codice:', codice);
       
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       
       if (!res.ok) throw new Error('Errore di connessione');
       
       const data = await res.json();
-      console.log('📦 Dati ricevuti:', data);
       
       if (data.length === 0) {
         errorEl.textContent = '❌ Codice non valido o utente disattivato. Contatta il circolo.';
@@ -2767,35 +2070,23 @@ function copiaLink() {
       const utente = data[0];
 
       if (utente.is_admin && utente.totp_enabled) {
-        console.log('🔐 Admin richiede 2FA');
-        
         loginSection.style.display = 'none';
         bookingSection.style.display = 'block';
         
         loggedUser = {
-          id: utente.id,
-          nome: utente.nome,
-          cognome: utente.cognome,
-          codice: utente.codice,
-          tipo: tipo,
-          is_tennis_member: utente.is_tennis_member || false,
-          is_padel_member: utente.is_padel_member || false,
-          is_admin: utente.is_admin || false,
-          can_book_special: utente.can_book_special || false,
-          scadenza: utente.scadenza || null,
-          totp_enabled: utente.totp_enabled || false,
-          authenticated: false,
-          accessToken: null
+          id: utente.id, nome: utente.nome, cognome: utente.cognome, codice: utente.codice, tipo: tipo,
+          is_tennis_member: utente.is_tennis_member || false, is_padel_member: utente.is_padel_member || false,
+          is_admin: utente.is_admin || false, can_book_special: utente.can_book_special || false,
+          scadenza: utente.scadenza || null, totp_enabled: utente.totp_enabled || false,
+          authenticated: false, accessToken: null
         };
 
-        const tipoLabel = loggedUser.tipo === 'tesserato' 
-          ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
-          : '<span class="badge-ospite">Ospite</span>';
+        const tipoLabel = loggedUser.tipo === 'tesserato' ? '<span class="badge-tesserato">⭐ Tesserato</span>' : '<span class="badge-ospite">Ospite</span>';
         document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
-document.getElementById('user-badge').innerHTML = tipoLabel;
-document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
-try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
-renderGuestExpiry();
+        document.getElementById('user-badge').innerHTML = tipoLabel;
+        document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
+        try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
+        renderGuestExpiry();
         setupAdminToggle();
         renderTesseratoExpiry();
         
@@ -2826,31 +2117,20 @@ renderGuestExpiry();
       try {
         const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
         accessToken = authData.access_token;
-        console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
       } catch(authErr) {
         console.warn('⚠️ Auth Supabase non disponibile, continuo senza token');
       }
     }
 
     loggedUser = {
-      id: utente.id,
-      nome: utente.nome,
-      cognome: utente.cognome,
-      codice: utente.codice,
-      tipo: tipo,
-      is_tennis_member: utente.is_tennis_member || false,
-      is_padel_member: utente.is_padel_member || false,
-      is_admin: utente.is_admin || false,
-      can_book_special: utente.can_book_special || false,
-      scadenza: utente.scadenza || null,
-      totp_enabled: utente.totp_enabled || false,
-      authenticated: !!accessToken,
-      accessToken: accessToken
+      id: utente.id, nome: utente.nome, cognome: utente.cognome, codice: utente.codice, tipo: tipo,
+      is_tennis_member: utente.is_tennis_member || false, is_padel_member: utente.is_padel_member || false,
+      is_admin: utente.is_admin || false, can_book_special: utente.can_book_special || false,
+      scadenza: utente.scadenza || null, totp_enabled: utente.totp_enabled || false,
+      authenticated: !!accessToken, accessToken: accessToken
     };
     
-    console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
-    
-        document.getElementById('login-error').textContent = '';
+    document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
     document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
     try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
@@ -2858,9 +2138,7 @@ renderGuestExpiry();
     loginSection.style.display = 'none';
     bookingSection.style.display = 'block';
     
-    const tipoLabel = loggedUser.tipo === 'tesserato' 
-      ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
-      : '<span class="badge-ospite">Ospite</span>';
+    const tipoLabel = loggedUser.tipo === 'tesserato' ? '<span class="badge-tesserato">⭐ Tesserato</span>' : '<span class="badge-ospite">Ospite</span>';
     document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
     document.getElementById('user-badge').innerHTML = tipoLabel;
     renderGuestExpiry();
@@ -2892,26 +2170,23 @@ renderGuestExpiry();
   }
 
   document.getElementById('login-btn').addEventListener('click', handleLogin);
-  document.getElementById('login-codice').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleLogin();
-  });
+  document.getElementById('login-codice').addEventListener('keydown', function(e) { if (e.key === 'Enter') handleLogin(); });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
   document.getElementById('webauthn-register-btn').addEventListener('click', registerFingerprint);
   document.getElementById('login-fingerprint-btn').addEventListener('click', loginWithFingerprint);
 
   document.getElementById('login-codice').addEventListener('input', () => {
     const val = document.getElementById('login-codice').value.trim();
-    document.getElementById('login-fingerprint-btn').style.display =
-      (window.PublicKeyCredential && val.length >= 2) ? 'block' : 'none';
+    document.getElementById('login-fingerprint-btn').style.display = (window.PublicKeyCredential && val.length >= 2) ? 'block' : 'none';
   });
+
   function prefillLastCodice() {
-  let saved = '';
-  try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
-  document.getElementById('login-codice').value = saved;
-  document.getElementById('login-fingerprint-btn').style.display =
-    (window.PublicKeyCredential && saved.length >= 2) ? 'block' : 'none';
-}
-prefillLastCodice();
+    let saved = '';
+    try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
+    document.getElementById('login-codice').value = saved;
+    document.getElementById('login-fingerprint-btn').style.display = (window.PublicKeyCredential && saved.length >= 2) ? 'block' : 'none';
+  }
+  prefillLastCodice();
 
   async function loginWithFingerprint() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
@@ -2933,17 +2208,12 @@ prefillLastCodice();
       }
 
       options.challenge = bufferDecode(options.challenge);
-      options.allowCredentials = options.allowCredentials.map(c => ({
-        ...c,
-        id: bufferDecode(c.id)
-      }));
+      options.allowCredentials = options.allowCredentials.map(c => ({ ...c, id: bufferDecode(c.id) }));
 
       const assertion = await navigator.credentials.get({ publicKey: options });
 
       const assertionResponse = {
-        id: assertion.id,
-        rawId: bufferEncode(assertion.rawId),
-        type: assertion.type,
+        id: assertion.id, rawId: bufferEncode(assertion.rawId), type: assertion.type,
         response: {
           clientDataJSON: bufferEncode(assertion.response.clientDataJSON),
           authenticatorData: bufferEncode(assertion.response.authenticatorData),
@@ -2973,6 +2243,7 @@ prefillLastCodice();
       }
     }
   }
+
   function bufferDecode(value) {
     value = value.replace(/-/g, '+').replace(/_/g, '/');
     const str = atob(value);
@@ -3009,9 +2280,7 @@ prefillLastCodice();
       const credential = await navigator.credentials.create({ publicKey: options });
 
       const credentialResponse = {
-        id: credential.id,
-        rawId: bufferEncode(credential.rawId),
-        type: credential.type,
+        id: credential.id, rawId: bufferEncode(credential.rawId), type: credential.type,
         response: {
           clientDataJSON: bufferEncode(credential.response.clientDataJSON),
           attestationObject: bufferEncode(credential.response.attestationObject)
@@ -3041,8 +2310,8 @@ prefillLastCodice();
       }
     }
   }
+
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
-  
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
   document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
   
