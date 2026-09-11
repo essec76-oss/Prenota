@@ -2917,7 +2917,7 @@ prefillLastCodice();
     if (!codice) return;
 
     try {
-      const optRes = await fetch('/api/webauthn-login-options', {
+      const optRes = await fetch('/api/webauthn-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codice })
@@ -2950,7 +2950,7 @@ prefillLastCodice();
         }
       };
 
-      const verifyRes = await fetch('/api/webauthn-login-verify', {
+      const verifyRes = await fetch('/api/webauthn-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codice, response: assertionResponse })
