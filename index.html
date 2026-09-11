@@ -634,6 +634,7 @@
       <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
       <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
       <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
+       <button class="admin-btn" id="webauthn-register-btn" style="display:none;">👆 Attiva impronta</button>
       <button class="logout-btn" id="logout-btn">🚪 Esci</button>
       <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
     </div>
@@ -2846,8 +2847,9 @@ function copiaLink() {
     
     console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
     
-    document.getElementById('login-error').textContent = '';
+        document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
+    document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
     
     loginSection.style.display = 'none';
     bookingSection.style.display = 'block';
@@ -2890,6 +2892,76 @@ function copiaLink() {
     if (e.key === 'Enter') handleLogin();
   });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  document.getElementById('webauthn-register-btn').addEventListener('click', registerFingerprint);
+
+  function bufferDecode(value) {
+    value = value.replace(/-/g, '+').replace(/_/g, '/');
+    const str = atob(value);
+    const buffer = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; i++) buffer[i] = str.charCodeAt(i);
+    return buffer;
+  }
+
+  function bufferEncode(buffer) {
+    let str = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  async function registerFingerprint() {
+    if (!window.PublicKeyCredential) {
+      showToast('⚠️ Il tuo dispositivo/browser non supporta l\'accesso con impronta.');
+      return;
+    }
+
+    try {
+      const optRes = await fetch('/api/webauthn-register-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codice: loggedUser.codice })
+      });
+      const options = await optRes.json();
+      if (!optRes.ok) throw new Error(options.error || 'Errore generazione opzioni');
+
+      options.challenge = bufferDecode(options.challenge);
+      options.user.id = bufferDecode(options.user.id);
+
+      const credential = await navigator.credentials.create({ publicKey: options });
+
+      const credentialResponse = {
+        id: credential.id,
+        rawId: bufferEncode(credential.rawId),
+        type: credential.type,
+        response: {
+          clientDataJSON: bufferEncode(credential.response.clientDataJSON),
+          attestationObject: bufferEncode(credential.response.attestationObject)
+        }
+      };
+
+      const verifyRes = await fetch('/api/webauthn-register-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          codice: loggedUser.codice,
+          deviceName: navigator.userAgentData?.platform || navigator.platform || 'Dispositivo',
+          response: credentialResponse
+        })
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) throw new Error(verifyData.error || 'Verifica fallita');
+
+      showToast('✅ Impronta attivata su questo dispositivo!');
+
+    } catch (err) {
+      console.error('❌ Errore registrazione impronta:', err);
+      if (err.name === 'NotAllowedError') {
+        showToast('Registrazione annullata.');
+      } else {
+        showToast('⚠️ Errore durante l\'attivazione dell\'impronta.');
+      }
+    }
+  }
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
   
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
