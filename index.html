@@ -738,10 +738,6 @@ function copiaLink() {
   let currentUserTab = 'tesserati';
   const userDataCache = {};
 
-  // 2FA: codice segreto per il testing (in produzione verrebbe da Supabase)
-  // Per testare, usa il codice "123456"
-  const TEST_2FA_CODE = "123456";
-
   function attachUserActionListeners(container){
     container.querySelectorAll('button[data-action]').forEach(btn => {
       btn.addEventListener('click', function(){
@@ -2898,58 +2894,6 @@ renderGuestExpiry();
 }
 prefillLastCodice();
 
-    if (!window.PublicKeyCredential) {
-      showToast('⚠️ Il tuo dispositivo/browser non supporta l\'accesso con impronta.');
-      return;
-    }
-
-    try {
-      const optRes = await fetch('/api/webauthn-register-options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codice: loggedUser.codice })
-      });
-      const options = await optRes.json();
-      if (!optRes.ok) throw new Error(options.error || 'Errore generazione opzioni');
-
-      options.challenge = bufferDecode(options.challenge);
-      options.user.id = bufferDecode(options.user.id);
-
-      const credential = await navigator.credentials.create({ publicKey: options });
-
-      const credentialResponse = {
-        id: credential.id,
-        rawId: bufferEncode(credential.rawId),
-        type: credential.type,
-        response: {
-          clientDataJSON: bufferEncode(credential.response.clientDataJSON),
-          attestationObject: bufferEncode(credential.response.attestationObject)
-        }
-      };
-
-      const verifyRes = await fetch('/api/webauthn-register-verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          codice: loggedUser.codice,
-          deviceName: navigator.userAgentData?.platform || navigator.platform || 'Dispositivo',
-          response: credentialResponse
-        })
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok) throw new Error(verifyData.error || 'Verifica fallita');
-
-      showToast('✅ Impronta attivata su questo dispositivo!');
-
-    } catch (err) {
-      console.error('❌ Errore registrazione impronta:', err);
-      if (err.name === 'NotAllowedError') {
-        showToast('Registrazione annullata.');
-      } else {
-        showToast('⚠️ Errore durante l\'attivazione dell\'impronta.');
-      }
-    }
-  }
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
   
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
