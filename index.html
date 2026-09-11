@@ -2723,9 +2723,8 @@ function copiaLink() {
       errorEl.textContent = 'Inserisci il tuo codice ID.';
       return;
     }
-    
-    if (!/^[to]\d{4}$/.test(codice)) {
-      errorEl.textContent = 'Il codice deve essere nel formato t1234 o o5678.';
+    if (!/^[to][a-z0-9\-]{4,20}$/.test(codice)) {
+      errorEl.textContent = 'Il codice deve iniziare con t o o, seguito da 4-20 caratteri (lettere, numeri, trattini).';
       return;
     }
     
