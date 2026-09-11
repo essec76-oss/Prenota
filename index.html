@@ -2792,8 +2792,10 @@ function copiaLink() {
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
         document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
-        document.getElementById('user-badge').innerHTML = tipoLabel;
-        renderGuestExpiry();
+document.getElementById('user-badge').innerHTML = tipoLabel;
+document.getElementById('webauthn-register-btn').style.display = window.PublicKeyCredential ? 'inline-block' : 'none';
+try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
+renderGuestExpiry();
         setupAdminToggle();
         renderTesseratoExpiry();
         
