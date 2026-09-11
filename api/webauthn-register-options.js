@@ -32,14 +32,16 @@ module.exports = async (req, res) => {
         { alg: -257, type: 'public-key' }  // RS256
       ],
       authenticatorSelection: {
-        authenticatorAttachment: 'platform', // impronta/FaceID del dispositivo, non chiavi USB esterne
+        authenticatorAttachment: 'platform',
         userVerification: 'required'
       },
       timeout: 60000,
       attestation: 'none'
     };
 
+    res.setHeader('Set-Cookie', `wa_challenge=${challenge}; HttpOnly; Secure; SameSite=Strict; Max-Age=60; Path=/api`);
     return res.status(200).json(options);
+
   } catch (err) {
     console.error('❌ Errore generazione opzioni WebAuthn:', err);
     return res.status(500).json({ error: 'Errore interno' });
