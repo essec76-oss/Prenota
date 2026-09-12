@@ -584,6 +584,29 @@
   .badge-2fa-enabled{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .badge-2fa-disabled{background:#B84B1E;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .admin-2fa-status{font-size:12px;color:var(--ink-soft);margin-left:6px;}
+
+  /* NUOVO: pulsante Google */
+  .btn-google{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    padding:14px 20px;
+    background:#fff;
+    color:#3c4043;
+    border:1px solid #dadce0;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    transition:all 0.2s ease;
+  }
+  .btn-google:hover{box-shadow:0 3px 10px rgba(0,0,0,0.15);background:#f8f9fa;}
+  .btn-google:active{transform:translateY(1px);}
+  .btn-google svg{width:20px;height:20px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -638,7 +661,7 @@
     <div id="auth-section">
       <div id="login-box" class="login-box">
         <div class="name-field">
-          <label for="login-codice">Codice ID (es. t1234 o o5678)</label>
+          <label for="login-codice">Codice ID (es. t1234 o oab12c)</label>
           <input id="login-codice" type="password" placeholder="Inserisci il tuo codice" />
         </div>
         <div class="form-error" id="login-error"></div>
@@ -653,7 +676,7 @@
       </div>
 
       <div class="guest-register-box">
-        <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi.</p>
+        <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi con Google.</p>
         <div id="guest-slots-counter" class="guest-slots-counter"></div>
         <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
       </div>
@@ -668,7 +691,6 @@
 
 <div id="modal-root"></div>
 <div id="toast-root"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function(){
   var qrImg = document.getElementById('login-qr-code');
@@ -1148,7 +1170,7 @@ function copiaLink() {
         row.appendChild(left);
         
         if (!loggedUser) {
-          // Nessuna azione disponibile per chi guarda senza login: solo nome e orario
+          // Nessuna azione disponibile per chi guarda senza login
         } else if (adminMode && loggedUser.is_admin) {
           const adminBtn = document.createElement('button');
           adminBtn.className = 'book-btn';
@@ -1511,7 +1533,7 @@ function copiaLink() {
     }
   }
 
-  // GESTIONE ADMIN TOGGLE CON 2FA - VERSIONE SEMPLIFICATA
+  // GESTIONE ADMIN TOGGLE CON 2FA
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
     const toggle = document.getElementById('admin-toggle');
@@ -1528,23 +1550,16 @@ function copiaLink() {
       toggle.checked = false;
       adminMode = false;
       
-      // Mostra stato 2FA
       if (loggedUser.totp_enabled) {
         statusEl.innerHTML = '<span class="badge-2fa-enabled">🔐 2FA ON</span>';
       } else {
         statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
       }
       
-      // Gestione toggle checkbox - FUNZIONE CORRETTA
       toggle.onchange = function() {
-        console.log('🔑 Toggle admin cambiato:', this.checked);
-        
         if (this.checked) {
-          // Se admin ha 2FA attivo, richiedi verifica
           if (loggedUser.totp_enabled) {
-            console.log('🔐 Admin con 2FA attivo, richiedo verifica');
             openAdmin2FAVerification(function(success) {
-              console.log('📞 Callback 2FA: success =', success);
               const toggleEl = document.getElementById('admin-toggle');
               if (success) {
                 adminMode = true;
@@ -1554,20 +1569,15 @@ function copiaLink() {
               } else {
                 adminMode = false;
                 toggleEl.checked = false;
-                // Il messaggio di errore viene già mostrato da openAdmin2FAVerification
               }
             });
           } else {
-            // Admin senza 2FA: attiva direttamente
-            console.log('🔓 Admin senza 2FA, attivo direttamente');
             adminMode = true;
             showToast('🔑 Modalità admin attivata');
             renderSlots();
             this.checked = true;
           }
         } else {
-          // Disattivazione admin mode
-          console.log('🔒 Disattivo modalità admin');
           adminMode = false;
           showToast('🔑 Modalità admin disattivata');
           renderSlots();
@@ -1607,8 +1617,7 @@ function copiaLink() {
     }
   }
 
-  // VERIFICA 2FA PER ATTIVAZIONE ADMIN - VERSIONE SEMPLIFICATA CON CODICE DI TEST
-   function openAdmin2FAVerification(callback) {
+  function openAdmin2FAVerification(callback) {
     const root = document.getElementById('modal-root');
 
     root.innerHTML = `
@@ -1685,7 +1694,7 @@ function copiaLink() {
       }
     });
   }
-  // GESTIONE 2FA COMPLETA - SEMPLIFICATA
+
   async function open2FAManagement() {
     const root = document.getElementById('modal-root');
     
@@ -1712,7 +1721,7 @@ function copiaLink() {
     await load2FAStatus();
   }
 
-   async function load2FAStatus() {
+  async function load2FAStatus() {
     try {
       const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
@@ -2152,8 +2161,7 @@ function copiaLink() {
     toggleCreateFields();
     await loadUserList('tesserati');
   }
-
-  function switchUserTab(tab) {
+    function switchUserTab(tab) {
     currentUserTab = tab;
     
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
@@ -2288,10 +2296,20 @@ function copiaLink() {
     if (tentativi >= 20) {
       throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
     }
-    
-    const numero = String(Math.floor(1000 + Math.random() * 9000));
-    const codice = (tipo === 'tesserato' ? 't' : 'o') + numero;
-    
+
+    let codice;
+    if (tipo === 'tesserato') {
+      const numero = String(Math.floor(1000 + Math.random() * 9000));
+      codice = 't' + numero;
+    } else {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let suffix = '';
+      for (let i = 0; i < 5; i++) {
+        suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      codice = 'o' + suffix;
+    }
+
     const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
     const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
       headers: { 
@@ -2299,18 +2317,18 @@ function copiaLink() {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (!checkRes.ok) {
       throw new Error('Errore verifica codice');
     }
-    
+
     const existing = await checkRes.json();
-    
+
     if (existing && existing.length > 0) {
       console.log('🔄 Codice ' + codice + ' già esistente, ritento...');
       return generateUniqueCodeFrontend(tipo, tentativi + 1);
     }
-    
+
     return codice;
   }
 
@@ -2636,7 +2654,7 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
           <h2 id="guest-reg-title">Crea profilo ospite</h2>
-          <p class="modal-subtitle">Il profilo sarà valido 14 giorni. Ti invieremo un codice di verifica via email.</p>
+          <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Accedi con Google per verificare la tua identità.</p>
           <div class="name-field">
             <label for="guest-nome">Nome *</label>
             <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
@@ -2644,10 +2662,6 @@ function copiaLink() {
           <div class="name-field">
             <label for="guest-cognome">Cognome *</label>
             <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
-          </div>
-          <div class="name-field">
-            <label for="guest-email">Email *</label>
-            <input id="guest-email" type="email" placeholder="La tua email" autocomplete="email" />
           </div>
           <div class="name-field">
             <label for="guest-sport">Sport</label>
@@ -2660,141 +2674,93 @@ function copiaLink() {
           <div class="form-error" id="guest-reg-error"></div>
           <div class="modal-actions">
             <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
-            <button class="btn-confirm" id="guest-reg-save">Invia codice di verifica</button>
           </div>
+          <button class="btn-google" id="guest-google-btn" style="margin-top:10px;">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Accedi con Google
+          </button>
         </div>
       </div>
     `;
     document.getElementById('guest-reg-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
-    document.getElementById('guest-reg-save').addEventListener('click', handleSendGuestOtp);
+    document.getElementById('guest-google-btn').addEventListener('click', handleGuestGoogleSignIn);
   }
 
-  async function handleSendGuestOtp() {
+  function handleGuestGoogleSignIn() {
     const errorEl = document.getElementById('guest-reg-error');
     const nome = document.getElementById('guest-nome').value.trim();
     const cognome = document.getElementById('guest-cognome').value.trim();
-    const email = document.getElementById('guest-email').value.trim().toLowerCase();
     const sport = document.getElementById('guest-sport').value;
-    const saveBtn = document.getElementById('guest-reg-save');
 
     if (!nome || !cognome) {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errorEl.textContent = 'Inserisci un\'email valida.';
-      return;
-    }
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Invio in corso...';
-    errorEl.textContent = '';
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
-        method: 'POST',
-        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, create_user: true })
-      });
+      sessionStorage.setItem('guestDraft', JSON.stringify({ nome, cognome, sport }));
+    } catch(e) {}
 
-      if (!res.ok) {
-        const errBody = await res.json().catch(()=>({}));
-        throw new Error(errBody.msg || errBody.error_description || 'Invio del codice non riuscito.');
-      }
+    const redirectTo = window.location.origin + window.location.pathname;
+    const authUrl = SUPABASE_URL + '/auth/v1/authorize?provider=google'
+      + '&redirect_to=' + encodeURIComponent(redirectTo);
 
-      openGuestOtpModal({ nome, cognome, email, sport });
-
-    } catch(e) {
-      console.error('❌ Errore invio OTP ospite:', e);
-      errorEl.textContent = '❌ Errore: ' + (e.message || 'invio non riuscito');
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Invia codice di verifica';
-    }
+    window.location.href = authUrl;
   }
 
-  function openGuestOtpModal(guestData) {
-    const root = document.getElementById('modal-root');
-    root.innerHTML = `
-      <div class="overlay" id="overlay">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-otp-title">
-          <h2 id="guest-otp-title">Verifica la tua email</h2>
-          <p class="modal-subtitle">Abbiamo inviato un codice a <strong>${guestData.email}</strong>. Inseriscilo qui sotto.</p>
-          <div class="name-field">
-            <label for="guest-otp-code">Codice di verifica</label>
-            <input id="guest-otp-code" type="text" inputmode="numeric" placeholder="123456" maxlength="6" />
-          </div>
-          <div class="form-error" id="guest-otp-error"></div>
-          <div class="modal-actions">
-            <button class="btn-cancel" id="guest-otp-cancel">Annulla</button>
-            <button class="btn-confirm" id="guest-otp-confirm">Verifica e crea profilo</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('guest-otp-cancel').addEventListener('click', closeModal);
-    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
-    document.getElementById('guest-otp-confirm').addEventListener('click', ()=> handleVerifyGuestOtp(guestData));
-    document.getElementById('guest-otp-code').addEventListener('keydown', function(e){
-      if (e.key === 'Enter') handleVerifyGuestOtp(guestData);
-    });
-  }
+  async function handleGoogleReturn() {
+    if (!window.location.hash || window.location.hash.indexOf('access_token=') === -1) return false;
 
-  async function handleVerifyGuestOtp(guestData) {
-    const errorEl = document.getElementById('guest-otp-error');
-    const code = document.getElementById('guest-otp-code').value.trim();
-    const confirmBtn = document.getElementById('guest-otp-confirm');
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = params.get('access_token');
+    if (!accessToken) return false;
 
-    if (!/^\d{6}$/.test(code)) {
-      errorEl.textContent = 'Il codice deve avere 6 cifre.';
-      return;
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+
+    let draft = null;
+    try { draft = JSON.parse(sessionStorage.getItem('guestDraft') || 'null'); } catch(e) {}
+
+    if (!draft) {
+      showToast('⚠️ Sessione di registrazione scaduta. Riprova.');
+      return true;
     }
-
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Verifica...';
-    errorEl.textContent = '';
 
     try {
-      const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
-        method: 'POST',
-        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: guestData.email, token: code, type: 'email' })
-      });
-
-      const verifyData = await verifyRes.json();
-
-      if (!verifyRes.ok || !verifyData.access_token) {
-        throw new Error(verifyData.msg || verifyData.error_description || 'Codice non valido o scaduto.');
-      }
-
       const res = await fetch('/api/create-guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nome: guestData.nome,
-          cognome: guestData.cognome,
-          sport: guestData.sport,
-          email: guestData.email,
-          accessToken: verifyData.access_token
+          nome: draft.nome,
+          cognome: draft.cognome,
+          sport: draft.sport,
+          accessToken: accessToken
         })
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Creazione fallita');
+        showToast('❌ ' + (data.error || 'Registrazione non riuscita'));
+        sessionStorage.removeItem('guestDraft');
+        return true;
       }
 
-      closeModal();
-      showGuestCodeModal(data.codice, guestData.nome, guestData.cognome, data.scadenza);
+      sessionStorage.removeItem('guestDraft');
+      showGuestCodeModal(data.codice, draft.nome, draft.cognome, data.scadenza);
       loadGuestSlotsCounter();
 
     } catch(e) {
-      console.error('❌ Errore verifica/creazione ospite:', e);
-      errorEl.textContent = '❌ Errore: ' + (e.message || 'verifica non riuscita');
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = 'Verifica e crea profilo';
+      console.error('❌ Errore registrazione ospite:', e);
+      showToast('❌ Errore di connessione');
     }
+
+    return true;
   }
 
   function showGuestCodeModal(codice, nome, cognome, scadenza) {
@@ -2804,10 +2770,10 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true">
           <h2>Profilo ospite creato!</h2>
-          <p class="modal-subtitle">Ciao <strong>${escapeHtml(nome + ' ' + cognome)}</strong>, il tuo profilo è attivo fino al <strong>${dataFmt}</strong>.</p>
+          <p class="modal-subtitle">Ciao <strong>${escapeHtml(nome + ' ' + cognome)}</strong>, il tuo profilo è attivo per 7 giorni, fino al <strong>${dataFmt}</strong>.</p>
           <p style="text-align:center;margin:8px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso:</p>
           <div class="booking-code">${codice}</div>
-          <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare.</p>
+          <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare. Passati i 7 giorni la prova termina e non sarà possibile rigenerare un nuovo codice.</p>
           <div class="modal-actions">
             <button class="btn-confirm" id="guest-code-ok" style="flex:none;width:100%;">Ho salvato il codice</button>
           </div>
@@ -2834,8 +2800,11 @@ function copiaLink() {
       errorEl.textContent = 'Inserisci il tuo codice ID.';
       return;
     }
-    if (!/^[to][a-z0-9\-]{4,20}$/.test(codice)) {
-      errorEl.textContent = 'Il codice deve iniziare con t o o, seguito da 4-20 caratteri (lettere, numeri, trattini).';
+
+    const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
+    const isOspiteCode = /^o[a-z0-9]{5}$/.test(codice);
+    if (!isTesseratoCode && !isOspiteCode) {
+      errorEl.textContent = 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXX (ospite).';
       return;
     }
     
@@ -2900,9 +2869,9 @@ function copiaLink() {
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
         document.getElementById('user-name-display').textContent = loggedUser.nome + ' ' + loggedUser.cognome;
-document.getElementById('user-badge').innerHTML = tipoLabel;
-try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
-renderGuestExpiry();
+        document.getElementById('user-badge').innerHTML = tipoLabel;
+        try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
+        renderGuestExpiry();
         setupAdminToggle();
         renderTesseratoExpiry();
         
@@ -2957,7 +2926,7 @@ renderGuestExpiry();
     
     console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
     
-        document.getElementById('login-error').textContent = '';
+    document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
     try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
     showLoggedInUI();
@@ -3000,12 +2969,13 @@ renderGuestExpiry();
     if (e.key === 'Enter') handleLogin();
   });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  
   function prefillLastCodice() {
-  let saved = '';
-  try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
-  document.getElementById('login-codice').value = saved;
-}
-prefillLastCodice();
+    let saved = '';
+    try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
+    document.getElementById('login-codice').value = saved;
+  }
+  prefillLastCodice();
 
   // Calendario pubblico: visibile subito, anche senza login
   showAuthUI();
@@ -3062,6 +3032,9 @@ prefillLastCodice();
     updateBookingDots();
     renderSlots();
   });
+
+  // Gestione ritorno da Google OAuth (nuovo flusso ospiti)
+  handleGoogleReturn();
 
 })();
 </script>
