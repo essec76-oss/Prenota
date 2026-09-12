@@ -117,12 +117,19 @@ module.exports = async function handler(req, res) {
     const emailClean = email.trim().toLowerCase();
 
     // ------------------------------------------------------------
-    // 1.4) Verifica che l'email sia stata confermata con il codice OTP
+    // 1.4) Verifica OTP email — DISATTIVATA TEMPORANEAMENTE
     // ------------------------------------------------------------
-    const verifica = await verifyEmailToken(accessToken, emailClean);
-    if (!verifica.ok) {
-      return res.status(401).json({ error: verifica.error });
-    }
+    // Richiede un dominio verificato su Resend (o altro provider email)
+    // per poter inviare a indirizzi diversi dal proprio. Finché non c'è
+    // un dominio, l'email viene comunque richiesta e salvata, ma non
+    // blocca la creazione del profilo. Per riattivare: decommentare le
+    // righe sotto (la funzione verifyEmailToken è già pronta) e ripristinare
+    // lo step di invio/verifica OTP nel frontend (openGuestOtpModal).
+    //
+    // const verifica = await verifyEmailToken(accessToken, emailClean);
+    // if (!verifica.ok) {
+    //   return res.status(401).json({ error: verifica.error });
+    // }
 
     // ------------------------------------------------------------
     // 1.5) Controllo limite giornaliero (max 5 auto-registrazioni/giorno)
