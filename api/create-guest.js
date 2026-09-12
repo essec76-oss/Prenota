@@ -3,13 +3,39 @@
 // ============================================================
 // Endpoint pubblico (nessun token richiesto).
 // Usa la SERVICE_ROLE_KEY solo lato server per bypassare le RLS
-// in modo sicuro. Genera codice univoco oXXXX e scadenza +7 giorni.
+// in modo sicuro. Genera codice univoco oXXXX e scadenza +14 giorni.
 // Applica un limite giornaliero di 5 auto-registrazioni (le creazioni
 // fatte dall'admin tramite create-user.js NON sono conteggiate).
+// L'email deve essere stata verificata lato client con un codice OTP
+// (Supabase Auth); qui verifichiamo l'access_token ricevuto per
+// assicurarci che la verifica sia avvenuta davvero, prima di creare
+// il profilo.
 // ============================================================
 
 const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Verifica che l'access_token sia valido e appartenga davvero all'email dichiarata
+async function verifyEmailToken(accessToken, email) {
+  if (!accessToken || typeof accessToken !== 'string') {
+    return { ok: false, error: 'Email non verificata.' };
+  }
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+  if (!res.ok) {
+    return { ok: false, error: 'Verifica email non valida o scaduta.' };
+  }
+  const user = await res.json();
+  if (!user || !user.email || user.email.toLowerCase() !== String(email).toLowerCase()) {
+    return { ok: false, error: 'L\'email verificata non corrisponde.' };
+  }
+  return { ok: true };
+}
 
 async function generateUniqueCode(tentativi = 0) {
   if (tentativi >= 20) {
@@ -71,7 +97,7 @@ module.exports = async function handler(req, res) {
     // ------------------------------------------------------------
     // 1) Validazione input
     // ------------------------------------------------------------
-    const { nome, cognome, sport } = req.body || {};
+    const { nome, cognome, sport, email, accessToken } = req.body || {};
 
     if (!nome || typeof nome !== 'string' || !nome.trim()) {
       return res.status(400).json({ error: 'Il nome è obbligatorio.' });
@@ -82,9 +108,21 @@ module.exports = async function handler(req, res) {
     if (!sport || !['tennis', 'padel', 'both'].includes(sport)) {
       return res.status(400).json({ error: 'Seleziona uno sport valido (tennis, padel o both).' });
     }
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return res.status(400).json({ error: 'Email non valida.' });
+    }
 
     const nomeClean = nome.trim();
     const cognomeClean = cognome.trim();
+    const emailClean = email.trim().toLowerCase();
+
+    // ------------------------------------------------------------
+    // 1.4) Verifica che l'email sia stata confermata con il codice OTP
+    // ------------------------------------------------------------
+    const verifica = await verifyEmailToken(accessToken, emailClean);
+    if (!verifica.ok) {
+      return res.status(401).json({ error: verifica.error });
+    }
 
     // ------------------------------------------------------------
     // 1.5) Controllo limite giornaliero (max 5 auto-registrazioni/giorno)
@@ -120,10 +158,10 @@ module.exports = async function handler(req, res) {
     const codice = await generateUniqueCode();
 
     // ------------------------------------------------------------
-    // 3) Calcola scadenza (+7 giorni)
+    // 3) Calcola scadenza (+14 giorni)
     // ------------------------------------------------------------
     const scadenzaDate = new Date();
-    scadenzaDate.setDate(scadenzaDate.getDate() + 7);
+    scadenzaDate.setDate(scadenzaDate.getDate() + 14);
     const yyyy = scadenzaDate.getFullYear();
     const mm = String(scadenzaDate.getMonth() + 1).padStart(2, '0');
     const dd = String(scadenzaDate.getDate()).padStart(2, '0');
@@ -136,6 +174,7 @@ module.exports = async function handler(req, res) {
       nome: nomeClean,
       cognome: cognomeClean,
       codice,
+      email: emailClean,
       is_tennis_member: sport === 'tennis' || sport === 'both',
       is_padel_member: sport === 'padel' || sport === 'both',
       attivo: true,
