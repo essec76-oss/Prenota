@@ -589,56 +589,30 @@
 <body>
 <div class="wrap" id="app">
   
-  <div id="login-section">
+  <div id="booking-section">
     <div class="club-name">Tennis Club Nulvi</div>
     <h1>Prenota il tuo campo</h1>
-    <p class="sub">Accedi con il tuo codice ID</p>
-    
-    <div id="login-box" class="login-box">
-      <div class="name-field">
-        <label for="login-codice">Codice ID (es. t1234 o o5678)</label>
-        <input id="login-codice" type="password" placeholder="Inserisci il tuo codice" />
+    <p class="sub">Il calendario è visibile a tutti. Accedi con il tuo codice per prenotare.</p>
+
+    <div id="logged-in-extras" style="display:none;">
+      <div class="user-badge">
+        <span style="flex:1;min-width:120px;">👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
+        <div id="admin-toggle-container">
+          <label>
+            <input type="checkbox" id="admin-toggle">
+            🔑 Admin
+          </label>
+          <span id="admin-2fa-status" class="admin-2fa-status"></span>
+        </div>
+        <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
+        <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
+        <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
+        <button class="logout-btn" id="logout-btn">🚪 Esci</button>
+        <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
       </div>
-      <div class="form-error" id="login-error"></div>
-            <button class="btn-confirm" id="login-btn">🔓 Accedi</button>
+      <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
     </div>
 
-    <div class="qr-share-box">
-      <p class="qr-share-title">Condividi il link di prenotazione</p>
-      <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
-      <button class="btn-copy-link" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
-      <div id="messaggio-copia" class="qr-copy-msg"></div>
-    </div>
-
-    <div class="guest-register-box">
-      <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi.</p>
-      <div id="guest-slots-counter" class="guest-slots-counter"></div>
-      <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
-    </div>
-  </div>
-
-  <div id="booking-section" style="display:none;">
-    <div class="club-name">Tennis Club Nulvi</div>
-    <h1>Prenota il tuo campo</h1>
-    <p class="sub">Scegli tennis o padel, poi il giorno e l'orario.</p>
-    
-    <div class="user-badge">
-      <span style="flex:1;min-width:120px;">👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
-      <div id="admin-toggle-container">
-        <label>
-          <input type="checkbox" id="admin-toggle">
-          🔑 Admin
-        </label>
-        <span id="admin-2fa-status" class="admin-2fa-status"></span>
-      </div>
-      <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
-      <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
-      <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
-      <button class="logout-btn" id="logout-btn">🚪 Esci</button>
-      <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
-    </div>
-    <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
-    
     <div class="tabs" role="tablist">
       <button class="tab active" id="tab-tennis" role="tab" aria-selected="true">Tennis</button>
       <button class="tab" id="tab-padel" role="tab" aria-selected="false">Padel</button>
@@ -660,9 +634,36 @@
       <div class="slots-title" id="slots-title"></div>
       <div class="slot-list" id="slot-list"></div>
     </div>
-    <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
+
+    <div id="auth-section">
+      <div id="login-box" class="login-box">
+        <div class="name-field">
+          <label for="login-codice">Codice ID (es. t1234 o o5678)</label>
+          <input id="login-codice" type="password" placeholder="Inserisci il tuo codice" />
+        </div>
+        <div class="form-error" id="login-error"></div>
+        <button class="btn-confirm" id="login-btn">🔓 Accedi per prenotare</button>
+      </div>
+
+      <div class="qr-share-box">
+        <p class="qr-share-title">Condividi il link di prenotazione</p>
+        <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
+        <button class="btn-copy-link" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
+        <div id="messaggio-copia" class="qr-copy-msg"></div>
+      </div>
+
+      <div class="guest-register-box">
+        <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi.</p>
+        <div id="guest-slots-counter" class="guest-slots-counter"></div>
+        <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
+      </div>
+    </div>
+
+    <div id="logged-in-extras-bottom" style="display:none;">
+      <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
+    </div>
   </div>
-  
+
 </div>
 
 <div id="modal-root"></div>
@@ -756,8 +757,27 @@ function copiaLink() {
     });
   }
 
-  const loginSection = document.getElementById('login-section');
-  const bookingSection = document.getElementById('booking-section');
+  const authSection = document.getElementById('auth-section');
+  const loggedInExtras = document.getElementById('logged-in-extras');
+  const loggedInExtrasBottom = document.getElementById('logged-in-extras-bottom');
+
+  function showAuthUI(){
+    authSection.style.display = 'block';
+    loggedInExtras.style.display = 'none';
+    loggedInExtrasBottom.style.display = 'none';
+  }
+
+  function showLoggedInUI(){
+    authSection.style.display = 'none';
+    loggedInExtras.style.display = 'block';
+    loggedInExtrasBottom.style.display = 'block';
+  }
+
+  function scrollToAuth(){
+    authSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const input = document.getElementById('login-codice');
+    if (input) setTimeout(()=> input.focus(), 300);
+  }
 
   function pad(n){return n.toString().padStart(2,'0');}
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
@@ -1111,7 +1131,7 @@ function copiaLink() {
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
         const keyboxCode = currentField === 'tennis' ? keyboxCodeTennis : keyboxCodePadel;
-        const keyboxHtml = (booking.modalita === 'allenamento') ? '' : (keyboxCode
+        const keyboxHtml = (!loggedUser || booking.modalita === 'allenamento') ? '' : (keyboxCode
           ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
           : '');
         const ownCodeHtml = (isOwnBooking(booking) && booking.code)
@@ -1127,7 +1147,9 @@ function copiaLink() {
         `;
         row.appendChild(left);
         
-        if (adminMode && loggedUser && loggedUser.is_admin) {
+        if (!loggedUser) {
+          // Nessuna azione disponibile per chi guarda senza login: solo nome e orario
+        } else if (adminMode && loggedUser.is_admin) {
           const adminBtn = document.createElement('button');
           adminBtn.className = 'book-btn';
           adminBtn.style.background = '#B84B1E';
@@ -1160,6 +1182,9 @@ function copiaLink() {
         if (allowed) {
           btn.textContent = 'Prenota';
           btn.addEventListener('click', ()=> openBookingModal(s, timeId));
+        } else if (!loggedUser) {
+          btn.textContent = 'Accedi per prenotare';
+          btn.addEventListener('click', ()=> scrollToAuth());
         } else {
           btn.textContent = 'Non abilitato';
           btn.disabled = true;
@@ -2611,7 +2636,7 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
           <h2 id="guest-reg-title">Crea profilo ospite</h2>
-          <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Riceverai un codice di accesso da usare per prenotare.</p>
+          <p class="modal-subtitle">Il profilo sarà valido 14 giorni. Ti invieremo un codice di verifica via email.</p>
           <div class="name-field">
             <label for="guest-nome">Nome *</label>
             <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
@@ -2619,6 +2644,10 @@ function copiaLink() {
           <div class="name-field">
             <label for="guest-cognome">Cognome *</label>
             <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
+          </div>
+          <div class="name-field">
+            <label for="guest-email">Email *</label>
+            <input id="guest-email" type="email" placeholder="La tua email" autocomplete="email" />
           </div>
           <div class="name-field">
             <label for="guest-sport">Sport</label>
@@ -2631,20 +2660,21 @@ function copiaLink() {
           <div class="form-error" id="guest-reg-error"></div>
           <div class="modal-actions">
             <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
-            <button class="btn-confirm" id="guest-reg-save">Crea profilo</button>
+            <button class="btn-confirm" id="guest-reg-save">Invia codice di verifica</button>
           </div>
         </div>
       </div>
     `;
     document.getElementById('guest-reg-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
-    document.getElementById('guest-reg-save').addEventListener('click', handleSelfCreateGuest);
+    document.getElementById('guest-reg-save').addEventListener('click', handleSendGuestOtp);
   }
 
-  async function handleSelfCreateGuest() {
+  async function handleSendGuestOtp() {
     const errorEl = document.getElementById('guest-reg-error');
     const nome = document.getElementById('guest-nome').value.trim();
     const cognome = document.getElementById('guest-cognome').value.trim();
+    const email = document.getElementById('guest-email').value.trim().toLowerCase();
     const sport = document.getElementById('guest-sport').value;
     const saveBtn = document.getElementById('guest-reg-save');
 
@@ -2652,16 +2682,101 @@ function copiaLink() {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errorEl.textContent = 'Inserisci un\'email valida.';
+      return;
+    }
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Creo...';
+    saveBtn.textContent = 'Invio in corso...';
     errorEl.textContent = '';
 
     try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, create_user: true })
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(()=>({}));
+        throw new Error(errBody.msg || errBody.error_description || 'Invio del codice non riuscito.');
+      }
+
+      openGuestOtpModal({ nome, cognome, email, sport });
+
+    } catch(e) {
+      console.error('❌ Errore invio OTP ospite:', e);
+      errorEl.textContent = '❌ Errore: ' + (e.message || 'invio non riuscito');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Invia codice di verifica';
+    }
+  }
+
+  function openGuestOtpModal(guestData) {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-otp-title">
+          <h2 id="guest-otp-title">Verifica la tua email</h2>
+          <p class="modal-subtitle">Abbiamo inviato un codice a <strong>${guestData.email}</strong>. Inseriscilo qui sotto.</p>
+          <div class="name-field">
+            <label for="guest-otp-code">Codice di verifica</label>
+            <input id="guest-otp-code" type="text" inputmode="numeric" placeholder="123456" maxlength="6" />
+          </div>
+          <div class="form-error" id="guest-otp-error"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="guest-otp-cancel">Annulla</button>
+            <button class="btn-confirm" id="guest-otp-confirm">Verifica e crea profilo</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('guest-otp-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
+    document.getElementById('guest-otp-confirm').addEventListener('click', ()=> handleVerifyGuestOtp(guestData));
+    document.getElementById('guest-otp-code').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') handleVerifyGuestOtp(guestData);
+    });
+  }
+
+  async function handleVerifyGuestOtp(guestData) {
+    const errorEl = document.getElementById('guest-otp-error');
+    const code = document.getElementById('guest-otp-code').value.trim();
+    const confirmBtn = document.getElementById('guest-otp-confirm');
+
+    if (!/^\d{6}$/.test(code)) {
+      errorEl.textContent = 'Il codice deve avere 6 cifre.';
+      return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Verifica...';
+    errorEl.textContent = '';
+
+    try {
+      const verifyRes = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: guestData.email, token: code, type: 'email' })
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || !verifyData.access_token) {
+        throw new Error(verifyData.msg || verifyData.error_description || 'Codice non valido o scaduto.');
+      }
+
       const res = await fetch('/api/create-guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, cognome, sport })
+        body: JSON.stringify({
+          nome: guestData.nome,
+          cognome: guestData.cognome,
+          sport: guestData.sport,
+          email: guestData.email,
+          accessToken: verifyData.access_token
+        })
       });
 
       const data = await res.json();
@@ -2671,14 +2786,14 @@ function copiaLink() {
       }
 
       closeModal();
-      showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
+      showGuestCodeModal(data.codice, guestData.nome, guestData.cognome, data.scadenza);
       loadGuestSlotsCounter();
 
     } catch(e) {
-      console.error('❌ Errore creazione ospite self:', e);
-      errorEl.textContent = '❌ Errore: ' + (e.message || 'creazione fallita');
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Crea profilo';
+      console.error('❌ Errore verifica/creazione ospite:', e);
+      errorEl.textContent = '❌ Errore: ' + (e.message || 'verifica non riuscita');
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Verifica e crea profilo';
     }
   }
 
@@ -2763,8 +2878,7 @@ function copiaLink() {
       if (utente.is_admin && utente.totp_enabled) {
         console.log('🔐 Admin richiede 2FA');
         
-        loginSection.style.display = 'none';
-        bookingSection.style.display = 'block';
+        showLoggedInUI();
         
         loggedUser = {
           id: utente.id,
@@ -2846,8 +2960,7 @@ renderGuestExpiry();
         document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
     try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
-    loginSection.style.display = 'none';
-    bookingSection.style.display = 'block';
+    showLoggedInUI();
     
     const tipoLabel = loggedUser.tipo === 'tesserato' 
       ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
@@ -2858,10 +2971,9 @@ renderGuestExpiry();
     setupAdminToggle();
     renderTesseratoExpiry();
     
-    setAccent('tennis');
     renderFieldNote();
-    renderDow();
-    renderCalendar();
+    updateBookingDots();
+    if (selectedDate) { renderSlots(); }
     deleteOldBookings();
 
     if (accessToken) {
@@ -2872,12 +2984,13 @@ renderGuestExpiry();
   function handleLogout() {
     loggedUser = null;
     adminMode = false;
-    loginSection.style.display = 'block';
-    bookingSection.style.display = 'none';
+    showAuthUI();
     prefillLastCodice();
     document.getElementById('login-error').textContent = '';
     document.getElementById('guest-expiry').style.display = 'none';
     document.getElementById('tesserato-expiry').style.display = 'none';
+    renderFieldNote();
+    updateBookingDots();
     selectedDate = null;
     document.getElementById('slots-section').style.display = 'none';
   }
@@ -2893,6 +3006,13 @@ renderGuestExpiry();
   document.getElementById('login-codice').value = saved;
 }
 prefillLastCodice();
+
+  // Calendario pubblico: visibile subito, anche senza login
+  showAuthUI();
+  setAccent(currentField);
+  renderFieldNote();
+  renderDow();
+  renderCalendar();
 
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
   
