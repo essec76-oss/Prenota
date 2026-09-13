@@ -3,47 +3,31 @@
 // ============================================================
 // Endpoint pubblico (nessun token richiesto).
 // Usa la SERVICE_ROLE_KEY solo lato server per bypassare le RLS
-// in modo sicuro. Genera codice univoco oXXXX e scadenza +14 giorni.
-// Applica un limite giornaliero di 5 auto-registrazioni (le creazioni
+// in modo sicuro. Genera codice univoco oXXXXXXX (o + 7 caratteri
+// alfanumerici) e scadenza +14 giorni dalla registrazione.
+// Applica un limite giornaliero di 10 auto-registrazioni (le creazioni
 // fatte dall'admin tramite create-user.js NON sono conteggiate).
-// L'email deve essere stata verificata lato client con un codice OTP
-// (Supabase Auth); qui verifichiamo l'access_token ricevuto per
-// assicurarci che la verifica sia avvenuta davvero, prima di creare
-// il profilo.
+// Il numero di telefono viene usato per riconoscere e bloccare i
+// duplicati: se già presente in Ospiti, la creazione viene rifiutata
+// e l'utente è invitato a contattare il direttivo.
 // ============================================================
 
 const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Verifica che l'access_token sia valido e appartenga davvero all'email dichiarata
-async function verifyEmailToken(accessToken, email) {
-  if (!accessToken || typeof accessToken !== 'string') {
-    return { ok: false, error: 'Email non verificata.' };
-  }
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
-  if (!res.ok) {
-    return { ok: false, error: 'Verifica email non valida o scaduta.' };
-  }
-  const user = await res.json();
-  if (!user || !user.email || user.email.toLowerCase() !== String(email).toLowerCase()) {
-    return { ok: false, error: 'L\'email verificata non corrisponde.' };
-  }
-  return { ok: true };
-}
+const CODE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 async function generateUniqueCode(tentativi = 0) {
   if (tentativi >= 20) {
     throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
   }
 
-  const numero = String(Math.floor(1000 + Math.random() * 9000));
-  const codice = 'o' + numero;
+  let suffisso = '';
+  for (let i = 0; i < 7; i++) {
+    suffisso += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  }
+  const codice = 'o' + suffisso;
 
   const checkRes = await fetch(
     `${SUPABASE_URL}/rest/v1/Ospiti?codice=eq.${codice}&select=id`,
@@ -97,7 +81,7 @@ module.exports = async function handler(req, res) {
     // ------------------------------------------------------------
     // 1) Validazione input
     // ------------------------------------------------------------
-    const { nome, cognome, sport, email, accessToken } = req.body || {};
+    const { nome, cognome, sport, telefono } = req.body || {};
 
     if (!nome || typeof nome !== 'string' || !nome.trim()) {
       return res.status(400).json({ error: 'Il nome è obbligatorio.' });
@@ -108,31 +92,55 @@ module.exports = async function handler(req, res) {
     if (!sport || !['tennis', 'padel', 'both'].includes(sport)) {
       return res.status(400).json({ error: 'Seleziona uno sport valido (tennis, padel o both).' });
     }
-    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      return res.status(400).json({ error: 'Email non valida.' });
+    if (!telefono || typeof telefono !== 'string' || !/^(\+39)?\s?3\d{8,9}$/.test(telefono.trim().replace(/\s+/g, ''))) {
+      return res.status(400).json({ error: 'Numero di telefono non valido. Inserisci un numero italiano valido.' });
     }
 
     const nomeClean = nome.trim();
     const cognomeClean = cognome.trim();
-    const emailClean = email.trim().toLowerCase();
+    const telefonoClean = telefono.trim().replace(/\s+/g, '');
 
     // ------------------------------------------------------------
-    // 1.4) Verifica OTP email — DISATTIVATA TEMPORANEAMENTE
+    // 1.4) Controllo duplicati per numero di telefono
     // ------------------------------------------------------------
-    // Richiede un dominio verificato su Resend (o altro provider email)
-    // per poter inviare a indirizzi diversi dal proprio. Finché non c'è
-    // un dominio, l'email viene comunque richiesta e salvata, ma non
-    // blocca la creazione del profilo. Per riattivare: decommentare le
-    // righe sotto (la funzione verifyEmailToken è già pronta) e ripristinare
-    // lo step di invio/verifica OTP nel frontend (openGuestOtpModal).
-    //
-    // const verifica = await verifyEmailToken(accessToken, emailClean);
-    // if (!verifica.ok) {
-    //   return res.status(401).json({ error: verifica.error });
-    // }
+    const dupRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/Ospiti?telefono=eq.${encodeURIComponent(telefonoClean)}&select=id`,
+      {
+        headers: {
+          apikey: SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SERVICE_ROLE_KEY}`
+        }
+      }
+    );
+
+    if (dupRes.ok) {
+      const duplicati = await dupRes.json();
+      if (duplicati && duplicati.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/richieste_bloccate`, {
+          method: 'POST',
+          headers: {
+            apikey: SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nome: nomeClean,
+            cognome: cognomeClean,
+            telefono: telefonoClean,
+            sport,
+            ospite_esistente_id: duplicati[0].id
+          })
+        }).catch(() => {});
+
+        return res.status(409).json({
+          error: 'Risulti già registrato con questo numero di telefono. Contatta una persona del direttivo per assistenza.',
+          duplicato: true
+        });
+      }
+    }
 
     // ------------------------------------------------------------
-    // 1.5) Controllo limite giornaliero (max 5 auto-registrazioni/giorno)
+    // 1.5) Controllo limite giornaliero (max 10 auto-registrazioni/giorno)
     // ------------------------------------------------------------
     const dataItalia = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -152,9 +160,9 @@ module.exports = async function handler(req, res) {
     const contentRange = countRes.headers.get('content-range');
     const totaleOggi = contentRange ? parseInt(contentRange.split('/')[1]) : 0;
 
-    if (totaleOggi >= 5) {
+    if (totaleOggi >= 10) {
       return res.status(429).json({
-        error: 'Limite giornaliero di 5 registrazioni ospiti raggiunto. Riprova domani.',
+        error: 'Limite giornaliero di 10 registrazioni ospiti raggiunto. Riprova domani.',
         limiteRaggiunto: true
       });
     }
@@ -181,7 +189,7 @@ module.exports = async function handler(req, res) {
       nome: nomeClean,
       cognome: cognomeClean,
       codice,
-      email: emailClean,
+      telefono: telefonoClean,
       is_tennis_member: sport === 'tennis' || sport === 'both',
       is_padel_member: sport === 'padel' || sport === 'both',
       attivo: true,
