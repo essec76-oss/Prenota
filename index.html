@@ -1561,18 +1561,34 @@ function copiaLink() {
       } else {
         statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
       }
-      
+
       toggle.onchange = function() {
         if (this.checked) {
           if (loggedUser.totp_enabled) {
-            openAdmin2FAVerification(function(success) {
+            openAdmin2FAVerification(async function(success) {
               const toggleEl = document.getElementById('admin-toggle');
               if (success) {
+                if (!loggedUser.accessToken) {
+                  try {
+                    const authData = await signInWithSupabaseAuth(loggedUser.codice + '@circolo.local', loggedUser.codice);
+                    loggedUser.accessToken = authData.access_token;
+                    loggedUser.authenticated = true;
+                    console.log('🔐 Token Supabase Auth ottenuto dopo verifica 2FA');
+                  } catch(authErr) {
+                    console.warn('⚠️ Auth Supabase non disponibile dopo verifica 2FA, azioni admin bloccate');
+                  }
+                }
                 adminMode = true;
                 showToast('🔑 Modalità admin attivata (2FA verificato)');
                 renderSlots();
                 toggleEl.checked = true;
               } else {
+                adminMode = false;
+                toggleEl.checked = false;
+              }
+            });
+          } else {
+      
                 adminMode = false;
                 toggleEl.checked = false;
               }
