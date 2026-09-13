@@ -7,7 +7,7 @@
 
 const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const LIMITE_GIORNALIERO = 5;
+const LIMITE_GIORNALIERO = 10;
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
