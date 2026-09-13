@@ -764,7 +764,8 @@ function copiaLink() {
   let selectedDate = null;
   let bookingsCache = {};
   let adminMode = false;
-  let currentUserTab = 'tesserati';
+    let currentUserTab = 'tesserati';
+  let currentPrenotazioniTipo = 'tesserato';
   const userDataCache = {};
 
   function attachUserActionListeners(container){
@@ -2084,7 +2085,7 @@ function copiaLink() {
           
           <div class="user-modal-tabs">
             <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
-            <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
+            <button data-tab="prenotazioni" id="tab-prenotazioni">📅 Prenotazioni</button>
             <button data-tab="bloccate" id="tab-bloccate">🚫 Bloccate</button>
             <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
           </div>
@@ -2154,8 +2155,8 @@ function copiaLink() {
     document.getElementById('tab-ospiti').addEventListener('click', function() {
       switchUserTab('ospiti');
     });
-    document.getElementById('tab-bloccate').addEventListener('click', function() {
-      switchUserTab('bloccate');
+        document.getElementById('tab-prenotazioni').addEventListener('click', function() {
+      switchUserTab('prenotazioni');
     });
     document.getElementById('tab-crea').addEventListener('click', function() {
       switchUserTab('crea');
@@ -2196,10 +2197,10 @@ function copiaLink() {
     if (tab === 'crea') {
       listContainer.style.display = 'none';
       createForm.style.display = 'block';
-    } else if (tab === 'bloccate') {
+        } else if (tab === 'prenotazioni') {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
-      loadBlockedRequests();
+      loadPrenotazioniList(currentPrenotazioniTipo);
     } else {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
@@ -2316,80 +2317,70 @@ function copiaLink() {
     }
   }
 
-  async function loadBlockedRequests() {
+    async function loadPrenotazioniList(tipo) {
+    currentPrenotazioniTipo = tipo;
     const container = document.getElementById('user-list-container');
-    container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
+    const selectedTesserati = tipo === 'tesserato' ? 'selected' : '';
+    const selectedOspiti = tipo === 'ospite' ? 'selected' : '';
+
+    container.innerHTML = `
+      <div class="name-field">
+        <label for="prenotazioni-tipo-filter">Mostra prenotazioni di</label>
+        <select id="prenotazioni-tipo-filter">
+          <option value="tesserato" ${selectedTesserati}>⭐ Tesserati</option>
+          <option value="ospite" ${selectedOspiti}>👤 Ospiti</option>
+        </select>
+      </div>
+      <div id="prenotazioni-list-body"><div class="user-list-empty">⏳ Caricamento...</div></div>
+    `;
+
+    document.getElementById('prenotazioni-tipo-filter').addEventListener('change', function() {
+      loadPrenotazioniList(this.value);
+    });
+
+    const body = document.getElementById('prenotazioni-list-body');
 
     try {
-      const res = await fetch('/api/blocked-requests', {
-        method: 'GET',
-        headers: { Authorization: 'Bearer ' + loggedUser.accessToken }
-      });
+      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?select=id,date,time,field,names,prenotato_da,modalita'
+        + '&tipo_prenotante=eq.' + encodeURIComponent(tipo)
+        + '&date=gte.' + dateKey(new Date())
+        + '&order=date.asc,time.asc';
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      if (!res.ok) throw new Error('Errore caricamento prenotazioni');
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
-        container.innerHTML = '<div class="user-list-empty">❌ ' + escapeHtml(data.error || 'Errore nel caricamento') + '</div>';
+      if (data.length === 0) {
+        const label = tipo === 'tesserato' ? 'tesserati' : 'ospiti';
+        body.innerHTML = '<div class="user-list-empty">📭 Nessuna prenotazione attiva fatta da ' + label + '.</div>';
         return;
       }
 
-      const richieste = data.richieste || [];
-      if (richieste.length === 0) {
-        container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta bloccata in attesa.</div>';
-        return;
-      }
+      const titleLabel = tipo === 'tesserato' ? '⭐ Prenotazioni dei Tesserati' : '👤 Prenotazioni degli Ospiti';
+      let html = '<div class="user-list-section-title">' + titleLabel + '</div>';
+      html += '<table class="user-list-table"><thead><tr><th>Data</th><th>Ora</th><th>Campo</th><th>Prenotato da</th><th>Giocatori</th></tr></thead><tbody>';
 
-      let html = '<div class="user-list-section-title">🚫 Richieste bloccate (telefono già registrato)</div>';
-      html += '<table class="user-list-table"><thead><tr><th>Data</th><th>Nome</th><th>Telefono</th><th>Sport</th><th>Azioni</th></tr></thead><tbody>';
-
-      richieste.forEach(r => {
-        const dataFmt = new Date(r.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'short', year:'numeric'});
+      data.forEach(r => {
+        const dataFmt = r.date ? r.date.split('-').reverse().join('/') : '';
+        const campoLabel = r.field === 'padel' ? '🏸 Padel' : '🎾 Tennis';
+        const modalitaLabel = r.modalita === 'torneo' ? ' (Torneo)' : (r.modalita === 'allenamento' ? ' (Allenamento)' : '');
+        const nomi = (r.names || '').split(',').map(s => s.trim()).filter(Boolean).map(escapeHtml).join(', ');
         html += `<tr>
           <td>${dataFmt}</td>
-          <td>${escapeHtml(r.nome + ' ' + r.cognome)}</td>
-          <td>${escapeHtml(r.telefono || '')}</td>
-          <td>${escapeHtml(r.sport || '')}</td>
-          <td>
-            <div class="user-actions">
-              <button class="btn-edit" data-resolve-id="${escapeHtml(r.id)}">✅ Segna risolta</button>
-            </div>
-          </td>
+          <td>${escapeHtml(r.time || '')}</td>
+          <td>${campoLabel}</td>
+          <td>${escapeHtml(r.prenotato_da || '')}</td>
+          <td>${nomi}${modalitaLabel}</td>
         </tr>`;
       });
 
       html += '</tbody></table>';
-      html += '<p style="font-size:13px;color:var(--ink-soft);margin-top:10px;">Per modificare il profilo ospite esistente collegato (es. correggere il telefono), usa la scheda "👤 Ospiti".</p>';
-      container.innerHTML = html;
-
-      container.querySelectorAll('button[data-resolve-id]').forEach(btn => {
-        btn.addEventListener('click', async function() {
-          const id = btn.dataset.resolveId;
-          try {
-            const res = await fetch('/api/blocked-requests', {
-              method: 'POST',
-              headers: {
-                Authorization: 'Bearer ' + loggedUser.accessToken,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ id })
-            });
-            const data = await res.json();
-            if (!res.ok || !data.success) {
-              showToast('❌ ' + (data.error || 'Errore durante lo sblocco'));
-              return;
-            }
-            showToast('✅ Richiesta segnata come risolta');
-            loadBlockedRequests();
-          } catch(e) {
-            showToast('❌ Errore di connessione');
-          }
-        });
-      });
+      body.innerHTML = html;
 
     } catch(e) {
-      container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
+      body.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
     }
   }
-
   async function generateUniqueCodeFrontend(tipo, tentativi = 0) {
     if (tentativi >= 20) {
       throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
