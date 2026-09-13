@@ -2721,7 +2721,7 @@ function copiaLink() {
         + '&' + fkColumn + '=eq.' + encodeURIComponent(id)
         + '&date=gte.' + encodeURIComponent(todayKey)
         + '&order=date.asc,time.asc', {
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + loggedUser.accessToken }
+        headers: { apikey: SUPABASE_KEY }
       });
       if (checkRes.ok) {
         const futureBookings = await checkRes.json();
