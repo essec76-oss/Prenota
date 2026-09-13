@@ -315,6 +315,14 @@
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;z-index:20;}
   @media (prefers-reduced-motion:no-preference){.modal{animation:up .18s ease-out;}}
   @keyframes up{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .overlay-welcome{position:fixed;inset:0;background:var(--padel);display:flex;align-items:center;justify-content:center;z-index:30;padding:24px;}
+  .modal-welcome{background:var(--surface);border-radius:18px;padding:32px 24px;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);}
+  .modal-welcome .welcome-icon{font-size:40px;margin-bottom:8px;}
+  .modal-welcome h2{font-family:'Fraunces',serif;font-size:24px;margin:0 0 10px;}
+  .modal-welcome .welcome-text{color:var(--ink-soft);font-size:15px;line-height:1.5;margin:0 0 6px;}
+  .modal-welcome .booking-code{font-size:36px;margin:16px 0 8px;}
+  .modal-welcome .save-warning{background:var(--tennis-soft);color:var(--tennis);border-radius:10px;padding:12px 14px;font-size:14px;font-weight:600;margin:14px 0 18px;line-height:1.4;}
+  @media (prefers-reduced-motion:no-preference){.modal-welcome{animation:up .22s ease-out;}}
 
   .login-box{background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--line);margin-top:20px;}
   .login-box .btn-confirm{width:100%;margin-top:8px;padding:16px;border-radius:10px;font-size:17px;font-weight:700;box-shadow:0 3px 8px rgba(184,75,30,0.35);}
@@ -585,28 +593,26 @@
   .badge-2fa-disabled{background:#B84B1E;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .admin-2fa-status{font-size:12px;color:var(--ink-soft);margin-left:6px;}
 
-  /* NUOVO: pulsante Google */
-  .btn-google{
+  .btn-guest-code{
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:10px;
     width:100%;
     padding:14px 20px;
-    background:#fff;
-    color:#3c4043;
-    border:1px solid #dadce0;
+    background:var(--accent);
+    color:#fff;
+    border:none;
     border-radius:10px;
     font-size:16px;
-    font-weight:600;
+    font-weight:700;
     font-family:inherit;
     cursor:pointer;
-    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    box-shadow:0 3px 10px rgba(184,75,30,0.3);
     transition:all 0.2s ease;
   }
-  .btn-google:hover{box-shadow:0 3px 10px rgba(0,0,0,0.15);background:#f8f9fa;}
-  .btn-google:active{transform:translateY(1px);}
-  .btn-google svg{width:20px;height:20px;flex-shrink:0;}
+  .btn-guest-code:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(184,75,30,0.4);}
+  .btn-guest-code:active{transform:translateY(1px);}
 </style>
 </head>
 <body>
@@ -676,7 +682,7 @@
       </div>
 
       <div class="guest-register-box">
-        <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo ospite in pochi secondi con Google.</p>
+        <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo in pochi secondi.</p>
         <div id="guest-slots-counter" class="guest-slots-counter"></div>
         <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
       </div>
@@ -2069,6 +2075,7 @@ function copiaLink() {
           <div class="user-modal-tabs">
             <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
             <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
+            <button data-tab="bloccate" id="tab-bloccate">🚫 Bloccate</button>
             <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
           </div>
           
@@ -2137,6 +2144,9 @@ function copiaLink() {
     document.getElementById('tab-ospiti').addEventListener('click', function() {
       switchUserTab('ospiti');
     });
+    document.getElementById('tab-bloccate').addEventListener('click', function() {
+      switchUserTab('bloccate');
+    });
     document.getElementById('tab-crea').addEventListener('click', function() {
       switchUserTab('crea');
     });
@@ -2176,6 +2186,10 @@ function copiaLink() {
     if (tab === 'crea') {
       listContainer.style.display = 'none';
       createForm.style.display = 'block';
+    } else if (tab === 'bloccate') {
+      listContainer.style.display = 'block';
+      createForm.style.display = 'none';
+      loadBlockedRequests();
     } else {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
@@ -2292,6 +2306,80 @@ function copiaLink() {
     }
   }
 
+  async function loadBlockedRequests() {
+    const container = document.getElementById('user-list-container');
+    container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
+
+    try {
+      const res = await fetch('/api/blocked-requests', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + loggedUser.accessToken }
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        container.innerHTML = '<div class="user-list-empty">❌ ' + escapeHtml(data.error || 'Errore nel caricamento') + '</div>';
+        return;
+      }
+
+      const richieste = data.richieste || [];
+      if (richieste.length === 0) {
+        container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta bloccata in attesa.</div>';
+        return;
+      }
+
+      let html = '<div class="user-list-section-title">🚫 Richieste bloccate (telefono già registrato)</div>';
+      html += '<table class="user-list-table"><thead><tr><th>Data</th><th>Nome</th><th>Telefono</th><th>Sport</th><th>Azioni</th></tr></thead><tbody>';
+
+      richieste.forEach(r => {
+        const dataFmt = new Date(r.created_at).toLocaleDateString('it-IT', {day:'numeric', month:'short', year:'numeric'});
+        html += `<tr>
+          <td>${dataFmt}</td>
+          <td>${escapeHtml(r.nome + ' ' + r.cognome)}</td>
+          <td>${escapeHtml(r.telefono || '')}</td>
+          <td>${escapeHtml(r.sport || '')}</td>
+          <td>
+            <div class="user-actions">
+              <button class="btn-edit" data-resolve-id="${escapeHtml(r.id)}">✅ Segna risolta</button>
+            </div>
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      html += '<p style="font-size:13px;color:var(--ink-soft);margin-top:10px;">Per modificare il profilo ospite esistente collegato (es. correggere il telefono), usa la scheda "👤 Ospiti".</p>';
+      container.innerHTML = html;
+
+      container.querySelectorAll('button[data-resolve-id]').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const id = btn.dataset.resolveId;
+          try {
+            const res = await fetch('/api/blocked-requests', {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + loggedUser.accessToken,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+              showToast('❌ ' + (data.error || 'Errore durante lo sblocco'));
+              return;
+            }
+            showToast('✅ Richiesta segnata come risolta');
+            loadBlockedRequests();
+          } catch(e) {
+            showToast('❌ Errore di connessione');
+          }
+        });
+      });
+
+    } catch(e) {
+      container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
+    }
+  }
+
   async function generateUniqueCodeFrontend(tipo, tentativi = 0) {
     if (tentativi >= 20) {
       throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
@@ -2304,7 +2392,7 @@ function copiaLink() {
     } else {
       const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       let suffix = '';
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 7; i++) {
         suffix += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       codice = 'o' + suffix;
@@ -2654,7 +2742,7 @@ function copiaLink() {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="guest-reg-title">
           <h2 id="guest-reg-title">Crea profilo ospite</h2>
-          <p class="modal-subtitle">Il profilo sarà valido 7 giorni. Accedi con Google per verificare la tua identità.</p>
+          <p class="modal-subtitle">Crea il tuo profilo in pochi secondi.</p>
           <div class="name-field">
             <label for="guest-nome">Nome *</label>
             <input id="guest-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
@@ -2662,6 +2750,10 @@ function copiaLink() {
           <div class="name-field">
             <label for="guest-cognome">Cognome *</label>
             <input id="guest-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
+          </div>
+          <div class="name-field">
+            <label for="guest-telefono">Numero di telefono *</label>
+            <input id="guest-telefono" type="tel" placeholder="Es. 3331234567" autocomplete="tel" />
           </div>
           <div class="name-field">
             <label for="guest-sport">Sport</label>
@@ -2675,105 +2767,65 @@ function copiaLink() {
           <div class="modal-actions">
             <button class="btn-cancel" id="guest-reg-cancel">Annulla</button>
           </div>
-          <button class="btn-google" id="guest-google-btn" style="margin-top:10px;">
-            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            </svg>
-            Accedi con Google
+          <button class="btn-guest-code" id="guest-create-code-btn" style="margin-top:10px;">
+            Crea codice id
           </button>
         </div>
       </div>
     `;
     document.getElementById('guest-reg-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
-    document.getElementById('guest-google-btn').addEventListener('click', handleGuestGoogleSignIn);
+    document.getElementById('guest-create-code-btn').addEventListener('click', handleCreateGuestProfile);
   }
 
-  function handleGuestGoogleSignIn() {
+  async function handleCreateGuestProfile() {
     const errorEl = document.getElementById('guest-reg-error');
     const nome = document.getElementById('guest-nome').value.trim();
     const cognome = document.getElementById('guest-cognome').value.trim();
+    const telefono = document.getElementById('guest-telefono').value.trim();
     const sport = document.getElementById('guest-sport').value;
 
-    if (!nome || !cognome) {
-      errorEl.textContent = 'Nome e Cognome sono obbligatori.';
+    if (!nome || !cognome || !telefono) {
+      errorEl.textContent = 'Nome, Cognome e Numero di telefono sono obbligatori.';
       return;
-    }
-
-    try {
-      sessionStorage.setItem('guestDraft', JSON.stringify({ nome, cognome, sport }));
-    } catch(e) {}
-
-    const redirectTo = window.location.origin + window.location.pathname;
-    const authUrl = SUPABASE_URL + '/auth/v1/authorize?provider=google'
-      + '&redirect_to=' + encodeURIComponent(redirectTo);
-
-    window.location.href = authUrl;
-  }
-
-  async function handleGoogleReturn() {
-    if (!window.location.hash || window.location.hash.indexOf('access_token=') === -1) return false;
-
-    const params = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = params.get('access_token');
-    if (!accessToken) return false;
-
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-
-    let draft = null;
-    try { draft = JSON.parse(sessionStorage.getItem('guestDraft') || 'null'); } catch(e) {}
-
-    if (!draft) {
-      showToast('⚠️ Sessione di registrazione scaduta. Riprova.');
-      return true;
     }
 
     try {
       const res = await fetch('/api/create-guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: draft.nome,
-          cognome: draft.cognome,
-          sport: draft.sport,
-          accessToken: accessToken
-        })
+        body: JSON.stringify({ nome, cognome, sport, telefono })
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        showToast('❌ ' + (data.error || 'Registrazione non riuscita'));
-        sessionStorage.removeItem('guestDraft');
-        return true;
+        errorEl.textContent = data.error || 'Registrazione non riuscita.';
+        return;
       }
 
-      sessionStorage.removeItem('guestDraft');
-      showGuestCodeModal(data.codice, draft.nome, draft.cognome, data.scadenza);
+      closeModal();
+      showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
       loadGuestSlotsCounter();
 
     } catch(e) {
       console.error('❌ Errore registrazione ospite:', e);
-      showToast('❌ Errore di connessione');
+      errorEl.textContent = 'Errore di connessione. Riprova.';
     }
-
-    return true;
   }
 
   function showGuestCodeModal(codice, nome, cognome, scadenza) {
     const dataFmt = new Date(scadenza + 'T00:00:00').toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
     const root = document.getElementById('modal-root');
     root.innerHTML = `
-      <div class="overlay" id="overlay">
-        <div class="modal" role="dialog" aria-modal="true">
-          <h2>Profilo ospite creato!</h2>
-          <p class="modal-subtitle">Ciao <strong>${escapeHtml(nome + ' ' + cognome)}</strong>, il tuo profilo è attivo per 7 giorni, fino al <strong>${dataFmt}</strong>.</p>
-          <p style="text-align:center;margin:8px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso:</p>
+      <div class="overlay-welcome" id="overlay">
+        <div class="modal-welcome" role="dialog" aria-modal="true">
+          <div class="welcome-icon">🎾</div>
+          <h2>Benvenuto/a, ${escapeHtml(nome)}!</h2>
+          <p class="welcome-text">Il tuo profilo ospite è pronto. Da oggi puoi vedere il calendario e prenotare liberamente tennis e padel per le prossime <strong>2 settimane</strong>, fino al <strong>${dataFmt}</strong>.</p>
+          <p style="text-align:center;margin:14px 0 4px;font-size:14px;color:var(--ink-soft);">Il tuo codice di accesso personale:</p>
           <div class="booking-code">${codice}</div>
-          <p style="text-align:center;font-size:13px;color:var(--ink-soft);margin-top:4px;">Salvalo: ti servirà per accedere e prenotare. Passati i 7 giorni la prova termina e non sarà possibile rigenerare un nuovo codice.</p>
+          <div class="save-warning">📸 Salva subito questo codice sul tuo telefono (ad esempio con uno screenshot): ti servirà ogni volta per accedere e prenotare.</div>
           <div class="modal-actions">
             <button class="btn-confirm" id="guest-code-ok" style="flex:none;width:100%;">Ho salvato il codice</button>
           </div>
@@ -2802,9 +2854,9 @@ function copiaLink() {
     }
 
     const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
-    const isOspiteCode = /^o[a-z0-9]{5}$/.test(codice);
+    const isOspiteCode = /^o[a-z0-9]{7}$/.test(codice);
     if (!isTesseratoCode && !isOspiteCode) {
-      errorEl.textContent = 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXX (ospite).';
+      errorEl.textContent = 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXXXX (ospite).';
       return;
     }
     
@@ -3033,8 +3085,7 @@ function copiaLink() {
     renderSlots();
   });
 
-  // Gestione ritorno da Google OAuth (nuovo flusso ospiti)
-  handleGoogleReturn();
+  // (rimosso: gestione ritorno da Google OAuth, non più necessaria)
 
 })();
 </script>
