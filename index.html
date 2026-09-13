@@ -1992,7 +1992,8 @@ function copiaLink() {
     }, 300);
   }
 
-  async function openKeyboxManagement() {
+    async function openKeyboxManagement() {
+    await loadKeyboxCode();
     const root = document.getElementById('modal-root');
 
     root.innerHTML = `
