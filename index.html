@@ -2701,9 +2701,7 @@ function copiaLink() {
     });
   };
 
-  window.deleteUser = async function(table, id, nome) {
-    if (!confirm('⚠️ Sei sicuro di voler eliminare ' + nome + '?')) return;
-    
+    window.deleteUser = async function(table, id, nome) {
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
       return;
@@ -2712,7 +2710,35 @@ function copiaLink() {
       showToast('❌ Attiva prima la modalità Admin (checkbox).');
       return;
     }
-    
+
+    let confirmMsg = '⚠️ Sei sicuro di voler eliminare ' + nome + '?';
+
+    try {
+      const fkColumn = table === 'Tesserati' ? 'tesserato_id' : 'ospite_id';
+      const todayKey = dateKey(new Date());
+      const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?select=date,time,field'
+        + '&' + fkColumn + '=eq.' + encodeURIComponent(id)
+        + '&date=gte.' + encodeURIComponent(todayKey)
+        + '&order=date.asc,time.asc', {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + loggedUser.accessToken }
+      });
+      if (checkRes.ok) {
+        const futureBookings = await checkRes.json();
+        if (futureBookings.length > 0) {
+          const dettagli = futureBookings.map(function(b) {
+            return '• ' + b.date + ' ore ' + b.time + ' (' + b.field + ')';
+          }).join('\n');
+          confirmMsg = '⚠️ ATTENZIONE: ' + nome + ' ha ' + futureBookings.length + ' prenotazione/i futura/e:\n\n' + dettagli
+            + '\n\nEliminando questo utente verranno cancellate ANCHE queste prenotazioni (gli slot torneranno liberi).\n\nVuoi procedere comunque?';
+        }
+      }
+    } catch(checkErr) {
+      console.warn('⚠️ Impossibile verificare prenotazioni future collegate:', checkErr);
+    }
+
+    if (!confirm(confirmMsg)) return;
+
     try {
       const tableName = table;
       
