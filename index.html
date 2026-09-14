@@ -2233,11 +2233,34 @@ function copiaLink() {
           : '';
         const tipoLabel = tipoLabels[r.tipo_richiesta] || r.tipo_richiesta;
         const sportLabel = r.sport === 'padel' ? '🏸 Padel' : (r.sport === 'tennis' ? '🎾 Tennis' : r.sport);
-        const stato = statoLabels[r.stato] || { text: r.stato || '—', color: '#5B655F', bg: '#F5F5F0' };
+        const statoKey = r.stato || 'pending';
+        const stato = statoLabels[statoKey] || { text: statoKey, color: '#5B655F', bg: '#F5F5F0' };
         const creditiInfo = r.tipo_richiesta === 'crediti' && r.numero_crediti
           ? r.numero_crediti + ' crediti'
           : '';
         const importo = r.importo_calcolato != null ? (Number(r.importo_calcolato).toFixed(0) + ' €') : '';
+
+        const isPending = !r.stato || r.stato === 'pending';
+
+        let actionsHtml = '';
+        if (isPending) {
+          actionsHtml = `
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button onclick="gestisciRichiestaPagamento(${r.id}, 'approvata')" 
+                style="flex:1;padding:10px;border:none;border-radius:8px;background:#2B6E5A;color:#fff;font-weight:700;font-size:14px;cursor:pointer;">
+                ✅ Approva
+              </button>
+              <button onclick="gestisciRichiestaPagamento(${r.id}, 'rifiutata')" 
+                style="flex:1;padding:10px;border:1px solid #D9A583;border-radius:8px;background:#F4DFD2;color:#8a3a15;font-weight:700;font-size:14px;cursor:pointer;">
+                ❌ Rifiuta
+              </button>
+            </div>`;
+        } else if (r.gestita_da || r.gestita_il) {
+          const gestitaInfo = r.gestita_il 
+            ? new Date(r.gestita_il).toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+            : '';
+          actionsHtml = `<div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">Gestita ${gestitaInfo}${r.gestita_da ? ' da ' + escapeHtml(r.gestita_da) : ''}</div>`;
+        }
 
         html += `
           <div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface);">
@@ -2257,6 +2280,7 @@ function copiaLink() {
               ${importo ? '<span>• ' + importo + '</span>' : ''}
             </div>
             <div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">${dataFmt}</div>
+            ${actionsHtml}
           </div>`;
       });
 
@@ -2269,7 +2293,51 @@ function copiaLink() {
     }
   }
 
-  function switchUserTab(tab) {
+  async function gestisciRichiestaPagamento(id, nuovoStato) {
+    if (!loggedUser || !loggedUser.is_admin) {
+      showToast('Solo gli admin possono gestire le richieste');
+      return;
+    }
+
+    const conferma = nuovoStato === 'approvata' 
+      ? 'Confermi di APPROVARE questa richiesta?' 
+      : 'Confermi di RIFIUTARE questa richiesta?';
+    
+    if (!confirm(conferma)) return;
+
+    try {
+      const payload = {
+        stato: nuovoStato,
+        gestita_da: (loggedUser.nome || '') + ' ' + (loggedUser.cognome || ''),
+        gestita_il: new Date().toISOString()
+      };
+
+      const res = await fetch(SUPABASE_URL + '/rest/v1/richieste_pagamento?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        let detail = '';
+        try { const err = await res.json(); detail = err.message || JSON.stringify(err); } catch(_) { detail = res.statusText; }
+        throw new Error(detail);
+      }
+
+      showToast(nuovoStato === 'approvata' ? '✅ Richiesta approvata' : '❌ Richiesta rifiutata');
+      loadRichiestePagamentoList();
+
+    } catch(e) {
+      console.error('Errore gestione richiesta:', e);
+      showToast('Errore: ' + (e.message || 'operazione non riuscita'));
+    }
+  }
+
+function switchUserTab(tab) {
     currentUserTab = tab;
     
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
