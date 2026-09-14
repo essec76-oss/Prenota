@@ -2206,13 +2206,18 @@ function copiaLink() {
     const container = document.getElementById('user-list-container');
     container.innerHTML = '<div class="user-list-empty">⏳ Caricamento richieste...</div>';
 
+    if (!loggedUser || !loggedUser.accessToken) {
+      container.innerHTML = '<div class="user-list-empty">🔒 Sessione sicura non attiva. Rifai il login per gestire le richieste.</div>';
+      return;
+    }
+
     try {
-      const url = SUPABASE_URL + '/rest/v1/richieste_pagamento'
-        + '?select=id,created_at,nome,cognome,telefono,sport,tipo_richiesta,numero_crediti,stato,importo_calcolato,codice_generato,scadenza_impostata,note_direttivo,gestita_da,gestita_il'
-        + '&order=created_at.desc';
-      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
-      if (!res.ok) throw new Error('Errore caricamento richieste');
-      const data = await res.json();
+      const res = await fetch('/api/gestisci-richiesta', {
+        headers: { Authorization: 'Bearer ' + loggedUser.accessToken }
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Errore caricamento richieste');
+      const data = body.richieste;
 
       if (data.length === 0) {
         container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta di pagamento presente.</div>';
@@ -2307,6 +2312,10 @@ function copiaLink() {
       showToast('Solo direttivo/admin possono gestire le richieste');
       return;
     }
+    if (!loggedUser.accessToken) {
+      showToast('🔒 Sessione sicura non attiva. Rifai il login.');
+      return;
+    }
 
     const conferma = nuovoStato === 'approvata' 
       ? 'Confermi di APPROVARE questa richiesta?' 
@@ -2315,174 +2324,20 @@ function copiaLink() {
     if (!confirm(conferma)) return;
 
     try {
-      // 1. Carica i dettagli della richiesta
-      const getRes = await fetch(SUPABASE_URL + '/rest/v1/richieste_pagamento?id=eq.' + id + '&select=*', {
-        headers: { apikey: SUPABASE_KEY }
-      });
-      if (!getRes.ok) throw new Error('Impossibile caricare la richiesta');
-      const richieste = await getRes.json();
-      if (!richieste.length) throw new Error('Richiesta non trovata');
-      const req = richieste[0];
-
-      let codiceGenerato = null;
-      let scadenzaImpostata = null;
-
-      if (nuovoStato === 'approvata') {
-        // 2. Cerca se esiste già un utente con lo stesso telefono
-        let existingUser = null;
-        let existingTable = null;
-
-        const tel = (req.telefono || '').trim();
-        if (tel) {
-          // Cerca in Tesserati
-          const tRes = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?telefono=eq.' + encodeURIComponent(tel) + '&select=id,codice,nome,cognome,scadenza,is_tennis_member,is_padel_member', {
-            headers: { apikey: SUPABASE_KEY }
-          });
-          if (tRes.ok) {
-            const tData = await tRes.json();
-            if (tData.length) {
-              existingUser = tData[0];
-              existingTable = 'Tesserati';
-            }
-          }
-
-          // Se non trovato, cerca in Ospiti
-          if (!existingUser) {
-            const oRes = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?telefono=eq.' + encodeURIComponent(tel) + '&select=id,codice,nome,cognome,scadenza,is_tennis_member,is_padel_member', {
-              headers: { apikey: SUPABASE_KEY }
-            });
-            if (oRes.ok) {
-              const oData = await oRes.json();
-              if (oData.length) {
-                existingUser = oData[0];
-                existingTable = 'Ospiti';
-              }
-            }
-          }
-        }
-
-        // 3. Calcola scadenza in base al tipo
-        const oggi = new Date();
-        let scadenzaDate = new Date(oggi);
-
-        if (req.tipo_richiesta === 'tessera_annuale' || req.tipo_richiesta === 'abbonamento_annuale') {
-          // Fine anno corrente
-          scadenzaDate = new Date(oggi.getFullYear(), 11, 31);
-        } else if (req.tipo_richiesta === 'abbonamento_mensile') {
-          scadenzaDate.setMonth(scadenzaDate.getMonth() + 1);
-        } else if (req.tipo_richiesta === 'abbonamento_trimestrale') {
-          scadenzaDate.setMonth(scadenzaDate.getMonth() + 3);
-        } else if (req.tipo_richiesta === 'abbonamento_semestrale') {
-          scadenzaDate.setMonth(scadenzaDate.getMonth() + 6);
-        } else {
-          // crediti o altro → +14 giorni di default (come gli ospiti)
-          scadenzaDate.setDate(scadenzaDate.getDate() + 14);
-        }
-
-        const yyyy = scadenzaDate.getFullYear();
-        const mm = String(scadenzaDate.getMonth() + 1).padStart(2, '0');
-        const dd = String(scadenzaDate.getDate()).padStart(2, '0');
-        scadenzaImpostata = yyyy + '-' + mm + '-' + dd;
-
-        const isTennis = req.sport === 'tennis' || req.sport === 'both';
-        const isPadel = req.sport === 'padel' || req.sport === 'both';
-
-        if (existingUser) {
-          // 4a. Aggiorna utente esistente
-          codiceGenerato = existingUser.codice;
-          const updatePayload = {
-            is_tennis_member: isTennis || existingUser.is_tennis_member,
-            is_padel_member: isPadel || existingUser.is_padel_member,
-            scadenza: scadenzaImpostata
-          };
-
-          const updRes = await fetch(SUPABASE_URL + '/rest/v1/' + existingTable + '?id=eq.' + existingUser.id, {
-            method: 'PATCH',
-            headers: {
-              apikey: SUPABASE_KEY,
-              'Content-Type': 'application/json',
-              Prefer: 'return=minimal'
-            },
-            body: JSON.stringify(updatePayload)
-          });
-          if (!updRes.ok) throw new Error('Errore aggiornamento utente esistente');
-        } else {
-          // 4b. Crea nuovo Tesserato
-          // Genera codice univoco t + 4 cifre
-          let codice = null;
-          for (let tentativo = 0; tentativo < 20; tentativo++) {
-            const num = String(Math.floor(1000 + Math.random() * 9000));
-            const candidato = 't' + num;
-            const checkRes = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?codice=eq.' + candidato + '&select=id', {
-              headers: { apikey: SUPABASE_KEY }
-            });
-            if (checkRes.ok) {
-              const existing = await checkRes.json();
-              if (!existing.length) {
-                codice = candidato;
-                break;
-              }
-            }
-          }
-          if (!codice) throw new Error('Impossibile generare codice univoco');
-
-          const insertPayload = {
-            nome: req.nome,
-            cognome: req.cognome,
-            codice: codice,
-            telefono: tel || null,
-            is_tennis_member: isTennis,
-            is_padel_member: isPadel,
-            is_admin: false,
-            scadenza: scadenzaImpostata
-          };
-
-          const insRes = await fetch(SUPABASE_URL + '/rest/v1/Tesserati', {
-            method: 'POST',
-            headers: {
-              apikey: SUPABASE_KEY,
-              'Content-Type': 'application/json',
-              Prefer: 'return=representation'
-            },
-            body: JSON.stringify(insertPayload)
-          });
-          if (!insRes.ok) {
-            let detail = '';
-            try { const err = await insRes.json(); detail = err.message || JSON.stringify(err); } catch(_) { detail = insRes.statusText; }
-            throw new Error('Errore creazione tesserato: ' + detail);
-          }
-          codiceGenerato = codice;
-        }
-      }
-
-      // 5. Aggiorna la richiesta
-      const payload = {
-        stato: nuovoStato,
-        gestita_da: (loggedUser.nome || '') + ' ' + (loggedUser.cognome || ''),
-        gestita_il: new Date().toISOString()
-      };
-      if (codiceGenerato) payload.codice_generato = codiceGenerato;
-      if (scadenzaImpostata) payload.scadenza_impostata = scadenzaImpostata;
-
-      const res = await fetch(SUPABASE_URL + '/rest/v1/richieste_pagamento?id=eq.' + id, {
-        method: 'PATCH',
+      const res = await fetch('/api/gestisci-richiesta', {
+        method: 'POST',
         headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
+          Authorization: 'Bearer ' + loggedUser.accessToken,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ id: id, azione: nuovoStato })
       });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Operazione non riuscita');
 
-      if (!res.ok) {
-        let detail = '';
-        try { const err = await res.json(); detail = err.message || JSON.stringify(err); } catch(_) { detail = res.statusText; }
-        throw new Error(detail);
-      }
-
-      if (nuovoStato === 'approvata' && codiceGenerato) {
-        showToast('✅ Approvata! Codice: ' + codiceGenerato);
-        alert('Richiesta approvata con successo!\n\nCodice utente: ' + codiceGenerato + (scadenzaImpostata ? '\nScadenza: ' + scadenzaImpostata.split('-').reverse().join('/') : ''));
+      if (nuovoStato === 'approvata' && body.codiceGenerato) {
+        showToast('✅ Approvata! Codice: ' + body.codiceGenerato);
+        alert('Richiesta approvata con successo!\n\nCodice utente: ' + body.codiceGenerato + (body.scadenzaImpostata ? '\nScadenza: ' + body.scadenzaImpostata.split('-').reverse().join('/') : ''));
       } else {
         showToast(nuovoStato === 'approvata' ? '✅ Richiesta approvata' : '❌ Richiesta rifiutata');
       }
@@ -3441,6 +3296,7 @@ function copiaLink() {
       is_tennis_member: utente.is_tennis_member || false,
       is_padel_member: utente.is_padel_member || false,
       is_admin: utente.is_admin || false,
+      is_direttivo: utente.is_direttivo || false,
       can_book_special: utente.can_book_special || false,
       scadenza: utente.scadenza || null,
       totp_enabled: utente.totp_enabled || false,
