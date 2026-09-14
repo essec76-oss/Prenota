@@ -2093,6 +2093,7 @@ function copiaLink() {
             <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
             <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
             <button data-tab="prenotazioni" id="tab-prenotazioni">📅 Prenotazioni</button>
+            <button data-tab="richieste" id="tab-richieste">💳 Richieste</button>
             <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
           </div>
           
@@ -2167,6 +2168,9 @@ function copiaLink() {
     document.getElementById('tab-crea').addEventListener('click', function() {
       switchUserTab('crea');
     });
+    document.getElementById('tab-richieste').addEventListener('click', function() {
+      switchUserTab('richieste');
+    });
     
     document.getElementById('create-tipo').addEventListener('change', function() {
       toggleCreateFields();
@@ -2188,7 +2192,84 @@ function copiaLink() {
     toggleCreateFields();
     await loadUserList('tesserati');
   }
-    function switchUserTab(tab) {
+    
+  async function loadRichiestePagamentoList() {
+    const container = document.getElementById('user-list-container');
+    container.innerHTML = '<div class="user-list-empty">⏳ Caricamento richieste...</div>';
+
+    try {
+      const url = SUPABASE_URL + '/rest/v1/richieste_pagamento'
+        + '?select=id,created_at,nome,cognome,telefono,sport,tipo_richiesta,numero_crediti,stato,importo_calcolato,codice_generato,scadenza_impostata,note_direttivo,gestita_da,gestita_il'
+        + '&order=created_at.desc';
+      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      if (!res.ok) throw new Error('Errore caricamento richieste');
+      const data = await res.json();
+
+      if (data.length === 0) {
+        container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta di pagamento presente.</div>';
+        return;
+      }
+
+      const tipoLabels = {
+        crediti: 'Pacchetto crediti',
+        abbonamento_mensile: 'Abb. mensile',
+        abbonamento_trimestrale: 'Abb. trimestrale',
+        abbonamento_semestrale: 'Abb. semestrale',
+        tessera_annuale: 'Tessera annuale'
+      };
+
+      const statoLabels = {
+        pending: { text: 'In attesa', color: '#8a6a1a', bg: '#FFF4E0' },
+        approvata: { text: 'Approvata', color: '#2B6E5A', bg: '#D9E9E1' },
+        rifiutata: { text: 'Rifiutata', color: '#8a3a15', bg: '#F4DFD2' }
+      };
+
+      let html = '<div class="user-list-section-title">💳 Richieste di abbonamento / crediti</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+
+      data.forEach(r => {
+        const dataFmt = r.created_at
+          ? new Date(r.created_at).toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+          : '';
+        const tipoLabel = tipoLabels[r.tipo_richiesta] || r.tipo_richiesta;
+        const sportLabel = r.sport === 'padel' ? '🏸 Padel' : (r.sport === 'tennis' ? '🎾 Tennis' : r.sport);
+        const stato = statoLabels[r.stato] || { text: r.stato || '—', color: '#5B655F', bg: '#F5F5F0' };
+        const creditiInfo = r.tipo_richiesta === 'crediti' && r.numero_crediti
+          ? r.numero_crediti + ' crediti'
+          : '';
+        const importo = r.importo_calcolato != null ? (Number(r.importo_calcolato).toFixed(0) + ' €') : '';
+
+        html += `
+          <div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+              <div>
+                <strong style="font-size:15px;">${escapeHtml(r.nome)} ${escapeHtml(r.cognome)}</strong>
+                <div style="font-size:13px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(r.telefono || '')}</div>
+              </div>
+              <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px;color:${stato.color};background:${stato.bg};white-space:nowrap;">
+                ${stato.text}
+              </span>
+            </div>
+            <div style="font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:8px 14px;">
+              <span>${sportLabel}</span>
+              <span>• ${tipoLabel}</span>
+              ${creditiInfo ? '<span>• ' + creditiInfo + '</span>' : ''}
+              ${importo ? '<span>• ' + importo + '</span>' : ''}
+            </div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">${dataFmt}</div>
+          </div>`;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+
+    } catch(e) {
+      console.error('Errore loadRichiestePagamentoList:', e);
+      container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento delle richieste.</div>';
+    }
+  }
+
+  function switchUserTab(tab) {
     currentUserTab = tab;
     
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
@@ -2203,10 +2284,14 @@ function copiaLink() {
     if (tab === 'crea') {
       listContainer.style.display = 'none';
       createForm.style.display = 'block';
-        } else if (tab === 'prenotazioni') {
+    } else if (tab === 'prenotazioni') {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
       loadPrenotazioniList(currentPrenotazioniTipo);
+    } else if (tab === 'richieste') {
+      listContainer.style.display = 'block';
+      createForm.style.display = 'none';
+      loadRichiestePagamentoList();
     } else {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
