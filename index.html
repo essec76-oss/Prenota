@@ -634,6 +634,7 @@
           <span id="admin-2fa-status" class="admin-2fa-status"></span>
         </div>
         <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
+        <button class="admin-btn" id="admin-richieste-btn" style="display:none;">💳 Richieste</button>
         <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
         <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
         <button class="logout-btn" id="logout-btn">🚪 Esci</button>
@@ -1554,9 +1555,10 @@ function copiaLink() {
     const twoFABtn = document.getElementById('admin-2fa-btn');
     const statusEl = document.getElementById('admin-2fa-status');
     
-    if (loggedUser && loggedUser.is_admin === true) {
+    if (loggedUser && (loggedUser.is_admin === true || loggedUser.is_direttivo === true)) {
       container.style.display = 'flex';
       usersBtn.style.display = 'inline-block';
+      if (document.getElementById('admin-richieste-btn')) document.getElementById('admin-richieste-btn').style.display = 'inline-block';
       keyboxBtn.style.display = 'inline-block';
       twoFABtn.style.display = 'inline-block';
       toggle.checked = false;
@@ -1903,6 +1905,7 @@ function copiaLink() {
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') closeModal();
     });
+
     document.getElementById('2fa-disable-confirm').addEventListener('click', async function() {
       const code = document.getElementById('2fa-disable-code').value.trim();
       const errorEl = document.getElementById('2fa-disable-error');
@@ -2167,7 +2170,14 @@ function copiaLink() {
     document.getElementById('tab-crea').addEventListener('click', function() {
       switchUserTab('crea');
     });
-    document.getElementById('tab-richieste').addEventListener('click', function() {
+    
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'admin-richieste-btn') {
+      openRichiestePanel();
+    }
+  });
+
+  document.getElementById('tab-richieste').addEventListener('click', function() {
       switchUserTab('richieste');
     });
     
@@ -2293,8 +2303,8 @@ function copiaLink() {
   }
 
   async function gestisciRichiestaPagamento(id, nuovoStato) {
-    if (!loggedUser || !loggedUser.is_admin) {
-      showToast('Solo gli admin possono gestire le richieste');
+    if (!loggedUser || (!loggedUser.is_admin && !loggedUser.is_direttivo)) {
+      showToast('Solo direttivo/admin possono gestire le richieste');
       return;
     }
 
@@ -2485,7 +2495,15 @@ function copiaLink() {
     }
   }
 
-function switchUserTab(tab) {
+
+  function openRichiestePanel() {
+    openUserManagement();
+    setTimeout(function() {
+      if (typeof switchUserTab === 'function') switchUserTab('richieste');
+    }, 200);
+  }
+
+  function switchUserTab(tab) {
     currentUserTab = tab;
     
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
@@ -3322,7 +3340,7 @@ function switchUserTab(tab) {
       
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,scadenza,auth_id,totp_enabled,can_book_special'
+        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,is_direttivo,scadenza,auth_id,totp_enabled,can_book_special'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
         tipo = 'ospite';
@@ -3363,6 +3381,7 @@ function switchUserTab(tab) {
           is_tennis_member: utente.is_tennis_member || false,
           is_padel_member: utente.is_padel_member || false,
           is_admin: utente.is_admin || false,
+          is_direttivo: utente.is_direttivo || false,
           can_book_special: utente.can_book_special || false,
           scadenza: utente.scadenza || null,
           totp_enabled: utente.totp_enabled || false,
@@ -3545,4 +3564,3 @@ document.getElementById('richiesta-pagamento-btn').addEventListener('click', ope
 </script>
 </body>
 </html>
-
