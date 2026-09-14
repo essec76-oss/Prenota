@@ -1557,10 +1557,11 @@ function copiaLink() {
     
     if (loggedUser && (loggedUser.is_admin === true || loggedUser.is_direttivo === true)) {
       container.style.display = 'flex';
-      usersBtn.style.display = 'inline-block';
+      const isFullAdmin = loggedUser.is_admin === true;
+      usersBtn.style.display = isFullAdmin ? 'inline-block' : 'none';
       if (document.getElementById('admin-richieste-btn')) document.getElementById('admin-richieste-btn').style.display = 'inline-block';
-      keyboxBtn.style.display = 'inline-block';
-      twoFABtn.style.display = 'inline-block';
+      keyboxBtn.style.display = isFullAdmin ? 'inline-block' : 'none';
+      twoFABtn.style.display = isFullAdmin ? 'inline-block' : 'none';
       toggle.checked = false;
       adminMode = false;
       
@@ -2084,19 +2085,20 @@ function copiaLink() {
 
   async function openUserManagement() {
     const root = document.getElementById('modal-root');
+    const isFullAdmin = loggedUser && loggedUser.is_admin === true;
     
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:620px;">
-          <h2>👥 Gestione Utenti</h2>
-          <p class="modal-subtitle">Crea nuovi utenti o gestisci quelli esistenti.</p>
+          <h2>${isFullAdmin ? '👥 Gestione Utenti' : '💳 Richieste di pagamento'}</h2>
+          <p class="modal-subtitle">${isFullAdmin ? 'Crea nuovi utenti o gestisci quelli esistenti.' : 'Approva o rifiuta le richieste di abbonamento/crediti.'}</p>
           
           <div class="user-modal-tabs">
-            <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
-            <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
-            <button data-tab="prenotazioni" id="tab-prenotazioni">📅 Prenotazioni</button>
+            <button class="active" data-tab="tesserati" id="tab-tesserati" style="${isFullAdmin ? '' : 'display:none;'}">⭐ Tesserati</button>
+            <button data-tab="ospiti" id="tab-ospiti" style="${isFullAdmin ? '' : 'display:none;'}">👤 Ospiti</button>
+            <button data-tab="prenotazioni" id="tab-prenotazioni" style="${isFullAdmin ? '' : 'display:none;'}">📅 Prenotazioni</button>
             <button data-tab="richieste" id="tab-richieste">💳 Richieste</button>
-            <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
+            <button data-tab="crea" id="tab-crea" style="${isFullAdmin ? '' : 'display:none;'}">➕ Crea nuovo</button>
           </div>
           
           <div id="user-list-container">
@@ -2199,7 +2201,14 @@ function copiaLink() {
     });
     
     toggleCreateFields();
-    await loadUserList('tesserati');
+    if (isFullAdmin) {
+      await loadUserList('tesserati');
+    } else {
+      currentUserTab = 'richieste';
+      document.getElementById('tab-tesserati').classList.remove('active');
+      document.getElementById('tab-richieste').classList.add('active');
+      await loadRichiestePagamentoList();
+    }
   }
     
   async function loadRichiestePagamentoList() {
@@ -2359,6 +2368,10 @@ function copiaLink() {
   }
 
   function switchUserTab(tab) {
+    const isFullAdmin = loggedUser && loggedUser.is_admin === true;
+    if (!isFullAdmin && tab !== 'richieste') {
+      tab = 'richieste';
+    }
     currentUserTab = tab;
     
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
