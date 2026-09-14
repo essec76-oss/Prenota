@@ -686,6 +686,11 @@
         <div id="guest-slots-counter" class="guest-slots-counter"></div>
         <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
       </div>
+
+      <div class="guest-register-box" style="margin-top:12px;">
+        <p>Hai esaurito la prova gratuita o vuoi un abbonamento/tessera/pacchetto crediti?</p>
+        <button class="btn-guest-register" id="richiesta-pagamento-btn">Richiedi accesso a pagamento</button>
+      </div>
     </div>
 
     <div id="logged-in-extras-bottom" style="display:none;">
@@ -2871,6 +2876,125 @@ function copiaLink() {
     });
   }
 
+  function openRichiestaPagamentoModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="richiesta-title">
+          <h2 id="richiesta-title">Richiedi accesso a pagamento</h2>
+          <p class="modal-subtitle">Un membro del direttivo attiverà il tuo accesso dopo aver verificato il pagamento.</p>
+          <div class="name-field">
+            <label for="rp-nome">Nome *</label>
+            <input id="rp-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
+          </div>
+          <div class="name-field">
+            <label for="rp-cognome">Cognome *</label>
+            <input id="rp-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
+          </div>
+          <div class="name-field">
+            <label for="rp-telefono">Numero di telefono *</label>
+            <input id="rp-telefono" type="tel" placeholder="Es. 3331234567" autocomplete="tel" />
+          </div>
+          <div class="name-field">
+            <label for="rp-sport">Sport *</label>
+            <select id="rp-sport">
+              <option value="padel">Padel</option>
+              <option value="tennis">Tennis</option>
+            </select>
+          </div>
+          <div class="name-field">
+            <label for="rp-tipo">Cosa vuoi richiedere? *</label>
+            <select id="rp-tipo">
+              <option value="crediti">Pacchetto crediti</option>
+              <option value="abbonamento_mensile">Abbonamento mensile</option>
+              <option value="abbonamento_trimestrale">Abbonamento trimestrale</option>
+              <option value="abbonamento_semestrale">Abbonamento semestrale</option>
+              <option value="tessera_annuale">Tessera annuale</option>
+            </select>
+          </div>
+          <div class="name-field" id="rp-crediti-field">
+            <label for="rp-crediti">Numero crediti (min. 4, multipli di 4)</label>
+            <input id="rp-crediti" type="number" min="4" step="4" value="4" />
+            <div id="rp-crediti-prezzo" style="font-size:13px;color:var(--ink-soft);margin-top:4px;">Totale: 20€</div>
+          </div>
+          <div class="form-error" id="rp-error"></div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="rp-cancel">Annulla</button>
+          </div>
+          <button class="btn-guest-code" id="rp-submit-btn" style="margin-top:10px;">
+            Invia richiesta
+          </button>
+        </div>
+      </div>
+    `;
+    document.getElementById('rp-cancel').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
+    document.getElementById('rp-submit-btn').addEventListener('click', handleRichiestaPagamento);
+
+    const tipoSel = document.getElementById('rp-tipo');
+    const creditiField = document.getElementById('rp-crediti-field');
+    const creditiInput = document.getElementById('rp-crediti');
+    const creditiPrezzo = document.getElementById('rp-crediti-prezzo');
+
+    function toggleCreditiField() {
+      creditiField.style.display = (tipoSel.value === 'crediti') ? '' : 'none';
+    }
+    function aggiornaPrezzo() {
+      let n = parseInt(creditiInput.value, 10) || 4;
+      n = Math.max(4, Math.round(n / 4) * 4);
+      creditiInput.value = n;
+      creditiPrezzo.textContent = 'Totale: ' + (n * 5) + '€';
+    }
+    tipoSel.addEventListener('change', toggleCreditiField);
+    creditiInput.addEventListener('change', aggiornaPrezzo);
+    toggleCreditiField();
+    aggiornaPrezzo();
+  }
+
+  async function handleRichiestaPagamento() {
+    const errorEl = document.getElementById('rp-error');
+    const nome = document.getElementById('rp-nome').value.trim();
+    const cognome = document.getElementById('rp-cognome').value.trim();
+    const telefono = document.getElementById('rp-telefono').value.trim();
+    const sport = document.getElementById('rp-sport').value;
+    const tipo_richiesta = document.getElementById('rp-tipo').value;
+    const numero_crediti = (tipo_richiesta === 'crediti')
+      ? (parseInt(document.getElementById('rp-crediti').value, 10) || 4)
+      : null;
+
+    if (!nome || !cognome || !telefono) {
+      errorEl.textContent = 'Nome, Cognome e Numero di telefono sono obbligatori.';
+      return;
+    }
+
+    const payload = { nome, cognome, telefono, sport, tipo_richiesta, numero_crediti };
+
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/richieste_pagamento', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        let detail = '';
+        try { const errBody = await res.json(); detail = errBody.message || errBody.hint || JSON.stringify(errBody); } catch(_) { detail = res.status + ' ' + res.statusText; }
+        throw new Error(detail);
+      }
+
+      closeModal();
+      showToast('✅ Richiesta inviata! Il direttivo la esaminerà a breve.');
+
+    } catch(e) {
+      console.error('❌ Errore invio richiesta pagamento:', e);
+      errorEl.textContent = 'Errore di connessione. Riprova.';
+    }
+  }
+
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
     const errorEl = document.getElementById('login-error');
@@ -3065,6 +3189,7 @@ function copiaLink() {
   renderCalendar();
 
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
+document.getElementById('richiesta-pagamento-btn').addEventListener('click', openRichiestaPagamentoModal);
   
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
   document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
