@@ -95,7 +95,7 @@ async function gestisciRichiesta(req, res, richiedente) {
   if (!richieste.length) return res.status(404).json({ error: 'Richiesta non trovata.' });
   const richiestaReq = richieste[0];
 
-  if (richiestaReq.stato && richiestaReq.stato !== 'pending') {
+  if (richiestaReq.stato && richiestaReq.stato !== 'in_attesa') {
     return res.status(409).json({ error: 'Questa richiesta è già stata gestita.' });
   }
 
@@ -170,9 +170,13 @@ async function gestisciRichiesta(req, res, richiedente) {
       if (!updRes.ok) return res.status(500).json({ error: 'Errore aggiornamento utente esistente.' });
     } else {
       let codice = null;
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       for (let tentativo = 0; tentativo < 20; tentativo++) {
-        const num = String(Math.floor(1000 + Math.random() * 9000));
-        const candidato = 't' + num;
+        let suffix = '';
+        for (let i = 0; i < 7; i++) {
+          suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        const candidato = 't' + suffix;
         const checkRes = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?codice=eq.' + candidato + '&select=id', { headers: authHeaders });
         if (checkRes.ok) {
           const existing = await checkRes.json();
