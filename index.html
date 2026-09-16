@@ -1576,8 +1576,8 @@ function copiaLink() {
     const statusEl = document.getElementById('admin-2fa-status');
     
     if (loggedUser && (loggedUser.is_admin === true || loggedUser.is_direttivo === true)) {
-      container.style.display = 'flex';
       const isFullAdmin = loggedUser.is_admin === true;
+      container.style.display = isFullAdmin ? 'flex' : 'none';
       usersBtn.style.display = isFullAdmin ? 'inline-block' : 'none';
       if (document.getElementById('admin-richieste-btn')) document.getElementById('admin-richieste-btn').style.display = 'inline-block';
       keyboxBtn.style.display = isFullAdmin ? 'inline-block' : 'none';
