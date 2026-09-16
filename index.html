@@ -634,7 +634,6 @@
           <span id="admin-2fa-status" class="admin-2fa-status"></span>
         </div>
         <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
-        <button class="admin-btn" id="admin-richieste-btn" style="display:none;">💳 Richieste</button>
         <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
         <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
         <button class="logout-btn" id="logout-btn">🚪 Esci</button>
@@ -688,10 +687,6 @@
         <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
       </div>
 
-      <div class="guest-register-box" style="margin-top:12px;">
-        <p>Hai esaurito la prova gratuita o vuoi un abbonamento/tessera/pacchetto crediti?</p>
-        <button class="btn-guest-register" id="richiesta-pagamento-btn">Richiedi accesso a pagamento</button>
-      </div>
     </div>
 
     <div id="logged-in-extras-bottom" style="display:none;">
@@ -711,51 +706,6 @@ document.addEventListener('DOMContentLoaded', function(){
     qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(link);
   }
   loadGuestSlotsCounter();
-});
-
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.id === 'admin-richieste-btn') {
-    if (!loggedUser || (!loggedUser.is_admin && !loggedUser.is_direttivo)) {
-      return;
-    }
-
-    // Se manca il token di sessione sicura, lo acquisiamo prima di aprire il pannello
-    if (!loggedUser.accessToken) {
-      // Solo gli admin con 2FA attivo devono passare dalla verifica TOTP
-      if (loggedUser.is_admin && loggedUser.totp_enabled) {
-        openAdmin2FAVerification(async function(success) {
-          if (!success) return;
-          try {
-            const authData = await signInWithSupabaseAuth(loggedUser.codice + '@circolo.local', loggedUser.codice);
-            loggedUser.accessToken = authData.access_token;
-            loggedUser.authenticated = true;
-          } catch(authErr) {
-            console.warn('⚠️ Auth Supabase non disponibile dopo verifica 2FA');
-            showToast('🔒 Impossibile ottenere sessione sicura. Contatta l\'amministratore.');
-            return;
-          }
-          openRichiestePanel();
-        });
-        return;
-      }
-
-      // Direttivo (o admin senza 2FA): tenta login diretto con il codice
-      (async function() {
-        try {
-          const authData = await signInWithSupabaseAuth(loggedUser.codice + '@circolo.local', loggedUser.codice);
-          loggedUser.accessToken = authData.access_token;
-          loggedUser.authenticated = true;
-          openRichiestePanel();
-        } catch(authErr) {
-          console.warn('⚠️ Auth Supabase non disponibile per direttivo/admin:', authErr);
-          showToast('🔒 Sessione sicura non disponibile. Verifica che esista l\'account Auth collegato al codice.');
-        }
-      })();
-      return;
-    }
-
-    openRichiestePanel();
-  }
 });
 
 async function loadGuestSlotsCounter() {
@@ -1600,13 +1550,12 @@ function copiaLink() {
     const twoFABtn = document.getElementById('admin-2fa-btn');
     const statusEl = document.getElementById('admin-2fa-status');
     
-    if (loggedUser && (loggedUser.is_admin === true || loggedUser.is_direttivo === true)) {
-      const isFullAdmin = loggedUser.is_admin === true;
-      container.style.display = isFullAdmin ? 'flex' : 'none';
-      usersBtn.style.display = isFullAdmin ? 'inline-block' : 'none';
-      if (document.getElementById('admin-richieste-btn')) document.getElementById('admin-richieste-btn').style.display = 'inline-block';
-      keyboxBtn.style.display = isFullAdmin ? 'inline-block' : 'none';
-      twoFABtn.style.display = isFullAdmin ? 'inline-block' : 'none';
+    if (loggedUser && loggedUser.is_admin === true) {
+      const isFullAdmin = true;
+      container.style.display = 'flex';
+      usersBtn.style.display = 'inline-block';
+      keyboxBtn.style.display = 'inline-block';
+      twoFABtn.style.display = 'inline-block';
       toggle.checked = false;
       adminMode = false;
       
@@ -2151,15 +2100,14 @@ function copiaLink() {
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:620px;">
-          <h2>${isFullAdmin ? '👥 Gestione Utenti' : '💳 Richieste di pagamento'}</h2>
-          <p class="modal-subtitle">${isFullAdmin ? 'Crea nuovi utenti o gestisci quelli esistenti.' : 'Approva o rifiuta le richieste di abbonamento/crediti.'}</p>
+          <h2>👥 Gestione Utenti</h2>
+          <p class="modal-subtitle">Crea nuovi utenti o gestisci quelli esistenti.</p>
           
           <div class="user-modal-tabs">
-            <button class="active" data-tab="tesserati" id="tab-tesserati" style="${isFullAdmin ? '' : 'display:none;'}">⭐ Tesserati</button>
-            <button data-tab="ospiti" id="tab-ospiti" style="${isFullAdmin ? '' : 'display:none;'}">👤 Ospiti</button>
-            <button data-tab="prenotazioni" id="tab-prenotazioni" style="${isFullAdmin ? '' : 'display:none;'}">📅 Prenotazioni</button>
-            <button data-tab="richieste" id="tab-richieste" style="${(loggedUser && loggedUser.is_direttivo === true) ? '' : 'display:none;'}">💳 Richieste</button>
-            <button data-tab="crea" id="tab-crea" style="${isFullAdmin ? '' : 'display:none;'}">➕ Crea nuovo</button>
+            <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
+            <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
+            <button data-tab="prenotazioni" id="tab-prenotazioni">📅 Prenotazioni</button>
+            <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
           </div>
           
           <div id="user-list-container">
@@ -2235,12 +2183,6 @@ function copiaLink() {
     });
     
  
-  const tabRichiesteBtn = document.getElementById('tab-richieste');
-  if (tabRichiesteBtn) {
-    tabRichiesteBtn.addEventListener('click', function() {
-      switchUserTab('richieste');
-    });
-  }
     
     document.getElementById('create-tipo').addEventListener('change', function() {
       toggleCreateFields();
@@ -2260,196 +2202,10 @@ function copiaLink() {
     });
     
     toggleCreateFields();
-    const canSeeRichieste = loggedUser && loggedUser.is_direttivo === true;
-    if (isFullAdmin) {
-      await loadUserList('tesserati');
-    } else if (canSeeRichieste) {
-      currentUserTab = 'richieste';
-      const tTab = document.getElementById('tab-tesserati');
-      const rTab = document.getElementById('tab-richieste');
-      if (tTab) tTab.classList.remove('active');
-      if (rTab) rTab.classList.add('active');
-      await loadRichiestePagamentoList();
-    } else {
-      // Né admin né direttivo: non dovrebbe mai arrivare qui
-      document.getElementById('user-list-container').innerHTML = '<div class="user-list-empty">Non hai i permessi per questa sezione.</div>';
-    }
+    await loadUserList('tesserati');
   }
     
-  async function loadRichiestePagamentoList() {
-    const container = document.getElementById('user-list-container');
-    container.innerHTML = '<div class="user-list-empty">⏳ Caricamento richieste...</div>';
-
-    if (!loggedUser || !loggedUser.accessToken) {
-      container.innerHTML = '<div class="user-list-empty">🔒 Sessione sicura non attiva. Rifai il login per gestire le richieste.</div>';
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/gestisci-richiesta', {
-        headers: { Authorization: 'Bearer ' + loggedUser.accessToken }
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || 'Errore caricamento richieste');
-      const data = body.richieste;
-
-      if (data.length === 0) {
-        container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta di pagamento presente.</div>';
-        return;
-      }
-
-      const tipoLabels = {
-        crediti: 'Pacchetto crediti',
-        abbonamento_mensile: 'Abb. mensile',
-        abbonamento_trimestrale: 'Abb. trimestrale',
-        abbonamento_semestrale: 'Abb. semestrale',
-        tessera_annuale: 'Tessera annuale'
-      };
-
-      const statoLabels = {
-        in_attesa: { text: 'In attesa', color: '#8a6a1a', bg: '#FFF4E0' },
-        pending:   { text: 'In attesa', color: '#8a6a1a', bg: '#FFF4E0' }, // retrocompatibilità
-        approvata: { text: 'Approvata', color: '#2B6E5A', bg: '#D9E9E1' },
-        rifiutata: { text: 'Rifiutata', color: '#8a3a15', bg: '#F4DFD2' }
-      };
-
-      let html = '<div class="user-list-section-title">💳 Richieste di abbonamento / crediti</div>';
-      html += '<div style="display:flex;flex-direction:column;gap:12px;">';
-
-      data.forEach(r => {
-        const dataFmt = r.created_at
-          ? new Date(r.created_at).toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
-          : '';
-        const tipoLabel = tipoLabels[r.tipo_richiesta] || r.tipo_richiesta;
-        const sportLabel = r.sport === 'padel' ? '🏸 Padel' : (r.sport === 'tennis' ? '🎾 Tennis' : r.sport);
-        const statoKey = r.stato || 'in_attesa';
-        const stato = statoLabels[statoKey] || { text: statoKey, color: '#5B655F', bg: '#F5F5F0' };
-        const creditiInfo = r.tipo_richiesta === 'crediti' && r.numero_crediti
-          ? r.numero_crediti + ' crediti'
-          : '';
-        const importo = r.importo_calcolato != null ? (Number(r.importo_calcolato).toFixed(0) + ' €') : '';
-
-        // Allineato con l'API che usa 'in_attesa' (accetta anche il vecchio 'pending')
-        const isPending = !r.stato || r.stato === 'in_attesa' || r.stato === 'pending';
-
-        let actionsHtml = '';
-        if (isPending) {
-          actionsHtml = `
-            <div style="display:flex;gap:8px;margin-top:12px;">
-              <button onclick="gestisciRichiestaPagamento(${r.id}, 'approvata')" 
-                style="flex:1;padding:10px;border:none;border-radius:8px;background:#2B6E5A;color:#fff;font-weight:700;font-size:14px;cursor:pointer;">
-                ✅ Approva
-              </button>
-              <button onclick="gestisciRichiestaPagamento(${r.id}, 'rifiutata')" 
-                style="flex:1;padding:10px;border:1px solid #D9A583;border-radius:8px;background:#F4DFD2;color:#8a3a15;font-weight:700;font-size:14px;cursor:pointer;">
-                ❌ Rifiuta
-              </button>
-            </div>`;
-        } else if (r.gestita_da || r.gestita_il) {
-          const gestitaInfo = r.gestita_il 
-            ? new Date(r.gestita_il).toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
-            : '';
-          actionsHtml = `<div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">Gestita ${gestitaInfo}${r.gestita_da ? ' da ' + escapeHtml(r.gestita_da) : ''}</div>`;
-        }
-
-        html += `
-          <div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--surface);">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
-              <div>
-                <strong style="font-size:15px;">${escapeHtml(r.nome)} ${escapeHtml(r.cognome)}</strong>
-                <div style="font-size:13px;color:var(--ink-soft);margin-top:2px;">${escapeHtml(r.telefono || '')}</div>
-              </div>
-              <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px;color:${stato.color};background:${stato.bg};white-space:nowrap;">
-                ${stato.text}
-              </span>
-            </div>
-            <div style="font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:8px 14px;">
-              <span>${sportLabel}</span>
-              <span>• ${tipoLabel}</span>
-              ${creditiInfo ? '<span>• ' + creditiInfo + '</span>' : ''}
-              ${importo ? '<span>• ' + importo + '</span>' : ''}
-            </div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">${dataFmt}</div>
-            ${actionsHtml}
-          </div>`;
-      });
-
-      html += '</div>';
-      container.innerHTML = html;
-
-    } catch(e) {
-      console.error('Errore loadRichiestePagamentoList:', e);
-      container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento delle richieste.</div>';
-    }
-  }
-
-  async function gestisciRichiestaPagamento(id, nuovoStato) {
-    if (!loggedUser || (!loggedUser.is_admin && !loggedUser.is_direttivo)) {
-      showToast('Solo direttivo/admin possono gestire le richieste');
-      return;
-    }
-    if (!loggedUser.accessToken) {
-      showToast('🔒 Sessione sicura non attiva. Rifai il login.');
-      return;
-    }
-
-    const conferma = nuovoStato === 'approvata' 
-      ? 'Confermi di APPROVARE questa richiesta?' 
-      : 'Confermi di RIFIUTARE questa richiesta?';
-    
-    if (!confirm(conferma)) return;
-
-    try {
-      const res = await fetch('/api/gestisci-richiesta', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + loggedUser.accessToken,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id: id, azione: nuovoStato })
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || 'Operazione non riuscita');
-
-      if (nuovoStato === 'approvata' && body.codiceGenerato) {
-        showToast('✅ Approvata! Codice: ' + body.codiceGenerato);
-        alert('Richiesta approvata con successo!\n\nCodice utente: ' + body.codiceGenerato + (body.scadenzaImpostata ? '\nScadenza: ' + body.scadenzaImpostata.split('-').reverse().join('/') : ''));
-      } else {
-        showToast(nuovoStato === 'approvata' ? '✅ Richiesta approvata' : '❌ Richiesta rifiutata');
-      }
-
-      loadRichiestePagamentoList();
-
-    } catch(e) {
-      console.error('Errore gestione richiesta:', e);
-      showToast('Errore: ' + (e.message || 'operazione non riuscita'));
-    }
-  }
-
-
-  function openRichiestePanel() {
-    if (!loggedUser || loggedUser.is_direttivo !== true) {
-      showToast('Non hai i permessi per visualizzare le richieste');
-      return;
-    }
-    openUserManagement();
-    setTimeout(function() {
-      if (typeof switchUserTab === 'function') switchUserTab('richieste');
-    }, 200);
-  }
-
   function switchUserTab(tab) {
-    const isFullAdmin = loggedUser && loggedUser.is_admin === true;
-    const canSeeRichieste = loggedUser && loggedUser.is_direttivo === true;
-    // Se non è full admin, forza la tab richieste solo se ha il permesso direttivo
-    if (!isFullAdmin) {
-      tab = canSeeRichieste ? 'richieste' : tab;
-    }
-    // Se prova ad aprire richieste senza permesso, blocca
-    if (tab === 'richieste' && !canSeeRichieste) {
-      showToast('Non hai i permessi per visualizzare le richieste');
-      return;
-    }
     currentUserTab = tab;
     
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
@@ -2468,11 +2224,7 @@ function copiaLink() {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
       loadPrenotazioniList(currentPrenotazioniTipo);
-    } else if (tab === 'richieste') {
-      listContainer.style.display = 'block';
-      createForm.style.display = 'none';
-      loadRichiestePagamentoList();
-    } else {
+ else {
       listContainer.style.display = 'block';
       createForm.style.display = 'none';
       loadUserList(tab);
@@ -3145,124 +2897,6 @@ function copiaLink() {
     });
   }
 
-  function openRichiestaPagamentoModal() {
-    const root = document.getElementById('modal-root');
-    root.innerHTML = `
-      <div class="overlay" id="overlay">
-        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="richiesta-title">
-          <h2 id="richiesta-title">Richiedi accesso a pagamento</h2>
-          <p class="modal-subtitle">Un membro del direttivo attiverà il tuo accesso dopo aver verificato il pagamento.</p>
-          <div class="name-field">
-            <label for="rp-nome">Nome *</label>
-            <input id="rp-nome" type="text" placeholder="Il tuo nome" autocomplete="given-name" />
-          </div>
-          <div class="name-field">
-            <label for="rp-cognome">Cognome *</label>
-            <input id="rp-cognome" type="text" placeholder="Il tuo cognome" autocomplete="family-name" />
-          </div>
-          <div class="name-field">
-            <label for="rp-telefono">Numero di telefono *</label>
-            <input id="rp-telefono" type="tel" placeholder="Es. 3331234567" autocomplete="tel" />
-          </div>
-          <div class="name-field">
-            <label for="rp-sport">Sport *</label>
-            <select id="rp-sport">
-              <option value="padel">Padel</option>
-              <option value="tennis">Tennis</option>
-            </select>
-          </div>
-          <div class="name-field">
-            <label for="rp-tipo">Cosa vuoi richiedere? *</label>
-            <select id="rp-tipo">
-              <option value="crediti">Pacchetto crediti</option>
-              <option value="abbonamento_mensile">Abbonamento mensile</option>
-              <option value="abbonamento_trimestrale">Abbonamento trimestrale</option>
-              <option value="abbonamento_semestrale">Abbonamento semestrale</option>
-              <option value="tessera_annuale">Tessera annuale</option>
-            </select>
-          </div>
-          <div class="name-field" id="rp-crediti-field">
-            <label for="rp-crediti">Numero crediti (min. 4, multipli di 4)</label>
-            <input id="rp-crediti" type="number" min="4" step="4" value="4" />
-            <div id="rp-crediti-prezzo" style="font-size:13px;color:var(--ink-soft);margin-top:4px;">Totale: 20€</div>
-          </div>
-          <div class="form-error" id="rp-error"></div>
-          <div class="modal-actions">
-            <button class="btn-cancel" id="rp-cancel">Annulla</button>
-          </div>
-          <button class="btn-guest-code" id="rp-submit-btn" style="margin-top:10px;">
-            Invia richiesta
-          </button>
-        </div>
-      </div>
-    `;
-    document.getElementById('rp-cancel').addEventListener('click', closeModal);
-    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
-    document.getElementById('rp-submit-btn').addEventListener('click', handleRichiestaPagamento);
-
-    const tipoSel = document.getElementById('rp-tipo');
-    const creditiField = document.getElementById('rp-crediti-field');
-    const creditiInput = document.getElementById('rp-crediti');
-    const creditiPrezzo = document.getElementById('rp-crediti-prezzo');
-
-    function toggleCreditiField() {
-      creditiField.style.display = (tipoSel.value === 'crediti') ? '' : 'none';
-    }
-    function aggiornaPrezzo() {
-      let n = parseInt(creditiInput.value, 10) || 4;
-      n = Math.max(4, Math.round(n / 4) * 4);
-      creditiInput.value = n;
-      creditiPrezzo.textContent = 'Totale: ' + (n * 5) + '€';
-    }
-    tipoSel.addEventListener('change', toggleCreditiField);
-    creditiInput.addEventListener('change', aggiornaPrezzo);
-    toggleCreditiField();
-    aggiornaPrezzo();
-  }
-
-  async function handleRichiestaPagamento() {
-    const errorEl = document.getElementById('rp-error');
-    const nome = document.getElementById('rp-nome').value.trim();
-    const cognome = document.getElementById('rp-cognome').value.trim();
-    const telefono = document.getElementById('rp-telefono').value.trim();
-    const sport = document.getElementById('rp-sport').value;
-    const tipo_richiesta = document.getElementById('rp-tipo').value;
-    const numero_crediti = (tipo_richiesta === 'crediti')
-      ? (parseInt(document.getElementById('rp-crediti').value, 10) || 4)
-      : null;
-
-    if (!nome || !cognome || !telefono) {
-      errorEl.textContent = 'Nome, Cognome e Numero di telefono sono obbligatori.';
-      return;
-    }
-
-    const payload = { nome, cognome, telefono, sport, tipo_richiesta, numero_crediti };
-
-    try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/richieste_pagamento', {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        let detail = '';
-        try { const errBody = await res.json(); detail = errBody.message || errBody.hint || JSON.stringify(errBody); } catch(_) { detail = res.status + ' ' + res.statusText; }
-        throw new Error(detail);
-      }
-
-      closeModal();
-      showToast('✅ Richiesta inviata! Il direttivo la esaminerà a breve.');
-
-    } catch(e) {
-      console.error('❌ Errore invio richiesta pagamento:', e);
-      errorEl.textContent = 'Errore di connessione. Riprova.';
-    }
-  }
 
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
@@ -3460,7 +3094,6 @@ function copiaLink() {
   renderCalendar();
 
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
-document.getElementById('richiesta-pagamento-btn').addEventListener('click', openRichiestaPagamentoModal);
   
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
   document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
