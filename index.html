@@ -713,6 +713,26 @@ document.addEventListener('DOMContentLoaded', function(){
   loadGuestSlotsCounter();
 });
 
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'admin-richieste-btn') {
+    if (loggedUser && !loggedUser.accessToken && loggedUser.is_admin && loggedUser.totp_enabled) {
+      openAdmin2FAVerification(async function(success) {
+        if (!success) return;
+        try {
+          const authData = await signInWithSupabaseAuth(loggedUser.codice + '@circolo.local', loggedUser.codice);
+          loggedUser.accessToken = authData.access_token;
+          loggedUser.authenticated = true;
+        } catch(authErr) {
+          console.warn('⚠️ Auth Supabase non disponibile dopo verifica 2FA');
+        }
+        openRichiestePanel();
+      });
+      return;
+    }
+    openRichiestePanel();
+  }
+});
+
 async function loadGuestSlotsCounter() {
   var el = document.getElementById('guest-slots-counter');
   if (!el) return;
@@ -2173,26 +2193,7 @@ function copiaLink() {
       switchUserTab('crea');
     });
     
-  document.addEventListener('click', function(e) {
-    if (e.target && e.target.id === 'admin-richieste-btn') {
-      if (loggedUser && !loggedUser.accessToken && loggedUser.is_admin && loggedUser.totp_enabled) {
-        openAdmin2FAVerification(async function(success) {
-          if (!success) return;
-          try {
-            const authData = await signInWithSupabaseAuth(loggedUser.codice + '@circolo.local', loggedUser.codice);
-            loggedUser.accessToken = authData.access_token;
-            loggedUser.authenticated = true;
-          } catch(authErr) {
-            console.warn('⚠️ Auth Supabase non disponibile dopo verifica 2FA');
-          }
-          openRichiestePanel();
-        });
-        return;
-      }
-      openRichiestePanel();
-    }
-  });
-
+ 
   document.getElementById('tab-richieste').addEventListener('click', function() {
       switchUserTab('richieste');
     });
