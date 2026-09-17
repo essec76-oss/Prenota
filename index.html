@@ -613,6 +613,110 @@
   }
   .btn-guest-code:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(184,75,30,0.4);}
   .btn-guest-code:active{transform:translateY(1px);}
+
+  /* ===== Form richiesta contatto direttivo ===== */
+  .richiesta-box{
+    margin-top:16px;
+    background:#FFF4E0;
+    border:2px solid #E8C989;
+    border-radius:12px;
+    padding:18px;
+  }
+  .richiesta-box h3{
+    font-family:'Fraunces',serif;
+    font-size:18px;
+    margin:0 0 6px;
+    color:#8a6a1a;
+  }
+  .richiesta-box .rich-sub{
+    font-size:14px;
+    color:#8a6a1a;
+    margin:0 0 14px;
+  }
+  .richiesta-box .name-field{margin-bottom:10px;}
+  .richiesta-box input[readonly]{
+    background:#F5F0E0;
+    color:var(--ink-soft);
+  }
+  .richiesta-box textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:15px;
+    resize:vertical;
+    min-height:70px;
+  }
+  .richiesta-box .privacy-row{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:12px 0 8px;
+    line-height:1.4;
+  }
+  .richiesta-box .privacy-row input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    margin-top:2px;
+    accent-color:var(--accent);
+    flex-shrink:0;
+  }
+  .richiesta-box .btn-invia{
+    width:100%;
+    padding:14px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(184,75,30,0.3);
+    transition:all .2s ease;
+  }
+  .richiesta-box .btn-invia:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(184,75,30,0.4);}
+  .richiesta-box .btn-invia:disabled{opacity:.5;cursor:not-allowed;}
+
+  .richiesta-successo{
+    margin-top:16px;
+    background:#D9E9E1;
+    border:2px solid #2B6E5A;
+    border-radius:12px;
+    padding:18px;
+    color:#1e5744;
+    text-align:center;
+    font-size:15px;
+    font-weight:600;
+  }
+
+  /* ===== Stampa elenco richieste ===== */
+  @media print{
+    body *{visibility:hidden !important;}
+    #print-are-richieste, #print-are-richieste *{visibility:visible !important;}
+    #print-are-richieste{
+      position:absolute;
+      left:0; top:0;
+      width:100%;
+      padding:20px;
+      font-family:'Source Sans 3',sans-serif;
+      color:#000;
+    }
+    #print-are-richieste h1{font-size:20px;margin:0 0 6px;}
+    #print-are-richieste .meta-stampa{font-size:12px;color:#444;margin-bottom:16px;}
+    #print-are-richieste .rich-item{
+      border-bottom:1px solid #999;
+      padding:10px 0;
+    }
+    #print-are-richieste .rich-item strong{font-size:14px;}
+    #print-are-richieste .rich-item .dett{
+      font-size:12px;color:#333;margin-top:4px;
+    }
+  }
+  #print-are-richieste{display:none;}
 </style>
 </head>
 <body>
@@ -636,6 +740,7 @@
         <button class="admin-btn" id="admin-users-btn" style="display:none;">👥 Gestione Utenti</button>
         <button class="admin-btn" id="admin-keybox-btn" style="display:none;">🔑 Key Box</button>
         <button class="admin-btn" id="admin-2fa-btn" style="display:none;">🔐 2FA</button>
+        <button class="admin-btn" id="admin-richieste-btn" style="display:none;">📩 Richieste</button>
         <button class="logout-btn" id="logout-btn">🚪 Esci</button>
         <div id="tesserato-expiry" style="display:none;font-size:13px;color:var(--ink-soft);margin-top:4px;width:100%;text-align:left;"></div>
       </div>
@@ -685,6 +790,10 @@
         <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo in pochi secondi.</p>
         <div id="guest-slots-counter" class="guest-slots-counter"></div>
         <button class="btn-guest-register" id="guest-register-btn">Crea profilo ospite</button>
+        <p style="margin:14px 0 0;font-size:14px;color:var(--ink-soft);">
+          Hai già fatto la prova e vuoi essere contattato?
+          <a href="#" id="link-richiesta-contatto" style="color:var(--accent);font-weight:600;">Richiedi contatto con il direttivo</a>
+        </p>
       </div>
 
     </div>
@@ -698,6 +807,7 @@
 
 <div id="modal-root"></div>
 <div id="toast-root"></div>
+<div id="print-are-richieste"></div>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
   var qrImg = document.getElementById('login-qr-code');
@@ -765,9 +875,13 @@ function copiaLink() {
   let selectedDate = null;
   let bookingsCache = {};
   let adminMode = false;
-    let currentUserTab = 'tesserati';
+  let currentUserTab = 'tesserati';
   let currentPrenotazioniTipo = 'tesserato';
   const userDataCache = {};
+
+  // === PATCH 3.4 — stato per richieste direttivo ===
+  let richiesteCache = [];
+  let filtroStatoRichieste = 'nuova';
 
   function attachUserActionListeners(container){
     container.querySelectorAll('button[data-action]').forEach(btn => {
@@ -1551,7 +1665,6 @@ function copiaLink() {
     const statusEl = document.getElementById('admin-2fa-status');
     
     if (loggedUser && loggedUser.is_admin === true) {
-      const isFullAdmin = true;
       container.style.display = 'flex';
       usersBtn.style.display = 'inline-block';
       keyboxBtn.style.display = 'inline-block';
@@ -1643,12 +1756,27 @@ function copiaLink() {
         }
         open2FAManagement();
       };
+
+      // === PATCH 3.7 — pulsante Richieste admin ===
+      const richiesteBtn = document.getElementById('admin-richieste-btn');
+      if (richiesteBtn) {
+        richiesteBtn.style.display = 'inline-block';
+        richiesteBtn.onclick = function() {
+          if (!adminMode) {
+            showToast('🔑 Attiva prima la modalità Admin (checkbox)');
+            return;
+          }
+          openRichiestePanel();
+        };
+      }
     } else {
       container.style.display = 'none';
       usersBtn.style.display = 'none';
       keyboxBtn.style.display = 'none';
       twoFABtn.style.display = 'none';
       statusEl.innerHTML = '';
+      const richiesteBtn = document.getElementById('admin-richieste-btn');
+      if (richiesteBtn) richiesteBtn.style.display = 'none';
     }
   }
 
@@ -2095,7 +2223,6 @@ function copiaLink() {
 
   async function openUserManagement() {
     const root = document.getElementById('modal-root');
-    const isFullAdmin = loggedUser && loggedUser.is_admin === true;
     
     root.innerHTML = `
       <div class="overlay" id="overlay">
@@ -2175,14 +2302,12 @@ function copiaLink() {
     document.getElementById('tab-ospiti').addEventListener('click', function() {
       switchUserTab('ospiti');
     });
-        document.getElementById('tab-prenotazioni').addEventListener('click', function() {
+    document.getElementById('tab-prenotazioni').addEventListener('click', function() {
       switchUserTab('prenotazioni');
     });
     document.getElementById('tab-crea').addEventListener('click', function() {
       switchUserTab('crea');
     });
-    
- 
     
     document.getElementById('create-tipo').addEventListener('change', function() {
       toggleCreateFields();
@@ -2412,7 +2537,6 @@ function copiaLink() {
     let codice;
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     if (tipo === 'tesserato') {
-      // Standard a 12 caratteri: 't' + 11 alfanumerici (usato anche come password Auth)
       let suffix = '';
       for (let i = 0; i < 11; i++) {
         suffix += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -2542,7 +2666,6 @@ function copiaLink() {
           });
           
           if (retryRes.ok) {
-            const created = await retryRes.json();
             const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
             showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + newCodice);
             document.getElementById('create-nome').value = '';
@@ -2927,11 +3050,10 @@ function copiaLink() {
         url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,is_direttivo,scadenza,auth_id,totp_enabled,can_book_special'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
+        // === PATCH 3.5 — query ospite senza filtro scadenza (per distinguere "scaduto" da "non trovato") ===
         tipo = 'ospite';
         url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
-          + '&codice=eq.' + encodeURIComponent(codice)
-          + '&attivo=eq.true'
-          + '&or=(scadenza.is.null,scadenza.gte.' + dateKey(new Date()) + ')';
+          + '&codice=eq.' + encodeURIComponent(codice);
       }
       
       console.log('🔍 Cerco utente con codice:', codice);
@@ -2944,12 +3066,32 @@ function copiaLink() {
       console.log('📦 Dati ricevuti:', data);
       
       if (data.length === 0) {
-        errorEl.textContent = '❌ Codice non valido o utente disattivato. Contatta il circolo.';
+        errorEl.textContent = '❌ Codice non valido. Controlla di averlo scritto bene.';
         loginBtn.disabled = false;
         return;
       }
       
       const utente = data[0];
+
+      // === PATCH 3.5 — se ospite scaduto/inattivo, mostra form di richiesta contatto ===
+      if (tipo === 'ospite') {
+        const oggi = dateKey(new Date());
+        const scaduto = utente.scadenza && utente.scadenza < oggi;
+        const inattivo = utente.attivo === false;
+        if (scaduto || inattivo) {
+          errorEl.textContent = '';
+          loginBtn.disabled = false;
+          mostraFormRichiestaContatto({
+            nome: utente.nome,
+            cognome: utente.cognome,
+            sport: utente.is_tennis_member && utente.is_padel_member ? 'both'
+                 : utente.is_tennis_member ? 'tennis'
+                 : utente.is_padel_member ? 'padel' : 'both',
+            codice: utente.codice
+          });
+          return;
+        }
+      }
 
       if (utente.is_admin && utente.totp_enabled) {
         console.log('🔐 Admin richiede 2FA');
@@ -3094,6 +3236,12 @@ function copiaLink() {
   renderCalendar();
 
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
+
+  // === PATCH 3.7 — link homepage "Ho già fatto la prova" ===
+  document.getElementById('link-richiesta-contatto').addEventListener('click', function(e){
+    e.preventDefault();
+    mostraFormRichiestaContatto(null);
+  });
   
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
   document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
@@ -3142,7 +3290,351 @@ function copiaLink() {
     renderSlots();
   });
 
-  // (rimosso: gestione ritorno da Google OAuth, non più necessaria)
+  // ============================================================
+  // PATCH 3.6 — Form richiesta contatto + Pannello Richieste admin
+  // ============================================================
+
+  function mostraFormRichiestaContatto(utente) {
+    const precompilato = !!utente;
+
+    if (!precompilato) {
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `
+        <div class="overlay" id="overlay">
+          <div class="modal" role="dialog" aria-modal="true" style="max-width:520px;">
+            <h2>📩 Richiedi contatto con il direttivo</h2>
+            <p class="modal-subtitle">Compila i dati: un membro del direttivo ti contatterà a breve.</p>
+            <div id="richiesta-form-container"></div>
+          </div>
+        </div>
+      `;
+      document.getElementById('overlay').addEventListener('click', function(e) {
+        if(e.target.id === 'overlay') closeModal();
+      });
+      renderFormRichiesta(document.getElementById('richiesta-form-container'), utente);
+      return;
+    }
+
+    let box = document.getElementById('richiesta-inline-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'richiesta-inline-box';
+      const loginBox = document.getElementById('login-box');
+      if (loginBox && loginBox.parentNode) {
+        loginBox.parentNode.insertBefore(box, loginBox.nextSibling);
+      } else {
+        document.getElementById('auth-section').appendChild(box);
+      }
+    }
+    box.innerHTML = '';
+    renderFormRichiesta(box, utente);
+  }
+
+  function renderFormRichiesta(container, utente) {
+    const precompilato = !!utente;
+    const nome = precompilato ? escapeHtml(utente.nome) : '';
+    const cognome = precompilato ? escapeHtml(utente.cognome) : '';
+    const sport = precompilato ? utente.sport : 'both';
+    const codice = precompilato ? utente.codice : '';
+
+    container.innerHTML = `
+      <div class="richiesta-box">
+        <h3>⏰ La tua prova gratuita è terminata</h3>
+        <p class="rich-sub">Vuoi continuare a giocare? Compila i dati e un membro del direttivo ti contatterà al più presto.</p>
+
+        <div class="name-field">
+          <label for="rich-nome">Nome *</label>
+          <input id="rich-nome" type="text" value="${nome}" ${precompilato ? 'readonly' : ''} />
+        </div>
+        <div class="name-field">
+          <label for="rich-cognome">Cognome *</label>
+          <input id="rich-cognome" type="text" value="${cognome}" ${precompilato ? 'readonly' : ''} />
+        </div>
+        <div class="name-field">
+          <label for="rich-telefono">Numero di telefono *</label>
+          <input id="rich-telefono" type="tel" placeholder="Es. 3331234567" autocomplete="tel" />
+        </div>
+        <div class="name-field">
+          <label for="rich-sport">Sport di interesse</label>
+          <select id="rich-sport">
+            <option value="both"   ${sport === 'both'   ? 'selected' : ''}>Tennis + Padel</option>
+            <option value="tennis" ${sport === 'tennis' ? 'selected' : ''}>Solo Tennis</option>
+            <option value="padel"  ${sport === 'padel'  ? 'selected' : ''}>Solo Padel</option>
+          </select>
+        </div>
+        <div class="name-field">
+          <label for="rich-messaggio">Messaggio (opzionale)</label>
+          <textarea id="rich-messaggio" placeholder="Es. Vorrei provare, informazioni orari, ecc."></textarea>
+        </div>
+
+        <label class="privacy-row">
+          <input type="checkbox" id="rich-privacy" />
+          <span>Acconsento al trattamento dei miei dati personali (nome, cognome, telefono, sport, messaggio) da parte del Tennis Club Nulvi, esclusivamente per essere contattato in merito a questa richiesta. I dati non saranno ceduti a terzi. Per esercitare i tuoi diritti puoi rivolgerti direttamente al circolo.</span>
+        </label>
+
+        <div class="form-error" id="rich-error"></div>
+
+        <button class="btn-invia" id="rich-invia">📩 Invia richiesta al direttivo</button>
+      </div>
+    `;
+
+    document.getElementById('rich-invia').addEventListener('click', function() {
+      inviaRichiestaContatto(codice);
+    });
+  }
+
+  async function inviaRichiestaContatto(codiceOspite) {
+    const errorEl = document.getElementById('rich-error');
+    const btn = document.getElementById('rich-invia');
+    const nome = (document.getElementById('rich-nome').value || '').trim();
+    const cognome = (document.getElementById('rich-cognome').value || '').trim();
+    const telefono = (document.getElementById('rich-telefono').value || '').trim();
+    const sport = document.getElementById('rich-sport').value;
+    const messaggio = (document.getElementById('rich-messaggio').value || '').trim();
+    const privacy = document.getElementById('rich-privacy').checked;
+
+    if (!nome || !cognome || !telefono) {
+      errorEl.textContent = 'Nome, cognome e telefono sono obbligatori.';
+      return;
+    }
+    if (!privacy) {
+      errorEl.textContent = 'Devi accettare il trattamento dei dati per procedere.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Invio...';
+    errorEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/richieste', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          azione: 'crea',
+          nome, cognome, telefono, sport, messaggio,
+          privacy_ok: privacy,
+          codice_ospite_originale: codiceOspite || null
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Invio non riuscito.');
+      }
+
+      const box = document.querySelector('.richiesta-box');
+      if (box) {
+        box.outerHTML = `
+          <div class="richiesta-successo">
+            ✅ Richiesta inviata!<br>
+            Un membro del direttivo ti contatterà a breve.
+          </div>
+        `;
+      } else {
+        closeModal();
+        showToast('✅ Richiesta inviata al direttivo!');
+      }
+
+    } catch(e) {
+      errorEl.textContent = '❌ ' + e.message;
+      btn.disabled = false;
+      btn.textContent = '📩 Invia richiesta al direttivo';
+    }
+  }
+
+  async function openRichiestePanel() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal" role="dialog" aria-modal="true" style="max-width:820px;">
+          <h2>📩 Richieste di contatto</h2>
+          <p class="modal-subtitle">Elenco delle richieste ricevute dagli ospiti. Puoi stampare o esportare in CSV.</p>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
+            <label style="font-size:13px;color:var(--ink-soft);">Filtro stato:</label>
+            <select id="richieste-filtro" style="padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">
+              <option value="nuova">🆕 Solo nuove</option>
+              <option value="lavorata">✅ Solo lavorate</option>
+              <option value="archiviata">🗄️ Solo archiviate</option>
+              <option value="">📋 Tutte</option>
+            </select>
+            <button class="clean-btn" id="richieste-stampa" style="padding:8px 14px;">🖨️ Stampa elenco</button>
+            <button class="clean-btn" id="richieste-csv" style="padding:8px 14px;">📋 Esporta CSV</button>
+          </div>
+
+          <div id="richieste-list-container">
+            <div class="user-list-empty">⏳ Caricamento...</div>
+          </div>
+
+          <div class="modal-actions" style="margin-top:12px;">
+            <button class="btn-cancel" id="richieste-close" style="flex:none;width:100%;">Chiudi</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('richieste-close').addEventListener('click', closeModal);
+    document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id === 'overlay') closeModal(); });
+    document.getElementById('richieste-filtro').addEventListener('change', function() {
+      filtroStatoRichieste = this.value;
+      caricaRichieste();
+    });
+    document.getElementById('richieste-stampa').addEventListener('click', stampaRichieste);
+    document.getElementById('richieste-csv').addEventListener('click', esportaCSVRichieste);
+
+    document.getElementById('richieste-filtro').value = filtroStatoRichieste;
+    await caricaRichieste();
+  }
+
+  async function caricaRichieste() {
+    const container = document.getElementById('richieste-list-container');
+    container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
+
+    if (!loggedUser || !loggedUser.accessToken) {
+      container.innerHTML = '<div class="user-list-empty">❌ Devi essere loggato come admin con sessione sicura.</div>';
+      return;
+    }
+
+    try {
+      const url = '/api/richieste' + (filtroStatoRichieste ? '?stato=' + encodeURIComponent(filtroStatoRichieste) : '');
+      const res = await fetch(url, {
+        headers: { Authorization: 'Bearer ' + loggedUser.accessToken }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Errore caricamento');
+
+      richiesteCache = data.richieste || [];
+
+      if (!richiesteCache.length) {
+        container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta in questo stato.</div>';
+        return;
+      }
+
+      let html = '<table class="user-list-table"><thead><tr>'
+        + '<th>Data</th><th>Nome</th><th>Telefono</th><th>Sport</th><th>Messaggio</th><th>Stato</th><th>Azioni</th>'
+        + '</tr></thead><tbody>';
+
+      richiesteCache.forEach(r => {
+        const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+        const sportLabel = r.sport === 'tennis' ? '🎾' : r.sport === 'padel' ? '🏸' : '🎾🏸';
+        const statoBadge = r.stato === 'nuova' ? '🆕' : r.stato === 'lavorata' ? '✅' : '🗄️';
+        const msg = r.messaggio ? escapeHtml(r.messaggio).slice(0,60) : '—';
+        html += `<tr>
+          <td style="font-size:12px;white-space:nowrap;">${dataFmt}</td>
+          <td>${escapeHtml(r.nome + ' ' + r.cognome)}</td>
+          <td>${escapeHtml(r.telefono)}</td>
+          <td>${sportLabel}</td>
+          <td style="font-size:12px;">${msg}</td>
+          <td>${statoBadge}</td>
+          <td>
+            <div class="user-actions">
+              ${r.stato === 'nuova' ? `<button class="btn-edit" data-az="lavorata" data-id="${escapeHtml(r.id)}">✅</button>` : ''}
+              <button class="btn-edit" data-az="nota" data-id="${escapeHtml(r.id)}">📝</button>
+              ${r.stato !== 'archiviata' ? `<button class="btn-delete" data-az="archiviata" data-id="${escapeHtml(r.id)}">🗄️</button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+
+      container.querySelectorAll('button[data-az]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const az = btn.dataset.az;
+          const id = btn.dataset.id;
+          if (az === 'nota') {
+            const nota = prompt('Nota interna:');
+            if (nota === null) return;
+            azioneRichiesta(id, 'nota', nota);
+          } else {
+            azioneRichiesta(id, az);
+          }
+        });
+      });
+
+    } catch(e) {
+      container.innerHTML = '<div class="user-list-empty">❌ ' + e.message + '</div>';
+    }
+  }
+
+  async function azioneRichiesta(id, azione, nota) {
+    if (!loggedUser || !loggedUser.accessToken) {
+      showToast('❌ Devi essere loggato come admin.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/richieste', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        },
+        body: JSON.stringify({ id, azione, note_direttivo: nota || null })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Errore');
+      showToast('✅ Aggiornata');
+      await caricaRichieste();
+    } catch(e) {
+      showToast('❌ ' + e.message);
+    }
+  }
+
+  function stampaRichieste() {
+    if (!richiesteCache.length) { showToast('Nessuna richiesta da stampare.'); return; }
+
+    const area = document.getElementById('print-are-richieste');
+    const dataOra = new Date().toLocaleString('it-IT');
+    let html = '<h1>Richieste di contatto — Tennis Club Nulvi</h1>';
+    html += '<div class="meta-stampa">Stampato il ' + dataOra + ' — Totale: ' + richiesteCache.length + '</div>';
+
+    richiesteCache.forEach((r, i) => {
+      const data = r.created_at ? new Date(r.created_at).toLocaleDateString('it-IT') : '';
+      const sportLbl = r.sport === 'tennis' ? 'Tennis' : r.sport === 'padel' ? 'Padel' : 'Tennis + Padel';
+      html += `<div class="rich-item">
+        <strong>${i+1}. ${escapeHtml(r.nome + ' ' + r.cognome)} — ${escapeHtml(r.telefono)}</strong>
+        <div class="dett">📅 ${data} · Sport: ${sportLbl}</div>
+        ${r.messaggio ? '<div class="dett">💬 ' + escapeHtml(r.messaggio) + '</div>' : ''}
+        ${r.note_direttivo ? '<div class="dett">📝 Nota: ' + escapeHtml(r.note_direttivo) + '</div>' : ''}
+      </div>`;
+    });
+
+    area.innerHTML = html;
+    window.print();
+    setTimeout(function(){ area.innerHTML = ''; }, 500);
+  }
+
+  function esportaCSVRichieste() {
+    if (!richiesteCache.length) { showToast('Nessuna richiesta da esportare.'); return; }
+
+    const header = ['Data','Nome','Cognome','Telefono','Sport','Messaggio','Stato','Nota','Gestita da','Gestita il'];
+    const rows = richiesteCache.map(r => [
+      r.created_at ? new Date(r.created_at).toLocaleString('it-IT') : '',
+      r.nome, r.cognome, r.telefono,
+      r.sport || '',
+      (r.messaggio || '').replace(/[\r\n]+/g, ' '),
+      r.stato || '',
+      (r.note_direttivo || '').replace(/[\r\n]+/g, ' '),
+      r.gestita_da || '',
+      r.gestita_il ? new Date(r.gestita_il).toLocaleString('it-IT') : ''
+    ]);
+
+    const csv = [header, ...rows].map(row =>
+      row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')
+    ).join('\n');
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'richieste_' + dateKey(new Date()) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ CSV scaricato');
+  }
 
 })();
 </script>
