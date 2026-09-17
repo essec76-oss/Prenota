@@ -10,7 +10,6 @@
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <style>
-  /* Tom Select overrides to match design */
   .ts-wrapper{font-family:inherit;}
   .ts-control{border:1px solid var(--line)!important;border-radius:8px!important;padding:10px 12px!important;font-size:15px!important;min-height:44px;}
   .ts-dropdown{border:1px solid var(--line)!important;border-radius:8px!important;font-size:14px;}
@@ -128,7 +127,6 @@
   .month-label{font-family:'Fraunces',serif;font-weight:600;font-size:19px;text-transform:capitalize;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:8px;}
   .cal-dow{text-align:center;font-size:12px;color:var(--ink-soft);padding-bottom:4px;}
-  
   .cal-day{
     aspect-ratio:1;
     display:flex;
@@ -157,7 +155,6 @@
     transform:scale(1.08);
     box-shadow:0 4px 16px rgba(184,75,30,0.35);
   }
-  
   .cal-day.has-booking .booking-count{
     position:absolute;
     top:-6px;
@@ -190,20 +187,16 @@
     50%{transform:scale(1.1);}
     100%{transform:scale(1);}
   }
-  
   .cal-day.empty{border:none;background:none;cursor:default;}
   .cal-day.past{color:#C7C4B8;background:#F5F5F0;border-color:#E8E5DC;cursor:not-allowed;opacity:0.7;}
   .cal-day:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
-  
   .cal-day.has-torneo{border-color:#8A5A2A;box-shadow:inset 0 0 0 2px #F4E8D0;}
   .cal-day.has-torneo:not(.selected){background:#FBF3E4;}
   .cal-day.has-allenamento{border-color:#6B5FA8;box-shadow:inset 0 0 0 2px #E4DEF4;}
   .cal-day.has-allenamento:not(.selected){background:#F3F0FB;}
   .cal-day.has-torneo.has-allenamento:not(.selected){background:linear-gradient(135deg,#FBF3E4 50%,#F3F0FB 50%);}
-
   .slots-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:26px 0 12px;}
   .slot-list{display:flex;flex-direction:column;gap:10px;}
-  
   .slot{
     display:flex;
     align-items:center;
@@ -323,13 +316,11 @@
   .modal-welcome .booking-code{font-size:36px;margin:16px 0 8px;}
   .modal-welcome .save-warning{background:var(--tennis-soft);color:var(--tennis);border-radius:10px;padding:12px 14px;font-size:14px;font-weight:600;margin:14px 0 18px;line-height:1.4;}
   @media (prefers-reduced-motion:no-preference){.modal-welcome{animation:up .22s ease-out;}}
-
   .login-box{background:var(--surface);border-radius:12px;padding:24px;border:1px solid var(--line);margin-top:20px;}
   .login-box .btn-confirm{width:100%;margin-top:8px;padding:16px;border-radius:10px;font-size:17px;font-weight:700;box-shadow:0 3px 8px rgba(184,75,30,0.35);}
   .login-box .btn-confirm:active{transform:translateY(1px);box-shadow:0 1px 4px rgba(184,75,30,0.35);}
   #login-codice{background:#F1EEE4;border:2px solid var(--accent);font-size:17px;padding:14px 14px;}
   #login-codice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;background:var(--surface);}
-  
   .user-badge{
     background:var(--accent-soft);
     border-radius:8px;
@@ -365,7 +356,6 @@
     background:#8A3A15;
     transform:scale(1.04);
   }
-  
   #admin-toggle-container{
     display:none;
     align-items:center;
@@ -390,7 +380,6 @@
     cursor:pointer;
     accent-color:#B84B1E;
   }
-  
   .guest-expiry{background:#FFF4E0;border:1px solid #E8C989;color:#8a6a1a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:600;}
   .guest-expiry.urgent{background:#F4DFD2;border-color:#D9A583;color:#8a3a15;}
   .badge-tesserato{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;}
@@ -410,7 +399,6 @@
   .clean-btn{margin-top:16px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink-soft);transition:all .15s;}
   .clean-btn:hover{border-color:var(--accent);color:var(--accent);}
   .field-note.warning{background:#F4DFD2;color:#8a3a15;font-weight:600;}
-  
   .slot .book-btn.admin-delete{
     background:#B84B1E;
     color:#fff;
@@ -425,7 +413,6 @@
   }
   .slot .book-btn.admin-delete:hover{background:#8A3A15;}
   .slot.booked.admin-visible{border:2px solid #B84B1E;background:#FDF0EA;}
-
   .mode-selector{display:flex;gap:8px;margin-bottom:16px;}
   .mode-selector button{
     flex:1;
@@ -442,7 +429,6 @@
   }
   .mode-selector button.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
   .mode-selector button:hover:not(.active){border-color:var(--accent);}
-
   .user-list-table{
     width:100%;
     border-collapse:collapse;
@@ -543,7 +529,6 @@
   .user-modal-tabs .tab-icon{
     margin-right:4px;
   }
-
   @media (max-width:480px){
     .slot{
       padding:12px 14px;
@@ -588,11 +573,9 @@
       right:-4px;
     }
   }
-  
   .badge-2fa-enabled{background:#2B6E5A;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .badge-2fa-disabled{background:#B84B1E;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;display:inline-block;margin-left:6px;}
   .admin-2fa-status{font-size:12px;color:var(--ink-soft);margin-left:6px;}
-
   .btn-guest-code{
     display:inline-flex;
     align-items:center;
@@ -613,8 +596,6 @@
   }
   .btn-guest-code:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(184,75,30,0.4);}
   .btn-guest-code:active{transform:translateY(1px);}
-
-  /* ===== Form richiesta contatto direttivo ===== */
   .richiesta-box{
     margin-top:16px;
     background:#FFF4E0;
@@ -680,7 +661,6 @@
   }
   .richiesta-box .btn-invia:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(184,75,30,0.4);}
   .richiesta-box .btn-invia:disabled{opacity:.5;cursor:not-allowed;}
-
   .richiesta-successo{
     margin-top:16px;
     background:#D9E9E1;
@@ -692,8 +672,6 @@
     font-size:15px;
     font-weight:600;
   }
-
-  /* ===== Stampa elenco richieste ===== */
   @media print{
     body *{visibility:hidden !important;}
     #print-are-richieste, #print-are-richieste *{visibility:visible !important;}
@@ -721,12 +699,10 @@
 </head>
 <body>
 <div class="wrap" id="app">
-  
   <div id="booking-section">
     <div class="club-name">Tennis Club Nulvi</div>
     <h1>Prenota il tuo campo</h1>
     <p class="sub">Il calendario è visibile a tutti. Accedi con il tuo codice per prenotare.</p>
-
     <div id="logged-in-extras" style="display:none;">
       <div class="user-badge">
         <span style="flex:1;min-width:120px;">👤 Benvenuto, <strong id="user-name-display"></strong> <span id="user-badge"></span></span>
@@ -746,17 +722,14 @@
       </div>
       <div class="guest-expiry" id="guest-expiry" style="display:none;"></div>
     </div>
-
     <div class="tabs" role="tablist">
       <button class="tab active" id="tab-tennis" role="tab" aria-selected="true">Tennis</button>
       <button class="tab" id="tab-padel" role="tab" aria-selected="false">Padel</button>
     </div>
     <div class="field-note" id="field-note"></div>
-
     <div style="text-align: center; margin: 20px 0;">
       <img id="court-image" src="/campo-tennis.jpg" alt="Schema dimensioni campo da tennis" style="max-width: 100%; width: 500px; border-radius: 8px; transition: opacity 0.35s ease;">
     </div>
-
     <div class="month-nav">
       <button id="prev-month" aria-label="Mese precedente">‹</button>
       <div class="month-label" id="month-label"></div>
@@ -768,7 +741,6 @@
       <div class="slots-title" id="slots-title"></div>
       <div class="slot-list" id="slot-list"></div>
     </div>
-
     <div id="auth-section">
       <div id="login-box" class="login-box">
         <div class="name-field">
@@ -778,14 +750,12 @@
         <div class="form-error" id="login-error"></div>
         <button class="btn-confirm" id="login-btn">🔓 Accedi per prenotare</button>
       </div>
-
       <div class="qr-share-box">
         <p class="qr-share-title">Condividi il link di prenotazione</p>
         <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
         <button class="btn-copy-link" id="login-copy-link-btn" onclick="copiaLink()">🔗 Copia link di prenotazione</button>
         <div id="messaggio-copia" class="qr-copy-msg"></div>
       </div>
-
       <div class="guest-register-box">
         <p>Vuoi provare gratis tennis o padel? Crea il tuo profilo in pochi secondi.</p>
         <div id="guest-slots-counter" class="guest-slots-counter"></div>
@@ -795,9 +765,7 @@
           <a href="#" id="link-richiesta-contatto" style="color:var(--accent);font-weight:600;">Richiedi contatto con il direttivo</a>
         </p>
       </div>
-
     </div>
-
     <div id="logged-in-extras-bottom" style="display:none;">
       <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
       <script>
@@ -855,7 +823,6 @@ function copiaLink() {
   const SUPABASE_TABLE_SETTINGS = 'Impostazioni';
   const CLEANUP_DAYS = 7;
   const PAST_SLOT_MARGIN_MINUTES = 10;
-
   let currentField = 'tennis';
   let loggedUser = null;
   let keyboxCodeTennis = null;
@@ -870,8 +837,6 @@ function copiaLink() {
   let currentUserTab = 'tesserati';
   let currentPrenotazioniTipo = 'tesserato';
   const userDataCache = {};
-
-  // === PATCH 3.4 — stato per richieste direttivo ===
   let richiesteCache = [];
   let filtroStatoRichieste = 'nuova';
 
@@ -902,23 +867,19 @@ function copiaLink() {
     loggedInExtras.style.display = 'none';
     loggedInExtrasBottom.style.display = 'none';
   }
-
   function showLoggedInUI(){
     authSection.style.display = 'none';
     loggedInExtras.style.display = 'block';
     loggedInExtrasBottom.style.display = 'block';
   }
-
   function scrollToAuth(){
     authSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const input = document.getElementById('login-codice');
     if (input) setTimeout(()=> input.focus(), 300);
   }
-
   function pad(n){return n.toString().padStart(2,'0');}
   function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
   function fmtTime(h){const hh=Math.floor(h), mm=Math.round((h-hh)*60); return pad(hh)+':'+pad(mm);}
-
   function escapeHtml(str){
     if (str === null || str === undefined) return '';
     return String(str)
@@ -928,7 +889,6 @@ function copiaLink() {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
-
   async function signInWithSupabaseAuth(email, password){
     const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
@@ -941,7 +901,6 @@ function copiaLink() {
     if(!res.ok) throw new Error('auth_failed');
     return await res.json();
   }
-
   function isSlotPassed(dateStr, slotStartHour) {
     const now = new Date();
     const todayStr = dateKey(now);
@@ -950,21 +909,18 @@ function copiaLink() {
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
     return slotMinutes <= nowMinutes + PAST_SLOT_MARGIN_MINUTES;
   }
-
   function canBookField(field){
     if (!loggedUser) return false;
     if (field === 'tennis') return !!loggedUser.is_tennis_member;
     if (field === 'padel') return !!loggedUser.is_padel_member;
     return false;
   }
-
   function isOwnBooking(booking){
     if (!loggedUser) return false;
     if (loggedUser.tipo === 'tesserato') return booking.tesserato_id === loggedUser.id;
     if (loggedUser.tipo === 'ospite') return booking.ospite_id === loggedUser.id;
     return false;
   }
-
   function renderGuestExpiry(){
     const el = document.getElementById('guest-expiry');
     if (!loggedUser || loggedUser.tipo !== 'ospite' || !loggedUser.scadenza) {
@@ -975,7 +931,6 @@ function copiaLink() {
     const scad = new Date(loggedUser.scadenza + 'T00:00:00');
     const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
     const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long'});
-
     let testo;
     if (giorniResidui <= 0) {
       testo = '⏳ Il tuo accesso come ospite scade oggi.';
@@ -984,26 +939,21 @@ function copiaLink() {
     } else {
       testo = '⏳ Il tuo accesso come ospite scade tra ' + giorniResidui + ' giorni (' + dataFmt + ').';
     }
-
     el.textContent = testo;
     el.classList.toggle('urgent', giorniResidui <= 1);
     el.style.display = 'block';
   }
-
   function renderTesseratoExpiry() {
     const el = document.getElementById('tesserato-expiry');
     if (!el) return;
-    
     if (!loggedUser || loggedUser.tipo !== 'tesserato' || !loggedUser.scadenza) {
       el.style.display = 'none';
       return;
     }
-    
     const oggi = new Date(); oggi.setHours(0,0,0,0);
     const scad = new Date(loggedUser.scadenza + 'T00:00:00');
     const giorniResidui = Math.round((scad - oggi) / (1000*60*60*24));
     const dataFmt = scad.toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
-    
     let testo, colore;
     if (giorniResidui < 0) {
       testo = '⚠️ Tessera scaduta il ' + dataFmt;
@@ -1021,18 +971,15 @@ function copiaLink() {
       testo = '✅ Tessera valida fino al ' + dataFmt;
       colore = '#2B6E5A';
     }
-    
     el.textContent = testo;
     el.style.color = colore;
     el.style.display = 'block';
   }
-
   async function deleteOldBookings() {
     const today = new Date();
     const cutoffDateObj = new Date(today);
     cutoffDateObj.setDate(today.getDate() - CLEANUP_DAYS);
     const cutoffDate = dateKey(cutoffDateObj);
-    
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
         + '?date=lt.' + cutoffDate, {
@@ -1050,19 +997,16 @@ function copiaLink() {
       console.error('❌ Errore nella cancellazione:', e);
     }
   }
-
   function setAccent(field){
     const f = FIELDS[field];
     document.documentElement.style.setProperty('--accent', getComputedStyle(document.documentElement).getPropertyValue(f.color));
     document.documentElement.style.setProperty('--accent-soft', getComputedStyle(document.documentElement).getPropertyValue(f.colorSoft));
   }
-
   function renderFieldNote(){
     const note = currentField === 'tennis'
       ? 'Puoi prenotare slot da 1 ora. Basta anche solo il tuo nome (Allenamento), oppure aggiungi fino a 4 giocatori.'
       : 'Puoi prenotare slot da 1 ora e mezza. Servono esattamente 4 nomi per prenotare.';
     const noteEl = document.getElementById('field-note');
-
     if (loggedUser && !canBookField(currentField)) {
       noteEl.textContent = '⚠️ Non sei abilitato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + ': puoi vedere il calendario ma non prenotare questo campo.';
       noteEl.classList.add('warning');
@@ -1071,17 +1015,14 @@ function copiaLink() {
       noteEl.classList.remove('warning');
     }
   }
-
   function renderDow(){
     document.getElementById('cal-dow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   }
-
   function renderMonthNav(){
     document.getElementById('month-label').textContent = MONTHS[viewMonth.getMonth()] + ' ' + viewMonth.getFullYear();
     document.getElementById('prev-month').disabled = (viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth());
     document.getElementById('next-month').disabled = (viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth());
   }
-
   function renderCalendar(){
     const grid = document.getElementById('cal-grid');
     grid.innerHTML = '';
@@ -1111,7 +1052,6 @@ function copiaLink() {
     renderMonthNav();
     updateBookingDots();
   }
-
   async function loadMonthDates(field, year, month){
     const start = year+'-'+pad(month+1)+'-01';
     const nextMonth = new Date(year, month+1, 1);
@@ -1136,7 +1076,6 @@ function copiaLink() {
       return new Map();
     }
   }
-
   async function updateBookingDots(){
     const year = viewMonth.getFullYear(), month = viewMonth.getMonth();
     const bookingCounts = await loadMonthDates(currentField, year, month);
@@ -1164,7 +1103,6 @@ function copiaLink() {
       cell.classList.toggle('has-allenamento', !!info.allenamento);
     });
   }
-
   async function loadKeyboxCode(){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
@@ -1179,7 +1117,6 @@ function copiaLink() {
       keyboxCodePadel = null;
     }
   }
-
   async function loadBookings(key){
     try{
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
@@ -1211,7 +1148,6 @@ function copiaLink() {
       return {};
     }
   }
-
   function buildSlots(field){
     const f = FIELDS[field];
     const slots = [];
@@ -1221,7 +1157,6 @@ function copiaLink() {
     }
     return slots;
   }
-
   function formatNamesDisplay(names, field, modalita){
     const n = names.map(escapeHtml);
     if (modalita === 'torneo' || modalita === 'allenamento') {
@@ -1233,7 +1168,6 @@ function copiaLink() {
     if(n.length === 4) return n[0] + ', ' + n[1] + ' vs ' + n[2] + ', ' + n[3] + (field === 'tennis' ? '<span class="match-type">Doppio</span>' : '');
     return n.join(', ');
   }
-
   async function renderSlots(){
     const section = document.getElementById('slots-section');
     const title = document.getElementById('slots-title');
@@ -1246,13 +1180,11 @@ function copiaLink() {
     const [bookings] = await Promise.all([loadBookings(selectedDate), loadKeyboxCode()]);
     const slots = buildSlots(currentField);
     list.innerHTML = '';
-    
     slots.forEach(s=>{
       const timeId = fmtTime(s.start);
       const booking = bookings[timeId];
       const row = document.createElement('div');
       const isPastSlot = isSlotPassed(selectedDate, s.start);
-      
       if (isPastSlot) {
         row.className = 'slot past-slot';
         const left = document.createElement('div');
@@ -1261,7 +1193,6 @@ function copiaLink() {
       } else if (booking) {
         const isTesserato = booking.tipo_prenotante === 'tesserato';
         row.className = 'slot booked ' + (isTesserato ? 'slot-tesserato' : 'slot-ospite');
-        
         const left = document.createElement('div');
         const badge = isTesserato 
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
@@ -1273,7 +1204,6 @@ function copiaLink() {
         const ownCodeHtml = (isOwnBooking(booking) && booking.code)
           ? '<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>' + booking.code + '</strong></div>'
           : '';
-        
         left.innerHTML = `
           <div class="time">${s.label}</div>
           <div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div>
@@ -1282,7 +1212,6 @@ function copiaLink() {
           ${ownCodeHtml}
         `;
         row.appendChild(left);
-        
         if (!loggedUser) {
           // Nessuna azione disponibile per chi guarda senza login
         } else if (adminMode && loggedUser.is_admin) {
@@ -1294,7 +1223,6 @@ function copiaLink() {
           adminBtn.title = 'Cancella come admin (senza codice)';
           adminBtn.addEventListener('click', ()=> doAdminCancel(booking.id, s.label));
           row.appendChild(adminBtn);
-          
           const normalBtn = document.createElement('button');
           normalBtn.className = 'book-btn cancel-btn';
           normalBtn.textContent = 'Cancella';
@@ -1327,11 +1255,9 @@ function copiaLink() {
         }
         row.appendChild(btn);
       }
-      
       list.appendChild(row);
     });
   }
-
   async function loadAllPlayersForSelect(){
     try{
       const [tessRes, ospRes] = await Promise.all([
@@ -1352,13 +1278,10 @@ function copiaLink() {
       return { tesserati: [], ospiti: [] };
     }
   }
-
   let selectedModalita = null;
-
   function canUseSpecialModes(){
     return !!(loggedUser && loggedUser.tipo === 'tesserato' && loggedUser.can_book_special);
   }
-
   function openBookingModal(slot, timeId){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1368,20 +1291,17 @@ function copiaLink() {
       showToast('Non sei abilitato per ' + (currentField === 'tennis' ? 'il tennis' : 'il padel') + '.');
       return;
     }
-    
     selectedModalita = null;
     const f = FIELDS[currentField];
     const root = document.getElementById('modal-root');
     const nameCount = f.maxNames;
     const requiredCount = f.minNames;
-    
     const prenotanteName = escapeHtml(loggedUser.nome + ' ' + loggedUser.cognome);
     let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
     for(let i=1;i<nameCount;i++){
       const isRequired = i < requiredCount;
       fieldsHtml += '<div class="name-field" id="name-field-' + i + '">\n        <label for="name-' + i + '">Giocatore ' + (i+1) + (isRequired?' (obbligatorio)':' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
     }
-
     const modeSelectorHtml = canUseSpecialModes()
       ? `<div class="mode-selector" id="mode-selector">
           <button type="button" class="active" data-mode="">Normale</button>
@@ -1389,7 +1309,6 @@ function copiaLink() {
           <button type="button" data-mode="allenamento">🎯 Allenamento</button>
         </div>`
       : '';
-    
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -1409,11 +1328,9 @@ function copiaLink() {
         </div>
       </div>
     `;
-    
     document.getElementById('btn-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> confirmBooking(timeId, requiredCount, nameCount));
-
     const modeSelectorEl = document.getElementById('mode-selector');
     if (modeSelectorEl) {
       modeSelectorEl.querySelectorAll('button').forEach(btn => {
@@ -1425,7 +1342,6 @@ function copiaLink() {
         });
       });
     }
-
     loadAllPlayersForSelect().then(({ tesserati, ospiti }) => {
       const options = [];
       tesserati.forEach(u => {
@@ -1436,7 +1352,6 @@ function copiaLink() {
         const label = u.nome + ' ' + u.cognome;
         options.push({ value: label, text: label, optgroup: 'ospiti' });
       });
-
       for (let i = 1; i < nameCount; i++) {
         const el = document.getElementById('name-' + i);
         if (!el) continue;
@@ -1459,7 +1374,6 @@ function copiaLink() {
       }
     });
   }
-
   function applyModalitaToNameFields(nameCount){
     for (let i = 1; i < nameCount; i++) {
       const fieldEl = document.getElementById('name-field-' + i);
@@ -1467,7 +1381,6 @@ function copiaLink() {
       fieldEl.style.display = (selectedModalita === 'allenamento') ? 'none' : '';
     }
   }
-
   async function confirmBooking(timeId, requiredCount, nameCount){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
@@ -1478,7 +1391,6 @@ function copiaLink() {
       closeModal();
       return;
     }
-    
     const errorEl = document.getElementById('form-error');
     const isAllenamento = selectedModalita === 'allenamento';
     const names = [];
@@ -1490,18 +1402,15 @@ function copiaLink() {
         if(val) names.push(val);
       }
     }
-    
     if(!isAllenamento && names.length < requiredCount){
       errorEl.textContent = currentField==='padel'
         ? 'Servono esattamente 4 nomi per prenotare il padel.'
         : 'Serve almeno il tuo nome per prenotare il tennis.';
       return;
     }
-    
     const confirmBtn = document.getElementById('btn-confirm');
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Salvo…';
-    
     try{
       const bookings = await loadBookings(selectedDate);
       if(bookings[timeId]){
@@ -1510,9 +1419,7 @@ function copiaLink() {
         confirmBtn.textContent = 'Conferma';
         return;
       }
-      
       const bookingCode = String(Math.floor(1000 + Math.random() * 9000));
-      
       const payload = {
         field: currentField,
         date: selectedDate,
@@ -1523,7 +1430,6 @@ function copiaLink() {
         tipo_prenotante: loggedUser.tipo,
         modalita: selectedModalita || null
       };
-      
       if (loggedUser.tipo === 'tesserato') {
         payload.tesserato_id = loggedUser.id;
         payload.ospite_id = null;
@@ -1531,7 +1437,6 @@ function copiaLink() {
         payload.ospite_id = loggedUser.id;
         payload.tesserato_id = null;
       }
-      
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE, {
         method: 'POST',
         headers: {
@@ -1541,25 +1446,21 @@ function copiaLink() {
         },
         body: JSON.stringify(payload)
       });
-      
       if(!insertRes.ok){
         let detail = '';
         try{ const errBody = await insertRes.json(); detail = errBody.message || errBody.hint || JSON.stringify(errBody); }catch(_){ detail = insertRes.status + ' ' + insertRes.statusText; }
         throw new Error(detail);
       }
-      
       closeModal();
       showCodeModal(bookingCode);
       renderSlots();
       updateBookingDots();
-      
     }catch(e){
       errorEl.textContent = 'Errore: ' + (e && e.message ? e.message : 'salvataggio non riuscito');
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Conferma';
     }
   }
-
   function openCancelModal(slot, timeId, booking){
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -1583,7 +1484,6 @@ function copiaLink() {
     document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('btn-confirm').addEventListener('click', ()=> doCancelBooking(timeId, booking));
   }
-
   async function doCancelBooking(timeId, booking){
     const errorEl = document.getElementById('form-error');
     const typedCode = document.getElementById('cancel-code').value.trim();
@@ -1619,12 +1519,10 @@ function copiaLink() {
       confirmBtn.textContent = 'Cancella prenotazione';
     }
   }
-
   async function doAdminCancel(bookingId, slotLabel) {
     if (!confirm('⚠️ Sei sicuro di voler cancellare questa prenotazione come ADMIN?\n\n' + slotLabel)) {
       return;
     }
-    
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
         + '?id=eq.' + encodeURIComponent(bookingId), {
@@ -1634,7 +1532,6 @@ function copiaLink() {
           Prefer: 'return=minimal'
         }
       });
-      
       if (res.ok) {
         showToast('✅ Prenotazione cancellata (admin)');
         renderSlots();
@@ -1646,7 +1543,6 @@ function copiaLink() {
       showToast('❌ Errore di connessione');
     }
   }
-
   // GESTIONE ADMIN TOGGLE CON 2FA
   function setupAdminToggle() {
     const container = document.getElementById('admin-toggle-container');
@@ -1655,7 +1551,6 @@ function copiaLink() {
     const keyboxBtn = document.getElementById('admin-keybox-btn');
     const twoFABtn = document.getElementById('admin-2fa-btn');
     const statusEl = document.getElementById('admin-2fa-status');
-    
     if (loggedUser && loggedUser.is_admin === true) {
       container.style.display = 'flex';
       usersBtn.style.display = 'inline-block';
@@ -1663,13 +1558,11 @@ function copiaLink() {
       twoFABtn.style.display = 'inline-block';
       toggle.checked = false;
       adminMode = false;
-      
       if (loggedUser.totp_enabled) {
         statusEl.innerHTML = '<span class="badge-2fa-enabled">🔐 2FA ON</span>';
       } else {
         statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
       }
-
       toggle.onchange = function() {
         if (this.checked) {
           if (loggedUser.totp_enabled) {
@@ -1696,7 +1589,6 @@ function copiaLink() {
               }
             });
           } else {
-            // Admin senza 2FA: acquisisce comunque il token di sessione sicura
             (async function() {
               try {
                 if (!loggedUser.accessToken) {
@@ -1724,7 +1616,6 @@ function copiaLink() {
           this.checked = false;
         }
       };
-      
       usersBtn.onclick = function() {
         if (!adminMode) {
           showToast('🔑 Attiva prima la modalità Admin (checkbox)');
@@ -1732,7 +1623,6 @@ function copiaLink() {
         }
         openUserManagement();
       };
-
       keyboxBtn.onclick = function() {
         if (!adminMode) {
           showToast('🔑 Attiva prima la modalità Admin (checkbox)');
@@ -1740,7 +1630,6 @@ function copiaLink() {
         }
         openKeyboxManagement();
       };
-
       twoFABtn.onclick = function() {
         if (!adminMode) {
           showToast('🔑 Attiva prima la modalità Admin (checkbox)');
@@ -1748,8 +1637,6 @@ function copiaLink() {
         }
         open2FAManagement();
       };
-
-      // === PATCH 3.7 — pulsante Richieste admin ===
       const richiesteBtn = document.getElementById('admin-richieste-btn');
       if (richiesteBtn) {
         richiesteBtn.style.display = 'inline-block';
@@ -1761,7 +1648,7 @@ function copiaLink() {
           openRichiestePanel();
         };
       }
-       } else if (loggedUser && loggedUser.is_direttivo === true) {
+    } else if (loggedUser && loggedUser.is_direttivo === true) {
       // === STEP 2 — Il direttivo vede solo il pulsante Richieste ===
       container.style.display = 'none';
       usersBtn.style.display = 'none';
@@ -1786,10 +1673,8 @@ function copiaLink() {
       if (richiesteBtn) richiesteBtn.style.display = 'none';
     }
   }
-
   function openAdmin2FAVerification(callback) {
     const root = document.getElementById('modal-root');
-
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
@@ -1807,13 +1692,11 @@ function copiaLink() {
         </div>
       </div>
     `;
-
     document.getElementById('admin-verify-cancel').addEventListener('click', function() {
       closeModal();
       showToast('❌ Verifica 2FA annullata');
       if (typeof callback === 'function') callback(false);
     });
-
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') {
         closeModal();
@@ -1821,41 +1704,34 @@ function copiaLink() {
         if (typeof callback === 'function') callback(false);
       }
     });
-
     document.getElementById('admin-verify-confirm').addEventListener('click', async function() {
       const code = document.getElementById('admin-verify-code').value.trim();
       const errorEl = document.getElementById('admin-verify-error');
       const confirmBtn = document.getElementById('admin-verify-confirm');
-
       if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
         errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
         return;
       }
-
       confirmBtn.disabled = true;
       confirmBtn.textContent = 'Verifico...';
       errorEl.textContent = '';
-
       try {
+        // ⚠️ Endpoint PUBBLICO — niente Bearer token (chiamato prima che l'utente abbia una sessione)
         const res = await fetch('/api/2fa-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: loggedUser.id, tipo: loggedUser.tipo, code: code })
         });
-
         const data = await res.json();
-
         if (!res.ok || !data.authenticated) {
           errorEl.textContent = data.error || '❌ Codice 2FA non valido';
           confirmBtn.disabled = false;
           confirmBtn.textContent = '🔓 Verifica';
           return;
         }
-
         closeModal();
         showToast('✅ Verifica 2FA riuscita!' + (data.warning ? ' ' + data.warning : ''));
         if (typeof callback === 'function') callback(true);
-
       } catch(e) {
         console.error('❌ Errore verifica 2FA:', e);
         errorEl.textContent = 'Errore di connessione al server';
@@ -1864,48 +1740,37 @@ function copiaLink() {
       }
     });
   }
-
   async function open2FAManagement() {
     const root = document.getElementById('modal-root');
-    
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:520px;">
           <h2>🔐 Gestione 2FA</h2>
           <p class="modal-subtitle">Configura l'autenticazione a due fattori per proteggere il tuo account admin.</p>
-          
           <div id="2fa-status-container"></div>
-          
           <div class="modal-actions" style="margin-top:16px;">
             <button class="btn-cancel" id="2fa-close" style="flex:none;width:100%;">Chiudi</button>
           </div>
         </div>
       </div>
     `;
-    
     document.getElementById('2fa-close').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') closeModal();
     });
-    
     await load2FAStatus();
   }
-
   async function load2FAStatus() {
     try {
       const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
         headers: { apikey: SUPABASE_KEY }
       });
-
       if (!response.ok) throw new Error('Errore caricamento status');
-
       const data = await response.json();
       const user = data[0];
       if (!user) throw new Error('Utente non trovato');
-
       const statusContainer = document.getElementById('2fa-status-container');
-
       if (user.totp_enabled) {
         statusContainer.innerHTML = `
           <div style="background:#D9E9E1;border:1px solid #2B6E5A;border-radius:8px;padding:14px;margin-bottom:16px;">
@@ -1935,25 +1800,24 @@ function copiaLink() {
       document.getElementById('2fa-status-container').innerHTML = '<p style="color:var(--tennis);">❌ Errore nel caricamento</p>';
     }
   }
-
   async function start2FASetup() {
     const setupContainer = document.getElementById('2fa-setup-container');
     setupContainer.innerHTML = '<p style="text-align:center;color:var(--ink-soft);">⏳ Preparo setup 2FA...</p>';
-
     try {
+      // ⚠️ STEP 3.2 — Invio Bearer token (endpoint protetto)
       const res = await fetch('/api/2fa-setup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + loggedUser.accessToken
+        },
         body: JSON.stringify({ userId: loggedUser.id, tipo: loggedUser.tipo })
       });
-
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Errore setup 2FA');
       }
-
       const data = await res.json();
-
       setupContainer.innerHTML = `
         <div style="background:var(--accent-soft);border-radius:8px;padding:16px;margin-bottom:16px;text-align:center;">
           <p style="margin:0 0 12px;font-size:14px;color:var(--ink-soft);font-weight:600;">📱 Scansiona con Proton Authenticator</p>
@@ -1977,56 +1841,50 @@ function copiaLink() {
           <button class="btn-confirm" id="2fa-setup-confirm" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">✅ Attiva 2FA</button>
         </div>
       `;
-
       document.getElementById('2fa-setup-cancel').addEventListener('click', function() {
         setupContainer.innerHTML = '';
       });
-
       document.getElementById('2fa-setup-confirm').addEventListener('click', async function() {
         const code = document.getElementById('2fa-confirm-code').value.trim();
         const errorEl = document.getElementById('2fa-setup-error');
         const confirmBtn = document.getElementById('2fa-setup-confirm');
-
         if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
           errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
           return;
         }
-
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Attivo...';
         errorEl.textContent = '';
-
         try {
+          // ⚠️ STEP 3.2 — Invio Bearer token (endpoint protetto)
           const verifyRes = await fetch('/api/2fa-verify', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + loggedUser.accessToken
+            },
             body: JSON.stringify({ userId: loggedUser.id, tipo: loggedUser.tipo, code: code })
           });
-
           if (!verifyRes.ok) {
             const errData = await verifyRes.json();
             throw new Error(errData.error || 'Verifica fallita');
           }
-
           showToast('✅ 2FA attivato con successo!');
           loggedUser.totp_enabled = true;
           await load2FAStatus();
           const statusEl = document.getElementById('admin-2fa-status');
           if (statusEl) statusEl.innerHTML = '<span class="badge-2fa-enabled">🔐 2FA ON</span>';
-
         } catch(e) {
           errorEl.textContent = '❌ ' + e.message;
           confirmBtn.disabled = false;
           confirmBtn.textContent = '✅ Attiva 2FA';
         }
       });
-
     } catch(e) {
       console.error('❌ Errore setup:', e);
       setupContainer.innerHTML = '<p style="color:var(--tennis);">❌ Errore: ' + e.message + '</p>';
     }
   }
-
   async function open2FADisableModal() {
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -2046,46 +1904,41 @@ function copiaLink() {
         </div>
       </div>
     `;
-
     document.getElementById('2fa-disable-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') closeModal();
     });
-
     document.getElementById('2fa-disable-confirm').addEventListener('click', async function() {
       const code = document.getElementById('2fa-disable-code').value.trim();
       const errorEl = document.getElementById('2fa-disable-error');
       const confirmBtn = document.getElementById('2fa-disable-confirm');
-
       if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
         errorEl.textContent = 'Inserisci un codice valido a 6 cifre';
         return;
       }
-
       confirmBtn.disabled = true;
       confirmBtn.textContent = 'Disabilito...';
       errorEl.textContent = '';
-
       try {
+        // ⚠️ STEP 3.2 — Invio Bearer token (endpoint protetto)
         const res = await fetch('/api/2fa-disable', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + loggedUser.accessToken
+          },
           body: JSON.stringify({ userId: loggedUser.id, tipo: loggedUser.tipo, code: code })
         });
-
         if (!res.ok) {
           const errData = await res.json();
           throw new Error(errData.error || 'Disabilitazione fallita');
         }
-
         showToast('✅ 2FA disabilitato');
         loggedUser.totp_enabled = false;
         closeModal();
         await open2FAManagement();
-
         const statusEl = document.getElementById('admin-2fa-status');
         if (statusEl) statusEl.innerHTML = '<span class="badge-2fa-disabled">⚠️ 2FA OFF</span>';
-
       } catch(e) {
         errorEl.textContent = '❌ ' + e.message;
         confirmBtn.disabled = false;
@@ -2109,15 +1962,12 @@ function copiaLink() {
     `;
     document.getElementById('btn-code-ok').addEventListener('click', closeModal);
   }
-
   function showToast(msg){
     const root = document.getElementById('toast-root');
     root.innerHTML = '<div class="toast">' + escapeHtml(msg) + '</div>';
     setTimeout(()=>{ root.innerHTML=''; }, 2600);
   }
-
   function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
-
   function switchField(field){
     currentField = field;
     document.getElementById('tab-tennis').classList.toggle('active', field==='tennis');
@@ -2131,7 +1981,6 @@ function copiaLink() {
     renderSlots();
     updateBookingDots();
   }
-
   function updateCourtImage(field){
     const img = document.getElementById('court-image');
     if (!img) return;
@@ -2144,11 +1993,9 @@ function copiaLink() {
       img.style.opacity = '1';
     }, 300);
   }
-
-    async function openKeyboxManagement() {
+  async function openKeyboxManagement() {
     await loadKeyboxCode();
     const root = document.getElementById('modal-root');
-
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="keybox-title">
@@ -2170,18 +2017,15 @@ function copiaLink() {
         </div>
       </div>
     `;
-
     document.getElementById('keybox-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id === 'overlay') closeModal(); });
     document.getElementById('keybox-save').addEventListener('click', handleUpdateKeybox);
   }
-
   async function handleUpdateKeybox() {
     const errorEl = document.getElementById('keybox-error');
     const nuovoCodiceTennis = document.getElementById('keybox-input-tennis').value.trim();
     const nuovoCodicePadel = document.getElementById('keybox-input-padel').value.trim();
     const saveBtn = document.getElementById('keybox-save');
-
     if (!nuovoCodiceTennis || !nuovoCodicePadel) {
       errorEl.textContent = 'Entrambi i codici sono obbligatori.';
       return;
@@ -2194,11 +2038,9 @@ function copiaLink() {
       errorEl.textContent = '❌ Attiva prima la modalità Admin (checkbox).';
       return;
     }
-
     saveBtn.disabled = true;
     saveBtn.textContent = 'Salvo...';
     errorEl.textContent = '';
-
     try {
       const res = await fetch('/api/update-keybox', {
         method: 'POST',
@@ -2208,46 +2050,37 @@ function copiaLink() {
         },
         body: JSON.stringify({ codice_keybox_tennis: nuovoCodiceTennis, codice_keybox_padel: nuovoCodicePadel })
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         throw new Error(data.error || 'Errore aggiornamento codici');
       }
-
       keyboxCodeTennis = data.codice_keybox_tennis;
       keyboxCodePadel = data.codice_keybox_padel;
       showToast('✅ Codici Key Box aggiornati');
       closeModal();
       renderSlots();
-
     } catch(e) {
       errorEl.textContent = '❌ Errore: ' + e.message;
       saveBtn.disabled = false;
       saveBtn.textContent = '💾 Aggiorna codici';
     }
   }
-
-  async function openUserManagement() {
+    async function openUserManagement() {
     const root = document.getElementById('modal-root');
-    
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:620px;">
           <h2>👥 Gestione Utenti</h2>
           <p class="modal-subtitle">Crea nuovi utenti o gestisci quelli esistenti.</p>
-          
           <div class="user-modal-tabs">
             <button class="active" data-tab="tesserati" id="tab-tesserati">⭐ Tesserati</button>
             <button data-tab="ospiti" id="tab-ospiti">👤 Ospiti</button>
             <button data-tab="prenotazioni" id="tab-prenotazioni">📅 Prenotazioni</button>
             <button data-tab="crea" id="tab-crea">➕ Crea nuovo</button>
           </div>
-          
           <div id="user-list-container">
             <div class="user-list-empty">⏳ Caricamento utenti...</div>
           </div>
-          
           <div id="user-create-form" style="display:none;">
             <div class="name-field">
               <label for="create-tipo">Tipo utente</label>
@@ -2295,14 +2128,12 @@ function copiaLink() {
               <button class="btn-confirm" id="create-save">💾 Crea utente</button>
             </div>
           </div>
-          
           <div class="modal-actions" style="margin-top:12px;">
             <button class="btn-cancel" id="user-close" style="flex:none;width:100%;">Chiudi</button>
           </div>
         </div>
       </div>
     `;
-    
     document.getElementById('tab-tesserati').addEventListener('click', function() {
       switchUserTab('tesserati');
     });
@@ -2315,40 +2146,31 @@ function copiaLink() {
     document.getElementById('tab-crea').addEventListener('click', function() {
       switchUserTab('crea');
     });
-    
     document.getElementById('create-tipo').addEventListener('change', function() {
       toggleCreateFields();
     });
-    
     document.getElementById('create-cancel').addEventListener('click', function() {
       switchUserTab(currentUserTab);
     });
-    
     document.getElementById('create-save').addEventListener('click', function() {
       handleCreateUser();
     });
-    
     document.getElementById('user-close').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') closeModal();
     });
-    
     toggleCreateFields();
     await loadUserList('tesserati');
   }
-    
   function switchUserTab(tab) {
     currentUserTab = tab;
-    
     document.querySelectorAll('.user-modal-tabs button').forEach(btn => {
       btn.classList.remove('active');
     });
     const tabBtn = document.getElementById('tab-' + tab);
     if (tabBtn) tabBtn.classList.add('active');
-    
     const listContainer = document.getElementById('user-list-container');
     const createForm = document.getElementById('user-create-form');
-    
     if (tab === 'crea') {
       listContainer.style.display = 'none';
       createForm.style.display = 'block';
@@ -2362,7 +2184,6 @@ function copiaLink() {
       loadUserList(tab);
     }
   }
-
   function toggleCreateFields() {
     document.getElementById('create-sport-field').style.display = 'block';
     const tipo = document.getElementById('create-tipo').value;
@@ -2371,29 +2192,23 @@ function copiaLink() {
       specialField.style.display = (tipo === 'tesserato') ? 'block' : 'none';
     }
   }
-
   async function loadUserList(tipo) {
     const container = document.getElementById('user-list-container');
     container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
-    
     try {
       let data = [];
-      
       if (tipo === 'tesserati') {
         const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo,can_book_special&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento tesserati');
         data = await res.json();
-        
         if (data.length === 0) {
           container.innerHTML = '<div class="user-list-empty">📭 Nessun tesserato presente.</div>';
           return;
         }
-        
         let html = '<div class="user-list-section-title">⭐ Tesserati</div>';
         html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Torneo/Allen.</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
-        
         data.forEach(u => {
           userDataCache['Tesserati:' + u.id] = u;
           const sports = [];
@@ -2403,7 +2218,6 @@ function copiaLink() {
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
           const specialLabel = u.can_book_special ? '✅' : '—';
-          
           html += `<tr>
             <td><strong>${escapeHtml(u.codice)}</strong></td>
             <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
@@ -2419,26 +2233,21 @@ function copiaLink() {
             </td>
           </tr>`;
         });
-        
         html += '</tbody></table>';
         container.innerHTML = html;
         attachUserActionListeners(container);
-        
       } else {
         const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
           headers: { apikey: SUPABASE_KEY }
         });
         if (!res.ok) throw new Error('Errore caricamento ospiti');
         data = await res.json();
-        
         if (data.length === 0) {
           container.innerHTML = '<div class="user-list-empty">📭 Nessun ospite presente.</div>';
           return;
         }
-        
         let html = '<div class="user-list-section-title">👤 Ospiti</div>';
         html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
-        
         data.forEach(u => {
           userDataCache['Ospiti:' + u.id] = u;
           const sports = [];
@@ -2447,7 +2256,6 @@ function copiaLink() {
           const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
           const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
           const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
-          
           html += `<tr>
             <td><strong>${escapeHtml(u.codice)}</strong></td>
             <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
@@ -2462,7 +2270,6 @@ function copiaLink() {
             </td>
           </tr>`;
         });
-        
         html += '</tbody></table>';
         container.innerHTML = html;
         attachUserActionListeners(container);
@@ -2471,13 +2278,11 @@ function copiaLink() {
       container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
     }
   }
-
-    async function loadPrenotazioniList(tipo) {
+  async function loadPrenotazioniList(tipo) {
     currentPrenotazioniTipo = tipo;
     const container = document.getElementById('user-list-container');
     const selectedTesserati = tipo === 'tesserato' ? 'selected' : '';
     const selectedOspiti = tipo === 'ospite' ? 'selected' : '';
-
     container.innerHTML = `
       <div class="name-field">
         <label for="prenotazioni-tipo-filter">Mostra prenotazioni di</label>
@@ -2488,13 +2293,10 @@ function copiaLink() {
       </div>
       <div id="prenotazioni-list-body"><div class="user-list-empty">⏳ Caricamento...</div></div>
     `;
-
     document.getElementById('prenotazioni-tipo-filter').addEventListener('change', function() {
       loadPrenotazioniList(this.value);
     });
-
     const body = document.getElementById('prenotazioni-list-body');
-
     try {
       const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
         + '?select=id,date,time,field,names,prenotato_da,modalita'
@@ -2504,17 +2306,14 @@ function copiaLink() {
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
       if (!res.ok) throw new Error('Errore caricamento prenotazioni');
       const data = await res.json();
-
       if (data.length === 0) {
         const label = tipo === 'tesserato' ? 'tesserati' : 'ospiti';
         body.innerHTML = '<div class="user-list-empty">📭 Nessuna prenotazione attiva fatta da ' + label + '.</div>';
         return;
       }
-
       const titleLabel = tipo === 'tesserato' ? '⭐ Prenotazioni dei Tesserati' : '👤 Prenotazioni degli Ospiti';
       let html = '<div class="user-list-section-title">' + titleLabel + '</div>';
       html += '<table class="user-list-table"><thead><tr><th>Data</th><th>Ora</th><th>Campo</th><th>Prenotato da</th><th>Giocatori</th></tr></thead><tbody>';
-
       data.forEach(r => {
         const dataFmt = r.date ? r.date.split('-').reverse().join('/') : '';
         const campoLabel = r.field === 'padel' ? '🏸 Padel' : '🎾 Tennis';
@@ -2528,10 +2327,8 @@ function copiaLink() {
           <td>${nomi}${modalitaLabel}</td>
         </tr>`;
       });
-
       html += '</tbody></table>';
       body.innerHTML = html;
-
     } catch(e) {
       body.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
     }
@@ -2540,7 +2337,6 @@ function copiaLink() {
     if (tentativi >= 20) {
       throw new Error('Impossibile generare un codice univoco dopo 20 tentativi');
     }
-
     let codice;
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     if (tipo === 'tesserato') {
@@ -2556,7 +2352,6 @@ function copiaLink() {
       }
       codice = 'o' + suffix;
     }
-
     const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
     const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
       headers: { 
@@ -2564,21 +2359,16 @@ function copiaLink() {
         'Content-Type': 'application/json'
       }
     });
-
     if (!checkRes.ok) {
       throw new Error('Errore verifica codice');
     }
-
     const existing = await checkRes.json();
-
     if (existing && existing.length > 0) {
       console.log('🔄 Codice ' + codice + ' già esistente, ritento...');
       return generateUniqueCodeFrontend(tipo, tentativi + 1);
     }
-
     return codice;
   }
-
   async function handleCreateUser() {
     const errorEl = document.getElementById('create-error');
     const tipo = document.getElementById('create-tipo').value;
@@ -2589,12 +2379,10 @@ function copiaLink() {
     const scadenza = document.getElementById('create-scadenza').value || null;
     const attivo = document.getElementById('create-attivo').value === 'true';
     const saveBtn = document.getElementById('create-save');
-    
     if (!nome || !cognome) {
       errorEl.textContent = 'Nome e Cognome sono obbligatori.';
       return;
     }
-    
     if (!loggedUser || !loggedUser.accessToken) {
       errorEl.textContent = '❌ Solo un admin con login sicuro attivo può creare utenti. Rifai il login.';
       return;
@@ -2603,14 +2391,11 @@ function copiaLink() {
       errorEl.textContent = '❌ Attiva prima la modalità Admin (checkbox).';
       return;
     }
-    
     saveBtn.disabled = true;
     saveBtn.textContent = 'Salvo...';
     errorEl.textContent = '';
-    
     try {
       const codice = await generateUniqueCodeFrontend(tipo);
-      
       let insertPayload;
       if (tipo === 'tesserato') {
         insertPayload = {
@@ -2635,7 +2420,6 @@ function copiaLink() {
           scadenza: scadenza || null
         };
       }
-      
       const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
       const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
         method: 'POST',
@@ -2647,7 +2431,6 @@ function copiaLink() {
         },
         body: JSON.stringify(insertPayload)
       });
-      
       if (!insertRes.ok) {
         let errorDetail = '';
         try {
@@ -2656,11 +2439,9 @@ function copiaLink() {
         } catch(_) {
           errorDetail = insertRes.status + ' ' + insertRes.statusText;
         }
-        
         if (errorDetail.includes('duplicate key') || errorDetail.includes('_codice_key')) {
           const newCodice = await generateUniqueCodeFrontend(tipo);
           insertPayload.codice = newCodice;
-          
           const retryRes = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
             method: 'POST',
             headers: {
@@ -2671,7 +2452,6 @@ function copiaLink() {
             },
             body: JSON.stringify(insertPayload)
           });
-          
           if (retryRes.ok) {
             const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
             showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + newCodice);
@@ -2694,52 +2474,40 @@ function copiaLink() {
             throw new Error('Ritentativo fallito: ' + retryError);
           }
         }
-        
         throw new Error(errorDetail);
       }
-      
       const created = await insertRes.json();
       const tipoLabel = tipo === 'tesserato' ? 'Tesserato' : 'Ospite';
       showToast('✅ ' + tipoLabel + ' ' + nome + ' ' + cognome + ' creato! Codice: ' + codice);
-      
       document.getElementById('create-nome').value = '';
       document.getElementById('create-cognome').value = '';
       document.getElementById('create-scadenza').value = '';
       document.getElementById('create-attivo').value = 'true';
-      
       await loadUserList(currentUserTab);
-      
     } catch(e) {
       console.error('❌ Errore creazione utente:', e);
       errorEl.textContent = '❌ Errore: ' + (e.message || 'creazione fallita');
     }
-    
     saveBtn.disabled = false;
     saveBtn.textContent = '💾 Crea utente';
   }
-
   window.editUser = async function(table, id, nome, scadenzaCorrente, attivoCorrente, isTennis, isPadel, canBookSpecialCorrente){
     const tennis = isTennis === true || isTennis === 'true';
     const padel = isPadel === true || isPadel === 'true';
     const specialCorrente = canBookSpecialCorrente === true || canBookSpecialCorrente === 'true';
-    
     let sportCorrente = 'both';
     if (tennis && padel) sportCorrente = 'both';
     else if (tennis) sportCorrente = 'tennis';
     else if (padel) sportCorrente = 'padel';
-    
     const dataInput = scadenzaCorrente || '';
     const attivoChecked = attivoCorrente === true || attivoCorrente === 'true';
     const isTesserato = table === 'Tesserati';
-    
     const root = document.getElementById('modal-root');
-    
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:480px;">
           <h2>✏️ Modifica ${escapeHtml(nome)}</h2>
           <p class="modal-subtitle">Aggiorna sport, scadenza e stato dell'utente.</p>
-          
           <div class="name-field">
             <label for="edit-sport">Sport</label>
             <select id="edit-sport">
@@ -2766,7 +2534,6 @@ function copiaLink() {
               <option value="false" ${!attivoChecked ? 'selected' : ''}>❌ Inattivo</option>
             </select>
           </div>
-          
           <div class="form-error" id="edit-error"></div>
           <div class="modal-actions">
             <button class="btn-cancel" id="edit-cancel">Annulla</button>
@@ -2775,12 +2542,10 @@ function copiaLink() {
         </div>
       </div>
     `;
-    
     document.getElementById('edit-cancel').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e) {
       if(e.target.id === 'overlay') closeModal();
     });
-    
     document.getElementById('edit-save').addEventListener('click', async function() {
       const errorEl = document.getElementById('edit-error');
       const sport = document.getElementById('edit-sport').value;
@@ -2788,7 +2553,6 @@ function copiaLink() {
       const nuovaScadenza = document.getElementById('edit-scadenza').value || null;
       const nuovoAttivo = document.getElementById('edit-attivo').value === 'true';
       const saveBtn = document.getElementById('edit-save');
-      
       if (!loggedUser || !loggedUser.accessToken) {
         errorEl.textContent = '❌ Solo un admin con login sicuro attivo può modificare gli utenti. Rifai il login.';
         return;
@@ -2797,11 +2561,9 @@ function copiaLink() {
         errorEl.textContent = '❌ Attiva prima la modalità Admin (checkbox).';
         return;
       }
-      
       saveBtn.disabled = true;
       saveBtn.textContent = 'Salvo...';
       errorEl.textContent = '';
-      
       try {
         const tableName = table;
         const payload = {
@@ -2813,7 +2575,6 @@ function copiaLink() {
         if (isTesserato && specialEl) {
           payload.can_book_special = specialEl.checked;
         }
-        
         const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
           method: 'PATCH',
           headers: {
@@ -2824,7 +2585,6 @@ function copiaLink() {
           },
           body: JSON.stringify(payload)
         });
-        
         if (!res.ok) {
           let errorMsg = '';
           try {
@@ -2835,11 +2595,9 @@ function copiaLink() {
           }
           throw new Error(errorMsg);
         }
-        
         closeModal();
         showToast('✅ Modifiche salvate per ' + nome);
         await loadUserList(currentUserTab);
-        
       } catch(e) {
         console.error('❌ Errore:', e);
         errorEl.textContent = '❌ Errore: ' + e.message;
@@ -2848,8 +2606,7 @@ function copiaLink() {
       }
     });
   };
-
-    window.deleteUser = async function(table, id, nome) {
+  window.deleteUser = async function(table, id, nome) {
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Solo un admin con login sicuro attivo può eliminare utenti. Rifai il login.');
       return;
@@ -2858,9 +2615,7 @@ function copiaLink() {
       showToast('❌ Attiva prima la modalità Admin (checkbox).');
       return;
     }
-
     let confirmMsg = '⚠️ Sei sicuro di voler eliminare ' + nome + '?';
-
     try {
       const fkColumn = table === 'Tesserati' ? 'tesserato_id' : 'ospite_id';
       const todayKey = dateKey(new Date());
@@ -2884,12 +2639,9 @@ function copiaLink() {
     } catch(checkErr) {
       console.warn('⚠️ Impossibile verificare prenotazioni future collegate:', checkErr);
     }
-
     if (!confirm(confirmMsg)) return;
-
     try {
       const tableName = table;
-      
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
         headers: {
@@ -2899,7 +2651,6 @@ function copiaLink() {
           Authorization: 'Bearer ' + loggedUser.accessToken
         }
       });
-      
       if (!res.ok) {
         let errorMsg = '';
         try {
@@ -2910,16 +2661,13 @@ function copiaLink() {
         }
         throw new Error(errorMsg);
       }
-      
       showToast('✅ ' + nome + ' eliminato con successo');
       await loadUserList(currentUserTab);
-      
     } catch(e) {
       console.error('❌ Errore eliminazione:', e);
       showToast('❌ Errore: ' + e.message);
     }
   };
-
   function openGuestRegisterModal() {
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -2961,43 +2709,35 @@ function copiaLink() {
     document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id==='overlay') closeModal(); });
     document.getElementById('guest-create-code-btn').addEventListener('click', handleCreateGuestProfile);
   }
-
   async function handleCreateGuestProfile() {
     const errorEl = document.getElementById('guest-reg-error');
     const nome = document.getElementById('guest-nome').value.trim();
     const cognome = document.getElementById('guest-cognome').value.trim();
     const telefono = document.getElementById('guest-telefono').value.trim();
     const sport = document.getElementById('guest-sport').value;
-
     if (!nome || !cognome || !telefono) {
       errorEl.textContent = 'Nome, Cognome e Numero di telefono sono obbligatori.';
       return;
     }
-
     try {
       const res = await fetch('/api/create-guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, cognome, sport, telefono })
       });
-
       const data = await res.json();
-
       if (!res.ok || !data.success) {
         errorEl.textContent = data.error || 'Registrazione non riuscita.';
         return;
       }
-
       closeModal();
       showGuestCodeModal(data.codice, nome, cognome, data.scadenza);
       loadGuestSlotsCounter();
-
     } catch(e) {
       console.error('❌ Errore registrazione ospite:', e);
       errorEl.textContent = 'Errore di connessione. Riprova.';
     }
   }
-
   function showGuestCodeModal(codice, nome, cognome, scadenza) {
     const dataFmt = new Date(scadenza + 'T00:00:00').toLocaleDateString('it-IT', {day:'numeric', month:'long', year:'numeric'});
     const root = document.getElementById('modal-root');
@@ -3026,61 +2766,45 @@ function copiaLink() {
       showToast('Ora puoi accedere con il tuo codice');
     });
   }
-
-
   async function handleLogin() {
     const codice = document.getElementById('login-codice').value.trim().toLowerCase();
     const errorEl = document.getElementById('login-error');
     const loginBtn = document.getElementById('login-btn');
-    
     if (!codice) {
       errorEl.textContent = 'Inserisci il tuo codice ID.';
       return;
     }
-
     const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
     const isOspiteCode = /^o[a-z0-9]{7}$/.test(codice);
     if (!isTesseratoCode && !isOspiteCode) {
       errorEl.textContent = 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXXXX (ospite).';
       return;
     }
-    
     errorEl.textContent = 'Verifica in corso...';
     loginBtn.disabled = true;
-    
     try {
       let url;
       let tipo;
-      
       if (codice.startsWith('t')) {
         tipo = 'tesserato';
         url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,is_direttivo,scadenza,auth_id,totp_enabled,can_book_special'
           + '&codice=eq.' + encodeURIComponent(codice);
       } else {
-        // === PATCH 3.5 — query ospite senza filtro scadenza (per distinguere "scaduto" da "non trovato") ===
         tipo = 'ospite';
         url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
           + '&codice=eq.' + encodeURIComponent(codice);
       }
-      
       console.log('🔍 Cerco utente con codice:', codice);
-      
       const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
-      
       if (!res.ok) throw new Error('Errore di connessione');
-      
       const data = await res.json();
       console.log('📦 Dati ricevuti:', data);
-      
       if (data.length === 0) {
         errorEl.textContent = '❌ Codice non valido. Controlla di averlo scritto bene.';
         loginBtn.disabled = false;
         return;
       }
-      
       const utente = data[0];
-
-      // === PATCH 3.5 — se ospite scaduto/inattivo, mostra form di richiesta contatto ===
       if (tipo === 'ospite') {
         const oggi = dateKey(new Date());
         const scaduto = utente.scadenza && utente.scadenza < oggi;
@@ -3099,12 +2823,9 @@ function copiaLink() {
           return;
         }
       }
-
       if (utente.is_admin && utente.totp_enabled) {
         console.log('🔐 Admin richiede 2FA');
-        
         showLoggedInUI();
-        
         loggedUser = {
           id: utente.id,
           nome: utente.nome,
@@ -3121,7 +2842,6 @@ function copiaLink() {
           authenticated: false,
           accessToken: null
         };
-
         const tipoLabel = loggedUser.tipo === 'tesserato' 
           ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
           : '<span class="badge-ospite">Ospite</span>';
@@ -3131,28 +2851,23 @@ function copiaLink() {
         renderGuestExpiry();
         setupAdminToggle();
         renderTesseratoExpiry();
-        
         setAccent('tennis');
         renderFieldNote();
         renderDow();
         renderCalendar();
         deleteOldBookings();
-
         showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
         errorEl.textContent = '';
         loginBtn.disabled = false;
         return;
       }
-
       await completeLogin(utente, tipo);
-      
     } catch(e) {
       errorEl.textContent = 'Errore di connessione. Riprova.';
       loginBtn.disabled = false;
       console.error('❌ Errore:', e);
     }
   }
-
   async function completeLogin(utente, tipo) {
     let accessToken = null;
     if (utente.auth_id) {
@@ -3164,7 +2879,6 @@ function copiaLink() {
         console.warn('⚠️ Auth Supabase non disponibile, continuo senza token');
       }
     }
-
     loggedUser = {
       id: utente.id,
       nome: utente.nome,
@@ -3181,14 +2895,11 @@ function copiaLink() {
       authenticated: !!accessToken,
       accessToken: accessToken
     };
-    
     console.log('✅ Utente loggato:', loggedUser.nome, loggedUser.cognome);
-    
     document.getElementById('login-error').textContent = '';
     document.getElementById('login-btn').disabled = false;
     try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
     showLoggedInUI();
-    
     const tipoLabel = loggedUser.tipo === 'tesserato' 
       ? '<span class="badge-tesserato">⭐ Tesserato</span>' 
       : '<span class="badge-ospite">Ospite</span>';
@@ -3197,17 +2908,14 @@ function copiaLink() {
     renderGuestExpiry();
     setupAdminToggle();
     renderTesseratoExpiry();
-    
     renderFieldNote();
     updateBookingDots();
     if (selectedDate) { renderSlots(); }
     deleteOldBookings();
-
     if (accessToken) {
       setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + loggedUser.codice); }, 400);
     }
   }
-
   function handleLogout() {
     loggedUser = null;
     adminMode = false;
@@ -3221,50 +2929,39 @@ function copiaLink() {
     selectedDate = null;
     document.getElementById('slots-section').style.display = 'none';
   }
-
   document.getElementById('login-btn').addEventListener('click', handleLogin);
   document.getElementById('login-codice').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') handleLogin();
   });
   document.getElementById('logout-btn').addEventListener('click', handleLogout);
-  
   function prefillLastCodice() {
     let saved = '';
     try { saved = localStorage.getItem('lastLoginCodice') || ''; } catch(e) {}
     document.getElementById('login-codice').value = saved;
   }
   prefillLastCodice();
-
-  // Calendario pubblico: visibile subito, anche senza login
   showAuthUI();
   setAccent(currentField);
   renderFieldNote();
   renderDow();
   renderCalendar();
-
   document.getElementById('guest-register-btn').addEventListener('click', openGuestRegisterModal);
-
-  // === PATCH 3.7 — link homepage "Ho già fatto la prova" ===
   document.getElementById('link-richiesta-contatto').addEventListener('click', function(e){
     e.preventDefault();
     mostraFormRichiestaContatto(null);
   });
-  
   document.getElementById('tab-tennis').addEventListener('click', function(){ switchField('tennis'); });
   document.getElementById('tab-padel').addEventListener('click', function(){ switchField('padel'); });
-  
   document.getElementById('prev-month').addEventListener('click', function(){
     if(viewMonth.getFullYear()===baseMonth.getFullYear() && viewMonth.getMonth()===baseMonth.getMonth()) return;
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1);
     renderCalendar();
   });
-  
   document.getElementById('next-month').addEventListener('click', function(){
     if(viewMonth.getFullYear()===maxMonth.getFullYear() && viewMonth.getMonth()===maxMonth.getMonth()) return;
     viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1);
     renderCalendar();
   });
-
   (function setupCalendarSwipe(){
     const calGrid = document.getElementById('cal-grid');
     let touchStartX = 0, touchStartY = 0;
@@ -3289,21 +2986,14 @@ function copiaLink() {
       }
     }, { passive: true });
   })();
-
   document.getElementById('clean-btn').addEventListener('click', async function() {
     await deleteOldBookings();
     showToast('🧹 Prenotazioni vecchie cancellate!');
     updateBookingDots();
     renderSlots();
   });
-
-  // ============================================================
-  // PATCH 3.6 — Form richiesta contatto + Pannello Richieste admin
-  // ============================================================
-
   function mostraFormRichiestaContatto(utente) {
     const precompilato = !!utente;
-
     if (!precompilato) {
       const root = document.getElementById('modal-root');
       root.innerHTML = `
@@ -3321,7 +3011,6 @@ function copiaLink() {
       renderFormRichiesta(document.getElementById('richiesta-form-container'), utente, 'contatto');
       return;
     }
-
     let box = document.getElementById('richiesta-inline-box');
     if (!box) {
       box = document.createElement('div');
@@ -3336,14 +3025,12 @@ function copiaLink() {
     box.innerHTML = '';
     renderFormRichiesta(box, utente, 'scaduto');
   }
-
   function renderFormRichiesta(container, utente, motivo) {
     const precompilato = !!utente;
     const nome = precompilato ? escapeHtml(utente.nome) : '';
     const cognome = precompilato ? escapeHtml(utente.cognome) : '';
     const sport = precompilato ? utente.sport : 'both';
     const codice = precompilato ? utente.codice : '';
-
     const isScaduto = motivo === 'scaduto';
     const titolo = isScaduto
       ? '⏰ La tua prova gratuita è terminata'
@@ -3351,12 +3038,10 @@ function copiaLink() {
     const sottotitolo = isScaduto
       ? 'Vuoi continuare a giocare? Compila i dati e un membro del direttivo ti contatterà al più presto.'
       : 'Compila i dati: un membro del direttivo ti contatterà al più presto.';
-
     container.innerHTML = `
       <div class="richiesta-box">
         <h3>${titolo}</h3>
         <p class="rich-sub">${sottotitolo}</p>
-
         <div class="name-field">
           <label for="rich-nome">Nome *</label>
           <input id="rich-nome" type="text" value="${nome}" ${precompilato ? 'readonly' : ''} />
@@ -3381,28 +3066,22 @@ function copiaLink() {
           <label for="rich-messaggio">Messaggio (opzionale)</label>
           <textarea id="rich-messaggio" placeholder="Es. Vorrei provare, informazioni orari, ecc."></textarea>
         </div>
-
         <label class="privacy-row">
           <input type="checkbox" id="rich-privacy" />
           <span>Acconsento al trattamento dei miei dati personali (nome, cognome, telefono, sport, messaggio) da parte del Tennis Club Nulvi, esclusivamente per essere contattato in merito a questa richiesta. I dati non saranno ceduti a terzi. Per esercitare i tuoi diritti puoi rivolgerti direttamente al circolo.</span>
         </label>
-
         <div class="form-error" id="rich-error"></div>
-
         <div style="display:flex;gap:10px;margin-top:14px;">
           <button class="btn-cancel" id="rich-annulla" style="flex:1;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink-soft);">Annulla</button>
           <button class="btn-invia" id="rich-invia" style="flex:2;">📩 Invia richiesta al direttivo</button>
         </div>
       </div>
     `;
-
     document.getElementById('rich-invia').addEventListener('click', function() {
       inviaRichiestaContatto(codice);
     });
-
     document.getElementById('rich-annulla').addEventListener('click', function() {
       if (precompilato) {
-        // Form inline (dopo login ospite scaduto): nascondo il box e ripristino il login
         const box = document.getElementById('richiesta-inline-box');
         if (box) box.innerHTML = '';
         const loginError = document.getElementById('login-error');
@@ -3410,12 +3089,10 @@ function copiaLink() {
         const loginCodice = document.getElementById('login-codice');
         if (loginCodice) loginCodice.value = '';
       } else {
-        // Form modale (dal link homepage): chiudo il modale
         closeModal();
       }
     });
   }
-
   async function inviaRichiestaContatto(codiceOspite) {
     const errorEl = document.getElementById('rich-error');
     const btn = document.getElementById('rich-invia');
@@ -3425,7 +3102,6 @@ function copiaLink() {
     const sport = document.getElementById('rich-sport').value;
     const messaggio = (document.getElementById('rich-messaggio').value || '').trim();
     const privacy = document.getElementById('rich-privacy').checked;
-
     if (!nome || !cognome || !telefono) {
       errorEl.textContent = 'Nome, cognome e telefono sono obbligatori.';
       return;
@@ -3434,11 +3110,9 @@ function copiaLink() {
       errorEl.textContent = 'Devi accettare il trattamento dei dati per procedere.';
       return;
     }
-
     btn.disabled = true;
     btn.textContent = 'Invio...';
     errorEl.textContent = '';
-
     try {
       const res = await fetch('/api/richieste', {
         method: 'POST',
@@ -3451,11 +3125,9 @@ function copiaLink() {
         })
       });
       const data = await res.json();
-
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Invio non riuscito.');
       }
-
       const box = document.querySelector('.richiesta-box');
       if (box) {
         box.outerHTML = `
@@ -3468,14 +3140,12 @@ function copiaLink() {
         closeModal();
         showToast('✅ Richiesta inviata al direttivo!');
       }
-
     } catch(e) {
       errorEl.textContent = '❌ ' + e.message;
       btn.disabled = false;
       btn.textContent = '📩 Invia richiesta al direttivo';
     }
   }
-
   async function openRichiestePanel() {
     const root = document.getElementById('modal-root');
     root.innerHTML = `
@@ -3483,7 +3153,6 @@ function copiaLink() {
         <div class="modal" role="dialog" aria-modal="true" style="max-width:820px;">
           <h2>📩 Richieste di contatto</h2>
           <p class="modal-subtitle">Elenco delle richieste ricevute dagli ospiti. Puoi stampare o esportare in CSV.</p>
-
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
             <label style="font-size:13px;color:var(--ink-soft);">Filtro stato:</label>
             <select id="richieste-filtro" style="padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">
@@ -3495,18 +3164,15 @@ function copiaLink() {
             <button class="clean-btn" id="richieste-stampa" style="padding:8px 14px;">🖨️ Stampa elenco</button>
             <button class="clean-btn" id="richieste-csv" style="padding:8px 14px;">📋 Esporta CSV</button>
           </div>
-
           <div id="richieste-list-container">
             <div class="user-list-empty">⏳ Caricamento...</div>
           </div>
-
           <div class="modal-actions" style="margin-top:12px;">
             <button class="btn-cancel" id="richieste-close" style="flex:none;width:100%;">Chiudi</button>
           </div>
         </div>
       </div>
     `;
-
     document.getElementById('richieste-close').addEventListener('click', closeModal);
     document.getElementById('overlay').addEventListener('click', function(e){ if(e.target.id === 'overlay') closeModal(); });
     document.getElementById('richieste-filtro').addEventListener('change', function() {
@@ -3515,20 +3181,16 @@ function copiaLink() {
     });
     document.getElementById('richieste-stampa').addEventListener('click', stampaRichieste);
     document.getElementById('richieste-csv').addEventListener('click', esportaCSVRichieste);
-
     document.getElementById('richieste-filtro').value = filtroStatoRichieste;
     await caricaRichieste();
   }
-
   async function caricaRichieste() {
     const container = document.getElementById('richieste-list-container');
     container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
-
     if (!loggedUser || !loggedUser.accessToken) {
       container.innerHTML = '<div class="user-list-empty">❌ Devi essere loggato come admin con sessione sicura.</div>';
       return;
     }
-
     try {
       const url = '/api/richieste' + (filtroStatoRichieste ? '?stato=' + encodeURIComponent(filtroStatoRichieste) : '');
       const res = await fetch(url, {
@@ -3536,18 +3198,14 @@ function copiaLink() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Errore caricamento');
-
       richiesteCache = data.richieste || [];
-
       if (!richiesteCache.length) {
         container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta in questo stato.</div>';
         return;
       }
-
       let html = '<table class="user-list-table"><thead><tr>'
         + '<th>Data</th><th>Nome</th><th>Telefono</th><th>Sport</th><th>Messaggio</th><th>Stato</th><th>Azioni</th>'
         + '</tr></thead><tbody>';
-
       richiesteCache.forEach(r => {
         const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
         const sportLabel = r.sport === 'tennis' ? '🎾' : r.sport === 'padel' ? '🏸' : '🎾🏸';
@@ -3571,7 +3229,6 @@ function copiaLink() {
       });
       html += '</tbody></table>';
       container.innerHTML = html;
-
       container.querySelectorAll('button[data-az]').forEach(btn => {
         btn.addEventListener('click', function() {
           const az = btn.dataset.az;
@@ -3585,12 +3242,10 @@ function copiaLink() {
           }
         });
       });
-
     } catch(e) {
       container.innerHTML = '<div class="user-list-empty">❌ ' + e.message + '</div>';
     }
   }
-
   async function azioneRichiesta(id, azione, nota) {
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Devi essere loggato come admin.');
@@ -3613,15 +3268,12 @@ function copiaLink() {
       showToast('❌ ' + e.message);
     }
   }
-
   function stampaRichieste() {
     if (!richiesteCache.length) { showToast('Nessuna richiesta da stampare.'); return; }
-
     const area = document.getElementById('print-are-richieste');
     const dataOra = new Date().toLocaleString('it-IT');
     let html = '<h1>Richieste di contatto — Tennis Club Nulvi</h1>';
     html += '<div class="meta-stampa">Stampato il ' + dataOra + ' — Totale: ' + richiesteCache.length + '</div>';
-
     richiesteCache.forEach((r, i) => {
       const data = r.created_at ? new Date(r.created_at).toLocaleDateString('it-IT') : '';
       const sportLbl = r.sport === 'tennis' ? 'Tennis' : r.sport === 'padel' ? 'Padel' : 'Tennis + Padel';
@@ -3632,15 +3284,12 @@ function copiaLink() {
         ${r.note_direttivo ? '<div class="dett">📝 Nota: ' + escapeHtml(r.note_direttivo) + '</div>' : ''}
       </div>`;
     });
-
     area.innerHTML = html;
     window.print();
     setTimeout(function(){ area.innerHTML = ''; }, 500);
   }
-
   function esportaCSVRichieste() {
     if (!richiesteCache.length) { showToast('Nessuna richiesta da esportare.'); return; }
-
     const header = ['Data','Nome','Cognome','Telefono','Sport','Messaggio','Stato','Nota','Gestita da','Gestita il'];
     const rows = richiesteCache.map(r => [
       r.created_at ? new Date(r.created_at).toLocaleString('it-IT') : '',
@@ -3652,11 +3301,9 @@ function copiaLink() {
       r.gestita_da || '',
       r.gestita_il ? new Date(r.gestita_il).toLocaleString('it-IT') : ''
     ]);
-
     const csv = [header, ...rows].map(row =>
       row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')
     ).join('\n');
-
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -3668,16 +3315,7 @@ function copiaLink() {
     URL.revokeObjectURL(url);
     showToast('✅ CSV scaricato');
   }
-
 })();
 </script>
 </body>
 </html>
-    </div>
-  </div>
-
-</div>
-
-<div id="modal-root"></div>
-<div id="toast-root"></div>
-<div id="print-are-richieste"></div>
