@@ -116,22 +116,6 @@ module.exports = async function handler(req, res) {
     if (dupRes.ok) {
       const duplicati = await dupRes.json();
       if (duplicati && duplicati.length > 0) {
-        await fetch(`${SUPABASE_URL}/rest/v1/richieste_bloccate`, {
-          method: 'POST',
-          headers: {
-            apikey: SERVICE_ROLE_KEY,
-            Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            nome: nomeClean,
-            cognome: cognomeClean,
-            telefono: telefonoClean,
-            sport,
-            ospite_esistente_id: duplicati[0].id
-          })
-        }).catch(() => {});
-
         return res.status(409).json({
           error: 'Risulti già registrato con questo numero di telefono. Contatta una persona del direttivo per assistenza.',
           duplicato: true
