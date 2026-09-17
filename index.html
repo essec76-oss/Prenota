@@ -1761,7 +1761,22 @@ function copiaLink() {
           openRichiestePanel();
         };
       }
+       } else if (loggedUser && loggedUser.is_direttivo === true) {
+      // === STEP 2 — Il direttivo vede solo il pulsante Richieste ===
+      container.style.display = 'none';
+      usersBtn.style.display = 'none';
+      keyboxBtn.style.display = 'none';
+      twoFABtn.style.display = 'none';
+      statusEl.innerHTML = '';
+      const richiesteBtn = document.getElementById('admin-richieste-btn');
+      if (richiesteBtn) {
+        richiesteBtn.style.display = 'inline-block';
+        richiesteBtn.onclick = function() {
+          openRichiestePanel();
+        };
+      }
     } else {
+      // === Utente normale: nasconde tutto ===
       container.style.display = 'none';
       usersBtn.style.display = 'none';
       keyboxBtn.style.display = 'none';
