@@ -800,15 +800,7 @@
 
     <div id="logged-in-extras-bottom" style="display:none;">
       <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
-    </div>
-  </div>
-
-</div>
-
-<div id="modal-root"></div>
-<div id="toast-root"></div>
-<div id="print-are-richieste"></div>
-<script>
+      <script>
 document.addEventListener('DOMContentLoaded', function(){
   var qrImg = document.getElementById('login-qr-code');
   if (qrImg) {
@@ -3311,7 +3303,7 @@ function copiaLink() {
       document.getElementById('overlay').addEventListener('click', function(e) {
         if(e.target.id === 'overlay') closeModal();
       });
-      renderFormRichiesta(document.getElementById('richiesta-form-container'), utente);
+      renderFormRichiesta(document.getElementById('richiesta-form-container'), utente, 'contatto');
       return;
     }
 
@@ -3327,20 +3319,28 @@ function copiaLink() {
       }
     }
     box.innerHTML = '';
-    renderFormRichiesta(box, utente);
+    renderFormRichiesta(box, utente, 'scaduto');
   }
 
-  function renderFormRichiesta(container, utente) {
+  function renderFormRichiesta(container, utente, motivo) {
     const precompilato = !!utente;
     const nome = precompilato ? escapeHtml(utente.nome) : '';
     const cognome = precompilato ? escapeHtml(utente.cognome) : '';
     const sport = precompilato ? utente.sport : 'both';
     const codice = precompilato ? utente.codice : '';
 
+    const isScaduto = motivo === 'scaduto';
+    const titolo = isScaduto
+      ? '⏰ La tua prova gratuita è terminata'
+      : '📩 Richiedi contatto con il direttivo';
+    const sottotitolo = isScaduto
+      ? 'Vuoi continuare a giocare? Compila i dati e un membro del direttivo ti contatterà al più presto.'
+      : 'Compila i dati: un membro del direttivo ti contatterà al più presto.';
+
     container.innerHTML = `
       <div class="richiesta-box">
-        <h3>⏰ La tua prova gratuita è terminata</h3>
-        <p class="rich-sub">Vuoi continuare a giocare? Compila i dati e un membro del direttivo ti contatterà al più presto.</p>
+        <h3>${titolo}</h3>
+        <p class="rich-sub">${sottotitolo}</p>
 
         <div class="name-field">
           <label for="rich-nome">Nome *</label>
@@ -3374,12 +3374,30 @@ function copiaLink() {
 
         <div class="form-error" id="rich-error"></div>
 
-        <button class="btn-invia" id="rich-invia">📩 Invia richiesta al direttivo</button>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="btn-cancel" id="rich-annulla" style="flex:1;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink-soft);">Annulla</button>
+          <button class="btn-invia" id="rich-invia" style="flex:2;">📩 Invia richiesta al direttivo</button>
+        </div>
       </div>
     `;
 
     document.getElementById('rich-invia').addEventListener('click', function() {
       inviaRichiestaContatto(codice);
+    });
+
+    document.getElementById('rich-annulla').addEventListener('click', function() {
+      if (precompilato) {
+        // Form inline (dopo login ospite scaduto): nascondo il box e ripristino il login
+        const box = document.getElementById('richiesta-inline-box');
+        if (box) box.innerHTML = '';
+        const loginError = document.getElementById('login-error');
+        if (loginError) loginError.textContent = '';
+        const loginCodice = document.getElementById('login-codice');
+        if (loginCodice) loginCodice.value = '';
+      } else {
+        // Form modale (dal link homepage): chiudo il modale
+        closeModal();
+      }
     });
   }
 
@@ -3640,3 +3658,11 @@ function copiaLink() {
 </script>
 </body>
 </html>
+    </div>
+  </div>
+
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+<div id="print-are-richieste"></div>
