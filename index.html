@@ -1275,7 +1275,7 @@ async function loadBookings(key){
       return;
     }
     try {
-      const res = await fetch(SUPABASE_URL + '/functions/v1/get-own-code', {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/hyper-function', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
