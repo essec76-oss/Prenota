@@ -1381,7 +1381,7 @@ function copiaLink() {
       fieldEl.style.display = (selectedModalita === 'allenamento') ? 'none' : '';
     }
   }
-  async function confirmBooking(timeId, requiredCount, nameCount){
+    async function confirmBooking(timeId, requiredCount, nameCount){
     if (!loggedUser) {
       showToast('Devi effettuare il login per prenotare.');
       return;
@@ -1412,45 +1412,36 @@ function copiaLink() {
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Salvo…';
     try{
-      const bookings = await loadBookings(selectedDate);
-      if(bookings[timeId]){
-        errorEl.textContent = 'Questo slot è appena stato prenotato da qualcun altro.';
+      // Chiamata alla Edge Function create-booking
+      const res = await fetch(SUPABASE_URL + '/functions/v1/create-booking', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          codice: loggedUser.codice,
+          field: currentField,
+          date: selectedDate,
+          time: timeId,
+          names: names,
+          modalita: selectedModalita || null
+        })
+      });
+
+      let data;
+      try { data = await res.json(); } catch(_) { data = {}; }
+
+      if (!res.ok || !data.success) {
+        errorEl.textContent = data.error || ('Errore ' + res.status);
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Conferma';
         return;
       }
-      const bookingCode = String(Math.floor(1000 + Math.random() * 9000));
-      const payload = {
-        field: currentField,
-        date: selectedDate,
-        time: timeId,
-        names: names.join(', '),
-        code: bookingCode,
-        prenotato_da: loggedUser.nome + ' ' + loggedUser.cognome,
-        tipo_prenotante: loggedUser.tipo,
-        modalita: selectedModalita || null
-      };
-      if (loggedUser.tipo === 'tesserato') {
-        payload.tesserato_id = loggedUser.id;
-        payload.ospite_id = null;
-      } else {
-        payload.ospite_id = loggedUser.id;
-        payload.tesserato_id = null;
-      }
-      const insertRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE, {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
-        },
-        body: JSON.stringify(payload)
-      });
-      if(!insertRes.ok){
-        let detail = '';
-        try{ const errBody = await insertRes.json(); detail = errBody.message || errBody.hint || JSON.stringify(errBody); }catch(_){ detail = insertRes.status + ' ' + insertRes.statusText; }
-        throw new Error(detail);
-      }
+
+      // Successo: la Edge Function ha generato il codice di cancellazione
+      const bookingCode = data.code;
       closeModal();
       showCodeModal(bookingCode);
       renderSlots();
@@ -1460,8 +1451,7 @@ function copiaLink() {
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Conferma';
     }
-  }
-  function openCancelModal(slot, timeId, booking){
+  }  function openCancelModal(slot, timeId, booking){
     const root = document.getElementById('modal-root');
     root.innerHTML = `
       <div class="overlay" id="overlay">
