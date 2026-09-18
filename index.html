@@ -1117,19 +1117,19 @@ function copiaLink() {
       keyboxCodePadel = null;
     }
   }
-  async function loadBookings(key){
-    try{
-      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,code,modalita'
-        + '&field=eq.' + encodeURIComponent(currentField)
-        + '&date=eq.' + encodeURIComponent(key);
-      const res = await fetch(url, {
+async function loadBookings(key){
+  try{
+    const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+      + '?select=id,time,names,prenotato_da,tipo_prenotante,tesserato_id,ospite_id,modalita'
+      + '&field=eq.' + encodeURIComponent(currentField)
+      + '&date=eq.' + encodeURIComponent(key);
+  const res = await fetch(url, {
         headers: { apikey: SUPABASE_KEY }
       });
       if(!res.ok) throw new Error('fetch failed');
       const rows = await res.json();
       const data = {};
-      rows.forEach(r=>{
+        rows.forEach(r=>{
         data[r.time] = { 
           id: r.id, 
           names: (r.names||'').split(',').map(s=>s.trim()).filter(Boolean),
@@ -1137,11 +1137,10 @@ function copiaLink() {
           tipo_prenotante: r.tipo_prenotante || 'ospite',
           tesserato_id: r.tesserato_id,
           ospite_id: r.ospite_id,
-          code: r.code || '',
           modalita: r.modalita || null
         };
       });
-      bookingsCache[key] = data;
+    bookingsCache[key] = data;
       return data;
     }catch(e){
       bookingsCache[key] = {};
@@ -1201,15 +1200,12 @@ function copiaLink() {
         const keyboxHtml = (!loggedUser || booking.modalita === 'allenamento') ? '' : (keyboxCode
           ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
           : '');
-        const ownCodeHtml = (isOwnBooking(booking) && booking.code)
-          ? '<div class="prenotato-da">🔐 Il tuo codice di cancellazione: <strong>' + booking.code + '</strong></div>'
-          : '';
+        const ownCodeHtml = '';  // il codice non è più nel payload: lo carichiamo on-demand
         left.innerHTML = `
           <div class="time">${s.label}</div>
           <div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div>
           <div class="prenotato-da">👤 Prenotato da: <strong>${escapeHtml(booking.prenotato_da)}</strong> ${badge}</div>
           ${keyboxHtml}
-          ${ownCodeHtml}
         `;
         row.appendChild(left);
         if (!loggedUser) {
@@ -1229,6 +1225,17 @@ function copiaLink() {
           normalBtn.addEventListener('click', ()=> openCancelModal(s, timeId, booking));
           row.appendChild(normalBtn);
         } else {
+          // 🔐 Se è la MIA prenotazione, mostro il pulsante per recuperare il codice
+          if (isOwnBooking(booking)) {
+            const codeBtn = document.createElement('button');
+            codeBtn.className = 'book-btn';
+            codeBtn.style.background = 'var(--padel)';
+            codeBtn.style.marginRight = '6px';
+            codeBtn.textContent = '🔐 Mostra codice';
+            codeBtn.title = 'Mostra il tuo codice di cancellazione';
+            codeBtn.addEventListener('click', ()=> fetchAndShowOwnCode(booking.id));
+            row.appendChild(codeBtn);
+          }
           const btn = document.createElement('button');
           btn.className = 'book-btn cancel-btn';
           btn.textContent = 'Cancella';
@@ -1258,6 +1265,36 @@ function copiaLink() {
       list.appendChild(row);
     });
   }
+    async function fetchAndShowOwnCode(bookingId) {
+    if (!loggedUser) {
+      showToast('❌ Devi essere loggato per vedere il codice.');
+      return;
+    }
+    if (!loggedUser.accessToken) {
+      showToast('❌ Sessione non valida. Rifai il login.');
+      return;
+    }
+    try {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/get-own-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + loggedUser.accessToken
+        },
+        body: JSON.stringify({ bookingId: bookingId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showToast('❌ ' + (data.error || 'Impossibile leggere il codice'));
+        return;
+      }
+      showCodeModal(data.code);
+    } catch(e) {
+      console.error('Errore recupero codice:', e);
+      showToast('❌ Errore di connessione');
+    }
+  }
+
   async function loadAllPlayersForSelect(){
     try{
       const [tessRes, ospRes] = await Promise.all([
