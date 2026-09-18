@@ -1485,20 +1485,35 @@ function copiaLink() {
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Cancello…';
     try{
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
-        + '?id=eq.' + encodeURIComponent(booking.id)
-        + '&code=eq.' + encodeURIComponent(typedCode), {
-        method: 'DELETE',
-        headers: { apikey: SUPABASE_KEY, Prefer: 'return=representation' }
+      const res = await fetch(SUPABASE_URL + '/functions/v1/delete-booking', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          code: typedCode
+        })
       });
-      if(!res.ok) throw new Error('delete failed');
-      const deleted = await res.json();
-      if(!deleted || deleted.length === 0){
-        errorEl.textContent = 'Codice errato. Riprova.';
+
+      let data;
+      try { data = await res.json(); } catch(_) { data = {}; }
+
+      if (!res.ok || !data.success) {
+        if (res.status === 403) {
+          errorEl.textContent = 'Codice errato. Riprova.';
+        } else if (res.status === 404) {
+          errorEl.textContent = 'Prenotazione non trovata. Forse è già stata cancellata.';
+        } else {
+          errorEl.textContent = data.error || 'Errore nella cancellazione. Riprova.';
+        }
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Cancella prenotazione';
         return;
       }
+
       closeModal();
       showToast('Prenotazione cancellata');
       updateBookingDots();
