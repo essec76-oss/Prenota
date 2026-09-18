@@ -1252,7 +1252,7 @@ async function loadBookings(key){
         const allowed = canBookField(currentField);
         if (allowed) {
           btn.textContent = 'Prenota';
-          btn.addEventListener('click', ()=> openBookingModal(s, timeId));
+          btn.addEventListener('click', ()=> openBookingModal(s, timeId)); 
         } else if (!loggedUser) {
           btn.textContent = 'Accedi per prenotare';
           btn.addEventListener('click', ()=> scrollToAuth());
