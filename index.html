@@ -2912,14 +2912,12 @@ async function loadBookings(key){
   }
   async function completeLogin(utente, tipo) {
     let accessToken = null;
-    if (utente.auth_id) {
-      try {
-        const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
-        accessToken = authData.access_token;
-        console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
-      } catch(authErr) {
-        console.warn('⚠️ Auth Supabase non disponibile, continuo senza token');
-      }
+    try {
+      const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
+      accessToken = authData.access_token;
+      console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
+    } catch(authErr) {
+      console.warn('⚠️ Auth Supabase non disponibile, continuo senza token', authErr);
     }
     loggedUser = {
       id: utente.id,
