@@ -1277,7 +1277,7 @@ async function loadBookings(key){
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY
+          'Authorization': 'Bearer ' + loggedUser.accessToken
         },
         body: JSON.stringify({ 
           bookingId: bookingId,
