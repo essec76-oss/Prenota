@@ -1,106 +1,95 @@
 // ============================================================
-// API Route Vercel — Verifica codice di login (server-side)
+// API Route Vercel — Login 2FA (verifica codice durante login admin)
 // ============================================================
-// Sostituisce la query diretta a Supabase fatta dal browser con la
-// chiave pubblica. Qui la verifica avviene lato server con la
-// SERVICE_ROLE_KEY (mai esposta al client), e la risposta NON
-// contiene mai il campo v"codice" né dati non necessari al frontend.
+// Endpoint PUBBLICO (necessario durante il login, prima che
+// l'utente abbia un Bearer token).
+// Sicurezza: serve il codice TOTP corretto (o un backup code)
+// per superare la verifica.
+// POST body: { userId, tipo, code }
+// Risposta: { success, authenticated?, requires2fa?, warning? }
 // ============================================================
 
-const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const { createClient } = require('@supabase/supabase-js');
+const { authenticator } = require('otplib');
 
-module.exports = async function handler(req, res) {
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+authenticator.options = {
+  window: 1,
+  step: 30,
+};
+
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-  if (!SERVICE_ROLE_KEY) {
-    return res.status(500).json({ error: 'Configurazione server incompleta (manca SUPABASE_SERVICE_ROLE_KEY)' });
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    return res.status(500).json({ error: 'Configurazione server incompleta.' });
   }
 
   try {
-    const { codice } = req.body || {};
-    if (!codice || typeof codice !== 'string') {
-      return res.status(400).json({ error: 'Codice mancante.' });
-    }
-    const codiceClean = codice.trim().toLowerCase();
+    const { userId, tipo, code } = req.body || {};
 
-    const isTesserato = /^t[a-z0-9\-]{4,20}$/.test(codiceClean);
-    const isOspite = /^o[a-z0-9]{7}$/.test(codiceClean);
-    if (!isTesserato && !isOspite) {
-      return res.status(400).json({ error: 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXXXX (ospite).' });
+    if (!userId || !tipo || !code) {
+      return res.status(400).json({ error: 'Parametri obbligatori' });
     }
 
-    const tipo = isTesserato ? 'tesserato' : 'ospite';
-    const table = isTesserato ? 'Tesserati' : 'Ospiti';
-    const selectFields = isTesserato
-      ? 'id,nome,cognome,is_tennis_member,is_padel_member,is_admin,is_direttivo,scadenza,totp_enabled,can_book_special'
-      : 'id,nome,cognome,is_tennis_member,is_padel_member,scadenza,attivo';
+    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
 
-    const lookupRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/${table}?select=${selectFields}&codice=eq.${encodeURIComponent(codiceClean)}`,
-      {
-        headers: {
-          apikey: SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SERVICE_ROLE_KEY}`
-        }
-      }
-    );
+    const { data: user, error: fetchErr } = await supabase
+      .from(table)
+      .select('totp_secret, totp_enabled, totp_backup_codes, is_admin')
+      .eq('id', userId)
+      .single();
 
-    if (!lookupRes.ok) {
-      return res.status(500).json({ error: 'Errore durante la verifica.' });
+    if (fetchErr || !user) {
+      return res.status(404).json({ error: 'Utente non trovato' });
     }
 
-    const rows = await lookupRes.json();
-    if (!rows || rows.length === 0) {
-      // Risposta generica: non riveliamo se il codice esiste o meno per un altro tipo
-      return res.status(401).json({ error: 'Codice non valido. Controlla di averlo scritto bene.' });
+    // Se non è admin, o non ha 2FA attivo, non c'è bisogno di 2FA
+    if (!user.is_admin) {
+      return res.json({ success: true, requires2fa: false });
+    }
+    if (!user.totp_enabled) {
+      return res.json({ success: true, requires2fa: false });
     }
 
-    const utente = rows[0];
+    // Verifica TOTP
+    const isValidTOTP = authenticator.check(String(code), user.totp_secret);
 
-    if (tipo === 'ospite') {
-      const oggiItalia = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'
-      }).format(new Date());
-      const scaduto = utente.scadenza && utente.scadenza < oggiItalia;
-      const inattivo = utente.attivo === false;
-      if (scaduto || inattivo) {
-        return res.status(200).json({
-          success: false,
-          scaduto: true,
-          utente: {
-            nome: utente.nome,
-            cognome: utente.cognome,
-            sport: utente.is_tennis_member && utente.is_padel_member ? 'both'
-                 : utente.is_tennis_member ? 'tennis'
-                 : utente.is_padel_member ? 'padel' : 'both'
-          }
-        });
-      }
+    if (isValidTOTP) {
+      return res.json({ success: true, authenticated: true });
     }
 
-    // Il campo "codice" NON viene mai incluso nella risposta: il client
-    // lo conosce già (l'ha appena digitato) e non deve tornare nel payload.
-    return res.status(200).json({
-      success: true,
-      tipo,
-      utente: {
-        id: utente.id,
-        nome: utente.nome,
-        cognome: utente.cognome,
-        is_tennis_member: utente.is_tennis_member || false,
-        is_padel_member: utente.is_padel_member || false,
-        is_admin: utente.is_admin || false,
-        is_direttivo: utente.is_direttivo || false,
-        can_book_special: utente.can_book_special || false,
-        scadenza: utente.scadenza || null,
-        totp_enabled: utente.totp_enabled || false
-      }
-    });
+    // Fallback: backup code
+    const backupCodes = (user.totp_backup_codes || '')
+      .split(',')
+      .map(c => c.trim())
+      .filter(Boolean);
+    const backupIndex = backupCodes.indexOf(String(code).toUpperCase());
+
+    if (backupIndex !== -1) {
+      // Consuma il backup code
+      backupCodes.splice(backupIndex, 1);
+      await supabase
+        .from(table)
+        .update({ totp_backup_codes: backupCodes.join(',') })
+        .eq('id', userId);
+
+      return res.json({
+        success: true,
+        authenticated: true,
+        warning: 'Hai usato un backup code. Rimangono ' + backupCodes.length + ' codici.'
+      });
+    }
+
+    return res.status(401).json({ error: 'Codice 2FA non valido' });
 
   } catch (e) {
-    console.error('Errore verify-login:', e);
-    return res.status(500).json({ error: 'Errore imprevisto: ' + e.message });
+    console.error('❌ Errore login 2FA:', e);
+    return res.status(500).json({ error: e.message });
   }
 };
