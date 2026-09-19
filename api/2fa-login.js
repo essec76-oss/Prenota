@@ -4,7 +4,7 @@
 // Sostituisce la query diretta a Supabase fatta dal browser con la
 // chiave pubblica. Qui la verifica avviene lato server con la
 // SERVICE_ROLE_KEY (mai esposta al client), e la risposta NON
-// contiene mai il campo "codice" né dati non necessari al frontend.
+// contiene mai il campo v"codice" né dati non necessari al frontend.
 // ============================================================
 
 const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
