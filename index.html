@@ -1270,18 +1270,18 @@ async function loadBookings(key){
       showToast('❌ Devi essere loggato per vedere il codice.');
       return;
     }
-    if (!loggedUser.accessToken) {
-      showToast('❌ Sessione non valida. Rifai il login.');
-      return;
-    }
     try {
       const res = await fetch(SUPABASE_URL + '/functions/v1/hyper-function', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + loggedUser.accessToken
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
         },
-        body: JSON.stringify({ bookingId: bookingId })
+        body: JSON.stringify({ 
+          bookingId: bookingId,
+          codice: loggedUser.codice
+        })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
