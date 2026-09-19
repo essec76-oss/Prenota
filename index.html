@@ -2911,14 +2911,34 @@ async function loadBookings(key){
     }
   }
   async function completeLogin(utente, tipo) {
+    adminMode
     let accessToken = null;
-    try {
-      const authData = await signInWithSupabaseAuth(utente.codice + '@circolo.local', utente.codice);
-      accessToken = authData.access_token;
-      console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
-    } catch(authErr) {
-      console.warn('⚠️ Auth Supabase non disponibile, continuo senza token', authErr);
-    }
+const authEmail = utente.codice + '@circolo.local';
+const authPassword = utente.codice;
+try {
+  // Prova login
+  let authData = await signInWithSupabaseAuth(authEmail, authPassword);
+  accessToken = authData.access_token;
+  console.log('🔐 Login Supabase Auth riuscito per', utente.codice);
+} catch (authErr) {
+  // Se l'utente non esiste, lo crea e poi fa login
+  try {
+    await fetch(SUPABASE_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: authEmail, password: authPassword })
+    });
+    // Riprova login dopo la creazione
+    const authData2 = await signInWithSupabaseAuth(authEmail, authPassword);
+    accessToken = authData2.access_token;
+    console.log('🔐 Utente Auth creato e login riuscito per', utente.codice);
+  } catch (e2) {
+    console.warn('⚠️ Impossibile creare/ottenere token Auth:', e2);
+  }
+}
     loggedUser = {
       id: utente.id,
       nome: utente.nome,
