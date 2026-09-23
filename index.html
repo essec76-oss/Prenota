@@ -2826,21 +2826,25 @@ async function loadBookings(key){
     errorEl.textContent = 'Verifica in corso...';
     loginBtn.disabled = true;
     try {
-      let url;
-      let tipo;
-      if (codice.startsWith('t')) {
-        tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,is_direttivo,scadenza,auth_id,totp_enabled,can_book_special'
-          + '&codice=eq.' + encodeURIComponent(codice);
-      } else {
-        tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
-          + '&codice=eq.' + encodeURIComponent(codice);
-      }
+      const tipo = codice.startsWith('t') ? 'tesserato' : 'ospite';
       console.log('🔍 Cerco utente con codice:', codice);
-      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+            const res = await fetch(SUPABASE_URL + '/functions/v1/app-login', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ codice: codice })
+      });
+      if (res.status === 429) {
+        errorEl.textContent = 'Troppi tentativi. Riprova tra qualche minuto.';
+        loginBtn.disabled = false;
+        return;
+      }
       if (!res.ok) throw new Error('Errore di connessione');
-      const data = await res.json();
+      const loginResp = await res.json();
+      const data = loginResp.utente ? [loginResp.utente] : [];
       console.log('📦 Dati ricevuti:', data);
       if (data.length === 0) {
         errorEl.textContent = '❌ Codice non valido. Controlla di averlo scritto bene.';
