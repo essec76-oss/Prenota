@@ -695,6 +695,193 @@
     }
   }
   #print-are-richieste{display:none;}
+  /* --- SCHEDA DETTAGLIO RICHIESTA (full-screen) --- */
+  #richiesta-dettaglio{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #richiesta-dettaglio .rd-top{
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  #richiesta-dettaglio .rd-back{
+    background:none;
+    border:none;
+    font-family:inherit;
+    font-size:16px;
+    font-weight:600;
+    color:var(--accent);
+    cursor:pointer;
+    padding:6px 0;
+  }
+  #richiesta-dettaglio .rd-top-title{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  #richiesta-dettaglio .rd-body{
+    flex:1;
+    overflow-y:auto;
+    padding:24px 20px 24px;
+    max-width:640px;
+    width:100%;
+    margin:0 auto;
+  }
+  #richiesta-dettaglio .rd-status{
+    display:inline-block;
+    padding:6px 16px;
+    border-radius:999px;
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  #richiesta-dettaglio h2.rd-name{
+    font-family:'Fraunces',serif;
+    font-size:34px;
+    line-height:1.1;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  #richiesta-dettaglio .rd-meta{
+    font-size:15px;
+    color:var(--ink-soft);
+    margin-bottom:24px;
+  }
+  #richiesta-dettaglio .rd-block{
+    margin-bottom:22px;
+  }
+  #richiesta-dettaglio .rd-label{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  #richiesta-dettaglio .rd-value-phone{
+    font-size:30px;
+    font-weight:700;
+    color:var(--ink);
+    letter-spacing:.02em;
+    word-break:break-all;
+    line-height:1.2;
+  }
+  #richiesta-dettaglio .rd-value-sport{
+    font-size:22px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  #richiesta-dettaglio .rd-value-msg{
+    font-size:20px;
+    line-height:1.5;
+    color:var(--ink);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  #richiesta-dettaglio .rd-value-note{
+    font-size:17px;
+    line-height:1.5;
+    color:var(--ink);
+    white-space:pre-wrap;
+    background:#FFF4E0;
+    border:1px solid #E8C989;
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  #richiesta-dettaglio .rd-copy-btn{
+    width:100%;
+    padding:18px 16px;
+    border-radius:12px;
+    border:2px solid var(--accent);
+    background:var(--surface);
+    color:var(--accent);
+    font-family:inherit;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .15s;
+    margin-top:8px;
+  }
+  #richiesta-dettaglio .rd-copy-btn:hover{
+    background:var(--accent);
+    color:#fff;
+  }
+  #richiesta-dettaglio .rd-copy-btn.copied{
+    background:var(--padel);
+    border-color:var(--padel);
+    color:#fff;
+  }
+  #richiesta-dettaglio .rd-actions{
+    flex-shrink:0;
+    padding:16px 20px 24px;
+    border-top:1px solid var(--line);
+    background:var(--surface);
+    display:flex;
+    gap:12px;
+    max-width:640px;
+    width:100%;
+    margin:0 auto;
+    box-shadow:0 -6px 20px rgba(0,0,0,0.05);
+  }
+  #richiesta-dettaglio .rd-actions button{
+    flex:1;
+    padding:18px 12px;
+    border-radius:12px;
+    font-family:inherit;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  #richiesta-dettaglio .rd-actions button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+  }
+  #richiesta-dettaglio .rd-btn-respingi{
+    background:var(--surface);
+    color:#B84B1E;
+    border:2px solid #B84B1E;
+  }
+  #richiesta-dettaglio .rd-btn-respingi:hover:not(:disabled){
+    background:#B84B1E;
+    color:#fff;
+  }
+  #richiesta-dettaglio .rd-btn-lavorata{
+    background:var(--padel);
+    color:#fff;
+    border:2px solid var(--padel);
+  }
+  #richiesta-dettaglio .rd-btn-lavorata:hover:not(:disabled){
+    background:#1e5744;
+    border-color:#1e5744;
+  }
+  #richiesta-dettaglio .rd-actions.single button{
+    flex:1;
+  }
+  @media (max-width:480px){
+    #richiesta-dettaglio h2.rd-name{font-size:28px;}
+    #richiesta-dettaglio .rd-value-phone{font-size:26px;}
+    #richiesta-dettaglio .rd-value-msg{font-size:18px;}
+    #richiesta-dettaglio .rd-actions{
+      flex-direction:column;
+      gap:10px;
+    }
+    #richiesta-dettaglio .rd-actions button{
+      padding:16px 12px;
+      font-size:16px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -3223,7 +3410,7 @@ try {
             <select id="richieste-filtro" style="padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">
               <option value="nuova">🆕 Da lavorare (nuove)</option>
               <option value="lavorata">✅ Già lavorate (archiviate)</option>
-              <option value="archiviata">🗄️ Solo archiviate</option>
+              <option value="respinta">🚫 Respinte</option>
               <option value="">📋 Tutte</option>
             </select>
             <button class="clean-btn" id="richieste-stampa" style="padding:8px 14px;">🖨️ Stampa elenco</button>
@@ -3272,8 +3459,10 @@ try {
       richiesteCache.forEach(r => {
         const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
         const sportLabel = r.sport === 'tennis' ? '🎾' : r.sport === 'padel' ? '🏸' : '🎾🏸';
-        const st = r.stato === 'nuova' ? {t:'🆕 Nuova', bg:'#fde8c8', c:'#8a4b00'}
-          : {t:'✅ Lavorata', bg:'#d9f0df', c:'#1f6b3a'};
+        let st;
+        if (r.stato === 'nuova') st = {t:'🆕 Nuova', bg:'#fde8c8', c:'#8a4b00'};
+        else if (r.stato === 'respinta') st = {t:'🚫 Respinta', bg:'#f8d7da', c:'#7a1f2b'};
+        else st = {t:'✅ Lavorata', bg:'#d9f0df', c:'#1f6b3a'};
         const msg = r.messaggio ? escapeHtml(r.messaggio).slice(0,60) : '—';
         html += `<div data-apri="${escapeHtml(r.id)}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -3294,47 +3483,79 @@ try {
       container.innerHTML = '<div class="user-list-empty">❌ ' + e.message + '</div>';
     }
   }
+
+  // ==== SCHEDA DETTAGLIO RICHIESTA (full-screen) ====
   function apriDettaglioRichiesta(id) {
     const r = richiesteCache.find(x => String(x.id) === String(id));
     if (!r) return;
     const vecchia = document.getElementById('richiesta-dettaglio');
     if (vecchia) vecchia.remove();
-    const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
-    const sportLabel = r.sport === 'tennis' ? '🎾 Tennis' : r.sport === 'padel' ? '🏸 Padel' : '🎾🏸 Tennis e Padel';
+
+    const dataFmt = r.created_at
+      ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '';
+    const sportLabel = r.sport === 'tennis' ? '🎾 Tennis'
+                     : r.sport === 'padel' ? '🏸 Padel'
+                     : '🎾🏸 Tennis e Padel';
+
     const nuova = r.stato === 'nuova';
-    const stBg = nuova ? '#fde8c8' : '#d9f0df';
-    const stCol = nuova ? '#8a4b00' : '#1f6b3a';
-    const stTxt = nuova ? '🆕 Nuova' : '✅ Lavorata';
+    let stBg, stCol, stTxt;
+    if (r.stato === 'nuova')      { stBg='#fde8c8'; stCol='#8a4b00'; stTxt='🆕 Nuova'; }
+    else if (r.stato === 'respinta') { stBg='#f8d7da'; stCol='#7a1f2b'; stTxt='🚫 Respinta'; }
+    else                          { stBg='#d9f0df'; stCol='#1f6b3a'; stTxt='✅ Lavorata'; }
+
     const telPulito = String(r.telefono || '').replace(/[^\d+]/g, '');
-    const btn = 'width:100%;padding:16px 12px;border-radius:10px;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;';
+
     const box = document.createElement('div');
     box.id = 'richiesta-dettaglio';
-    box.style.cssText = 'position:fixed;inset:0;z-index:15;background:var(--surface);display:flex;flex-direction:column;';
     box.innerHTML = `
-      <div style="padding:14px 16px;border-bottom:1px solid var(--line);">
-        <button id="rd-indietro" style="background:none;border:none;font-family:inherit;font-size:16px;font-weight:600;color:var(--accent);cursor:pointer;padding:6px 0;">← Indietro</button>
+      <div class="rd-top">
+        <button class="rd-back" id="rd-indietro">← Indietro</button>
+        <div class="rd-top-title">Dettaglio richiesta</div>
       </div>
-      <div style="flex:1;overflow-y:auto;padding:18px 16px;">
-        <span style="background:${stBg};color:${stCol};padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700;">${stTxt}</span>
-        <h2 style="margin:12px 0 4px;font-size:24px;">${escapeHtml(r.nome + ' ' + r.cognome)}</h2>
-        <div style="font-size:13px;color:var(--ink-soft);margin-bottom:16px;">Ricevuta il ${dataFmt}</div>
-        <div style="font-size:13px;color:var(--ink-soft);">Telefono</div>
-        <div style="font-size:20px;font-weight:700;margin-bottom:14px;">📱 ${escapeHtml(r.telefono)}</div>
-        <div style="font-size:13px;color:var(--ink-soft);">Sport di interesse</div>
-        <div style="font-size:17px;margin-bottom:14px;">${sportLabel}</div>
-        <div style="font-size:13px;color:var(--ink-soft);">Messaggio</div>
-        <div style="font-size:16px;margin-bottom:14px;white-space:pre-wrap;">${r.messaggio ? escapeHtml(r.messaggio) : '—'}</div>
-        ${r.note_direttivo ? `<div style="font-size:13px;color:var(--ink-soft);">Nota interna</div><div style="font-size:15px;margin-bottom:14px;">📝 ${escapeHtml(r.note_direttivo)}</div>` : ''}
+      <div class="rd-body">
+        <span class="rd-status" style="background:${stBg};color:${stCol};">${stTxt}</span>
+        <h2 class="rd-name">${escapeHtml(r.nome + ' ' + r.cognome)}</h2>
+        <div class="rd-meta">Ricevuta il ${dataFmt}</div>
+
+        <div class="rd-block">
+          <div class="rd-label">Telefono</div>
+          <div class="rd-value-phone">📱 ${escapeHtml(r.telefono || '—')}</div>
+          <button class="rd-copy-btn" id="rd-contatta">📋 Copia numero di telefono</button>
+        </div>
+
+        <div class="rd-block">
+          <div class="rd-label">Sport di interesse</div>
+          <div class="rd-value-sport">${sportLabel}</div>
+        </div>
+
+        <div class="rd-block">
+          <div class="rd-label">Messaggio</div>
+          <div class="rd-value-msg">${r.messaggio ? escapeHtml(r.messaggio) : '—'}</div>
+        </div>
+
+        ${r.note_direttivo ? `
+        <div class="rd-block">
+          <div class="rd-label">Nota interna</div>
+          <div class="rd-value-note">📝 ${escapeHtml(r.note_direttivo)}</div>
+        </div>` : ''}
       </div>
-      <div style="padding:12px 16px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px;background:var(--surface);">
-        <button id="rd-contatta" style="${btn}border:2px solid var(--accent);background:var(--surface);color:var(--accent);">📞 Contatta utente (copia numero)</button>
-        ${nuova ? `<button id="rd-archivia" style="${btn}border:2px solid var(--accent);background:var(--accent);color:#fff;">🗄️ Archivia (lavorazione fatta)</button>` : ''}
+      <div class="rd-actions">
+        ${nuova
+          ? `<button class="rd-btn-respingi" id="rd-respingi">🚫 Respingi richiesta</button>
+             <button class="rd-btn-lavorata" id="rd-lavorata">✅ Richiesta lavorata</button>`
+          : `<button class="rd-btn-lavorata" id="rd-chiudi" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent);">Chiudi</button>`
+        }
       </div>
     `;
     document.body.appendChild(box);
-    const chiudi = function() { box.remove(); };
+
+    const chiudi = () => box.remove();
+
     document.getElementById('rd-indietro').addEventListener('click', chiudi);
-    document.getElementById('rd-contatta').addEventListener('click', async function() {
+
+    const copiaBtn = document.getElementById('rd-contatta');
+    copiaBtn.addEventListener('click', async function() {
       const b = this;
       let ok = false;
       try {
@@ -3351,19 +3572,41 @@ try {
           ta.remove();
         } catch(e2) { ok = false; }
       }
-      const testoOrig = b.textContent;
+      const testoOrig = '📋 Copia numero di telefono';
       b.textContent = ok ? '✅ Numero copiato: ' + telPulito : '❌ Copia non riuscita: ' + telPulito;
-      setTimeout(function() { b.textContent = testoOrig; }, 3000);
+      b.classList.add('copied');
+      setTimeout(() => {
+        b.textContent = testoOrig;
+        b.classList.remove('copied');
+      }, 2500);
     });
-    const arch = document.getElementById('rd-archivia');
-    if (arch) {
-      arch.addEventListener('click', async function() {
-        if (!confirm('Confermi di archiviare la richiesta di ' + r.nome + ' ' + r.cognome + '?\nVerrà spostata tra le lavorate.')) return;
+
+    const respingiBtn = document.getElementById('rd-respingi');
+    if (respingiBtn) {
+      respingiBtn.addEventListener('click', async function() {
+        if (!confirm('Confermi di RESPINGERE la richiesta di ' + r.nome + ' ' + r.cognome + '?')) return;
+        this.disabled = true;
+        await azioneRichiesta(id, 'respinta');
+        chiudi();
+      });
+    }
+
+    const lavorataBtn = document.getElementById('rd-lavorata');
+    if (lavorataBtn) {
+      lavorataBtn.addEventListener('click', async function() {
+        if (!confirm('Confermi di segnare come LAVORATA la richiesta di ' + r.nome + ' ' + r.cognome + '?')) return;
+        this.disabled = true;
         await azioneRichiesta(id, 'lavorata');
         chiudi();
       });
     }
+
+    const chiudiBtn = document.getElementById('rd-chiudi');
+    if (chiudiBtn) {
+      chiudiBtn.addEventListener('click', chiudi);
+    }
   }
+
   async function azioneRichiesta(id, azione, nota) {
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Devi essere loggato come admin.');
