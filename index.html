@@ -676,6 +676,7 @@
     body *{visibility:hidden !important;}
     #print-are-richieste, #print-are-richieste *{visibility:visible !important;}
     #print-are-richieste{
+      display:block;
       position:absolute;
       left:0; top:0;
       width:100%;
@@ -956,7 +957,9 @@
     <div id="logged-in-extras-bottom" style="display:none;">
       <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
     </div>
-      <script>
+  </div>
+</div>
+  <script>
 document.addEventListener('DOMContentLoaded', function(){
   var qrImg = document.getElementById('login-qr-code');
   if (qrImg) {
@@ -1008,7 +1011,6 @@ function copiaLink() {
   const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
   const SUPABASE_TABLE = 'Tennis';
-  const SUPABASE_TABLE_SETTINGS = 'Impostazioni';
   const CLEANUP_DAYS = 7;
   const PAST_SLOT_MARGIN_MINUTES = 10;
   let currentField = 'tennis';
@@ -1175,7 +1177,8 @@ function copiaLink() {
         headers: { 
           apikey: SUPABASE_KEY,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
+          Prefer: 'return=minimal',
+          ...(loggedUser && loggedUser.accessToken ? { Authorization: 'Bearer ' + loggedUser.accessToken } : {})
         }
       });
       if (res.ok) {
@@ -1292,14 +1295,20 @@ function copiaLink() {
     });
   }
   async function loadKeyboxCode(){
+    // Codici key box via RPC: leggibili solo da membri validi loggati
     try{
-      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
-        + '?select=codice_keybox_tennis,codice_keybox_padel&id=eq.1';
-      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' };
+      if (loggedUser && loggedUser.accessToken) {
+        headers['Authorization'] = 'Bearer ' + loggedUser.accessToken;
+      }
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_keybox_codes', {
+        method: 'POST',
+        headers: headers
+      });
       if(!res.ok) throw new Error('fetch failed');
-      const rows = await res.json();
-      keyboxCodeTennis = (rows[0] && rows[0].codice_keybox_tennis) || null;
-      keyboxCodePadel = (rows[0] && rows[0].codice_keybox_padel) || null;
+      const data = await res.json();
+      keyboxCodeTennis = (data && data.tennis) || null;
+      keyboxCodePadel = (data && data.padel) || null;
     }catch(e){
       keyboxCodeTennis = null;
       keyboxCodePadel = null;
@@ -1388,7 +1397,6 @@ async function loadBookings(key){
         const keyboxHtml = (!loggedUser || booking.modalita === 'allenamento') ? '' : (keyboxCode
           ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
           : '');
-        const ownCodeHtml = '';  // il codice non è più nel payload: lo carichiamo on-demand
         left.innerHTML = `
           <div class="time">${s.label}</div>
           <div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div>
@@ -1400,9 +1408,7 @@ async function loadBookings(key){
           // Nessuna azione disponibile per chi guarda senza login
         } else if (adminMode && loggedUser.is_admin) {
           const adminBtn = document.createElement('button');
-          adminBtn.className = 'book-btn';
-          adminBtn.style.background = '#B84B1E';
-          adminBtn.style.marginRight = '6px';
+          adminBtn.className = 'book-btn admin-delete';
           adminBtn.textContent = '🗑️ Admin';
           adminBtn.title = 'Cancella come admin (senza codice)';
           adminBtn.addEventListener('click', ()=> doAdminCancel(booking.id, s.label));
@@ -1458,6 +1464,10 @@ async function loadBookings(key){
       showToast('❌ Devi essere loggato per vedere il codice.');
       return;
     }
+    if (!loggedUser.accessToken) {
+      showToast('❌ Sessione sicura non attiva. Esci e rifai il login, poi riprova.');
+      return;
+    }
     try {
       const res = await fetch(SUPABASE_URL + '/functions/v1/hyper-function', {
         method: 'POST',
@@ -1484,20 +1494,20 @@ async function loadBookings(key){
   }
 
   async function loadAllPlayersForSelect(){
+    // Lettura tramite RPC: la tabella non è più leggibile direttamente
     try{
-      const [tessRes, ospRes] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        })
-      ]);
-      const tesserati = tessRes.ok ? await tessRes.json() : [];
-      const ospiti = ospRes.ok ? await ospRes.json() : [];
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_giocatori_attivi', {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) throw new Error('fetch failed');
+      const rows = await res.json();
+      const tesserati = rows.filter(r => r.tipo === 'tesserato')
+        .map(r => ({ nome: r.nome, cognome: r.cognome }));
       const oggi = dateKey(new Date());
-      const ospitiValidi = ospiti.filter(o => !o.scadenza || o.scadenza >= oggi);
-      return { tesserati, ospiti: ospitiValidi };
+      const ospiti = rows.filter(r => r.tipo === 'ospite' && (!r.scadenza || r.scadenza >= oggi))
+        .map(r => ({ nome: r.nome, cognome: r.cognome }));
+      return { tesserati, ospiti };
     }catch(e){
       console.error('Errore caricamento giocatori:', e);
       return { tesserati: [], ospiti: [] };
@@ -1759,7 +1769,8 @@ async function loadBookings(key){
         method: 'DELETE',
         headers: {
           apikey: SUPABASE_KEY,
-          Prefer: 'return=minimal'
+          Prefer: 'return=minimal',
+          Authorization: 'Bearer ' + (loggedUser && loggedUser.accessToken ? loggedUser.accessToken : SUPABASE_KEY)
         }
       });
       if (res.ok) {
@@ -1992,14 +2003,17 @@ async function loadBookings(key){
   }
   async function load2FAStatus() {
     try {
-      const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-      const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
-        headers: { apikey: SUPABASE_KEY }
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_totp_status', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        }
       });
       if (!response.ok) throw new Error('Errore caricamento status');
-      const data = await response.json();
-      const user = data[0];
-      if (!user) throw new Error('Utente non trovato');
+      const payload = await response.json();
+      const user = { totp_enabled: !!(payload && payload.totp_enabled) };
       const statusContainer = document.getElementById('2fa-status-container');
       if (user.totp_enabled) {
         statusContainer.innerHTML = `
@@ -2182,7 +2196,7 @@ async function loadBookings(key){
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="code-title">
           <h2 id="code-title">Prenotazione confermata</h2>
-          <div class="meta">Il tuo codice di cancellazione. Lo ritroverai sempre accanto a questa prenotazione nel calendario, quindi non devi segnarlo da nessuna parte.</div>
+          <div class="meta">Il tuo codice di cancellazione a 4 cifre. Puoi recuperarlo quando vuoi col pulsante «Mostra codice» accanto alla tua prenotazione nel calendario.</div>
           <div class="booking-code">${code}</div>
           <div class="modal-actions">
             <button class="btn-confirm" id="btn-code-ok" style="flex:none;width:100%;">Ho capito</button>
@@ -2425,85 +2439,60 @@ async function loadBookings(key){
   async function loadUserList(tipo) {
     const container = document.getElementById('user-list-container');
     container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
+    if (!loggedUser || !loggedUser.accessToken) {
+      container.innerHTML = '<div class="user-list-empty">❌ Serve una sessione admin sicura (modalità Admin attiva).</div>';
+      return;
+    }
     try {
-      let data = [];
-      if (tipo === 'tesserati') {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo,can_book_special&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        });
-        if (!res.ok) throw new Error('Errore caricamento tesserati');
-        data = await res.json();
-        if (data.length === 0) {
-          container.innerHTML = '<div class="user-list-empty">📭 Nessun tesserato presente.</div>';
-          return;
-        }
-        let html = '<div class="user-list-section-title">⭐ Tesserati</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Torneo/Allen.</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
-        data.forEach(u => {
-          userDataCache['Tesserati:' + u.id] = u;
-          const sports = [];
-          if (u.is_tennis_member) sports.push('🎾');
-          if (u.is_padel_member) sports.push('🏸');
-          const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
-          const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
-          const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
-          const specialLabel = u.can_book_special ? '✅' : '—';
-          html += `<tr>
-            <td><strong>${escapeHtml(u.codice)}</strong></td>
-            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
-            <td>${sportLabel}</td>
-            <td>${specialLabel}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
-            <td>
-              <div class="user-actions">
-                <button class="btn-edit" data-action="edit" data-table="Tesserati" data-id="${escapeHtml(u.id)}">✏️</button>
-                <button class="btn-delete" data-action="delete" data-table="Tesserati" data-id="${escapeHtml(u.id)}">🗑️</button>
-              </div>
-            </td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        attachUserActionListeners(container);
-      } else {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        });
-        if (!res.ok) throw new Error('Errore caricamento ospiti');
-        data = await res.json();
-        if (data.length === 0) {
-          container.innerHTML = '<div class="user-list-empty">📭 Nessun ospite presente.</div>';
-          return;
-        }
-        let html = '<div class="user-list-section-title">👤 Ospiti</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
-        data.forEach(u => {
-          userDataCache['Ospiti:' + u.id] = u;
-          const sports = [];
-          if (u.is_tennis_member) sports.push('🎾');
-          if (u.is_padel_member) sports.push('🏸');
-          const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
-          const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
-          const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
-          html += `<tr>
-            <td><strong>${escapeHtml(u.codice)}</strong></td>
-            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
-            <td>${sportLabel}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
-            <td>
-              <div class="user-actions">
-                <button class="btn-edit" data-action="edit" data-table="Ospiti" data-id="${escapeHtml(u.id)}">✏️</button>
-                <button class="btn-delete" data-action="delete" data-table="Ospiti" data-id="${escapeHtml(u.id)}">🗑️</button>
-              </div>
-            </td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        attachUserActionListeners(container);
+      // Elenco utenti via RPC: richiede token admin verificato server-side
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_admin_users', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        },
+        body: JSON.stringify({ tipo: tipo })
+      });
+      if (!res.ok) throw new Error('Errore caricamento utenti');
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = '<div class="user-list-empty">📭 Nessun ' + (tipo === 'tesserati' ? 'tesserato' : 'ospite') + ' presente.</div>';
+        return;
       }
+      const isTesserati = tipo === 'tesserati';
+      let html = '<div class="user-list-section-title">' + (isTesserati ? '⭐ Tesserati' : '👤 Ospiti') + '</div>';
+      html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th>'
+        + (isTesserati ? '<th>Torneo/Allen.</th>' : '')
+        + '<th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+      data.forEach(u => {
+        userDataCache[(isTesserati ? 'Tesserati:' : 'Ospiti:') + u.id] = u;
+        const sports = [];
+        if (u.is_tennis_member) sports.push('🎾');
+        if (u.is_padel_member) sports.push('🏸');
+        const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
+        const scadenza = u.scadenza ? String(u.scadenza).split('-').reverse().join('/') : 'N/D';
+        const attivo = (u.attivo === undefined || u.attivo === null) ? true : !!u.attivo;
+        const attivoLabel = attivo ? '✅ Attivo' : '❌ Inattivo';
+        const specialLabel = u.can_book_special ? '✅' : '—';
+        html += `<tr>
+          <td><strong>${escapeHtml(u.codice)}</strong></td>
+          <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
+          <td>${sportLabel}</td>
+          ${isTesserati ? `<td>${specialLabel}</td>` : ''}
+          <td>${scadenza}</td>
+          <td>${attivoLabel}</td>
+          <td>
+            <div class="user-actions">
+              <button class="btn-edit" data-action="edit" data-table="${isTesserati ? 'Tesserati' : 'Ospiti'}" data-id="${escapeHtml(u.id)}">✏️</button>
+              <button class="btn-delete" data-action="delete" data-table="${isTesserati ? 'Tesserati' : 'Ospiti'}" data-id="${escapeHtml(u.id)}">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+      attachUserActionListeners(container);
     } catch(e) {
       container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
     }
@@ -2582,18 +2571,20 @@ async function loadBookings(key){
       }
       codice = 'o' + suffix;
     }
-    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
-      headers: { 
+    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/rpc/codice_libero', {
+      method: 'POST',
+      headers: {
         apikey: SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + (loggedUser && loggedUser.accessToken ? loggedUser.accessToken : SUPABASE_KEY)
+      },
+      body: JSON.stringify({ p_codice: codice })
     });
     if (!checkRes.ok) {
       throw new Error('Errore verifica codice');
     }
-    const existing = await checkRes.json();
-    if (existing && existing.length > 0) {
+    const isFree = await checkRes.json();
+    if (isFree !== true) {
       console.log('🔄 Codice ' + codice + ' già esistente, ritento...');
       return generateUniqueCodeFrontend(tipo, tentativi + 1);
     }
@@ -2870,6 +2861,24 @@ async function loadBookings(key){
       console.warn('⚠️ Impossibile verificare prenotazioni future collegate:', checkErr);
     }
     if (!confirm(confirmMsg)) return;
+    // FIX: cancella davvero le prenotazioni collegate, come promesso nel messaggio di conferma
+    try {
+      const fkColumn = table === 'Tesserati' ? 'tesserato_id' : 'ospite_id';
+      const delBookRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?' + fkColumn + '=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        }
+      });
+      if (!delBookRes.ok) throw new Error('Errore cancellazione prenotazioni collegate');
+    } catch(delErr) {
+      console.warn('⚠️ Impossibile cancellare le prenotazioni collegate:', delErr);
+      showToast('⚠️ Le prenotazioni future potrebbero non essere state cancellate');
+    }
     try {
       const tableName = table;
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
@@ -3084,8 +3093,9 @@ async function loadBookings(key){
         try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
         renderGuestExpiry();
         setupAdminToggle();
+        updateCleanBtnVisibility();
         renderTesseratoExpiry();
-        setAccent('tennis');
+        setAccent(currentField);
         renderFieldNote();
         renderDow();
         renderCalendar();
@@ -3103,7 +3113,6 @@ async function loadBookings(key){
     }
   }
   async function completeLogin(utente, tipo) {
-    adminMode
     let accessToken = null;
 const authEmail = utente.codice + '@circolo.local';
 const authPassword = utente.codice;
@@ -3159,6 +3168,7 @@ try {
     document.getElementById('user-badge').innerHTML = tipoLabel;
     renderGuestExpiry();
     setupAdminToggle();
+    updateCleanBtnVisibility();
     renderTesseratoExpiry();
     renderFieldNote();
     updateBookingDots();
@@ -3239,11 +3249,19 @@ try {
     }, { passive: true });
   })();
   document.getElementById('clean-btn').addEventListener('click', async function() {
+    if (!loggedUser || !loggedUser.is_admin || !loggedUser.accessToken) {
+      showToast('🔑 La pulizia delle prenotazioni vecchie è riservata agli admin con sessione attiva.');
+      return;
+    }
     await deleteOldBookings();
     showToast('🧹 Prenotazioni vecchie cancellate!');
     updateBookingDots();
     renderSlots();
   });
+  function updateCleanBtnVisibility(){
+    const btn = document.getElementById('clean-btn');
+    if (btn) btn.style.display = (loggedUser && loggedUser.is_admin) ? 'inline-block' : 'none';
+  }
   function mostraFormRichiestaContatto(utente) {
     const precompilato = !!utente;
     if (!precompilato) {
@@ -3676,7 +3694,7 @@ try {
     URL.revokeObjectURL(url);
     showToast('✅ CSV scaricato');
   }
-  })();
+})();
 </script>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
