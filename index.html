@@ -3217,12 +3217,12 @@ try {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:820px;">
           <h2>📩 Richieste di contatto</h2>
-          <p class="modal-subtitle">Elenco delle richieste ricevute dagli ospiti. Puoi stampare o esportare in CSV.</p>
+          <p class="modal-subtitle">Tocca una richiesta per aprirla, contatta la persona e poi archiviala. Puoi anche stampare o esportare in CSV.</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
             <label style="font-size:13px;color:var(--ink-soft);">Filtro stato:</label>
             <select id="richieste-filtro" style="padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">
-              <option value="nuova">🆕 Solo nuove</option>
-              <option value="lavorata">✅ Solo lavorate</option>
+              <option value="nuova">🆕 Da lavorare (nuove)</option>
+              <option value="lavorata">✅ Già lavorate (archiviate)</option>
               <option value="archiviata">🗄️ Solo archiviate</option>
               <option value="">📋 Tutte</option>
             </select>
@@ -3268,47 +3268,100 @@ try {
         container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta in questo stato.</div>';
         return;
       }
-      let html = '<table class="user-list-table"><thead><tr>'
-        + '<th>Data</th><th>Nome</th><th>Telefono</th><th>Sport</th><th>Messaggio</th><th>Stato</th><th>Azioni</th>'
-        + '</tr></thead><tbody>';
+      let html = '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;">👆 Tocca una richiesta per aprirla</div>';
       richiesteCache.forEach(r => {
         const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
         const sportLabel = r.sport === 'tennis' ? '🎾' : r.sport === 'padel' ? '🏸' : '🎾🏸';
-        const statoBadge = r.stato === 'nuova' ? '🆕' : r.stato === 'lavorata' ? '✅' : '🗄️';
+        const st = r.stato === 'nuova' ? {t:'🆕 Nuova', bg:'#fde8c8', c:'#8a4b00'}
+          : {t:'✅ Lavorata', bg:'#d9f0df', c:'#1f6b3a'};
         const msg = r.messaggio ? escapeHtml(r.messaggio).slice(0,60) : '—';
-        html += `<tr>
-          <td style="font-size:12px;white-space:nowrap;">${dataFmt}</td>
-          <td>${escapeHtml(r.nome + ' ' + r.cognome)}</td>
-          <td>${escapeHtml(r.telefono)}</td>
-          <td>${sportLabel}</td>
-          <td style="font-size:12px;">${msg}</td>
-          <td>${statoBadge}</td>
-          <td>
-            <div class="user-actions">
-              ${r.stato === 'nuova' ? `<button class="btn-edit" data-az="lavorata" data-id="${escapeHtml(r.id)}">✅</button>` : ''}
-              <button class="btn-edit" data-az="nota" data-id="${escapeHtml(r.id)}">📝</button>
-              ${r.stato !== 'archiviata' ? `<button class="btn-delete" data-az="archiviata" data-id="${escapeHtml(r.id)}">🗄️</button>` : ''}
-            </div>
-          </td>
-        </tr>`;
+        html += `<div data-apri="${escapeHtml(r.id)}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong style="font-size:16px;">${sportLabel} ${escapeHtml(r.nome + ' ' + r.cognome)}</strong>
+            <span style="background:${st.bg};color:${st.c};padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;">${st.t}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">${dataFmt}</div>
+          <div style="font-size:13px;margin-top:4px;">${msg}</div>
+        </div>`;
       });
-      html += '</tbody></table>';
       container.innerHTML = html;
-      container.querySelectorAll('button[data-az]').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const az = btn.dataset.az;
-          const id = btn.dataset.id;
-          if (az === 'nota') {
-            const nota = prompt('Nota interna:');
-            if (nota === null) return;
-            azioneRichiesta(id, 'nota', nota);
-          } else {
-            azioneRichiesta(id, az);
-          }
+      container.querySelectorAll('[data-apri]').forEach(riga => {
+        riga.addEventListener('click', function() {
+          apriDettaglioRichiesta(riga.dataset.apri);
         });
       });
     } catch(e) {
       container.innerHTML = '<div class="user-list-empty">❌ ' + e.message + '</div>';
+    }
+  }
+  function apriDettaglioRichiesta(id) {
+    const r = richiesteCache.find(x => String(x.id) === String(id));
+    if (!r) return;
+    const vecchia = document.getElementById('richiesta-dettaglio');
+    if (vecchia) vecchia.remove();
+    const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const sportLabel = r.sport === 'tennis' ? '🎾 Tennis' : r.sport === 'padel' ? '🏸 Padel' : '🎾🏸 Tennis e Padel';
+    const nuova = r.stato === 'nuova';
+    const stBg = nuova ? '#fde8c8' : '#d9f0df';
+    const stCol = nuova ? '#8a4b00' : '#1f6b3a';
+    const stTxt = nuova ? '🆕 Nuova' : '✅ Lavorata';
+    const telPulito = String(r.telefono || '').replace(/[^\d+]/g, '');
+    const btn = 'width:100%;padding:16px 12px;border-radius:10px;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;';
+    const box = document.createElement('div');
+    box.id = 'richiesta-dettaglio';
+    box.style.cssText = 'position:fixed;inset:0;z-index:15;background:var(--surface);display:flex;flex-direction:column;';
+    box.innerHTML = `
+      <div style="padding:14px 16px;border-bottom:1px solid var(--line);">
+        <button id="rd-indietro" style="background:none;border:none;font-family:inherit;font-size:16px;font-weight:600;color:var(--accent);cursor:pointer;padding:6px 0;">← Indietro</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:18px 16px;">
+        <span style="background:${stBg};color:${stCol};padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700;">${stTxt}</span>
+        <h2 style="margin:12px 0 4px;font-size:24px;">${escapeHtml(r.nome + ' ' + r.cognome)}</h2>
+        <div style="font-size:13px;color:var(--ink-soft);margin-bottom:16px;">Ricevuta il ${dataFmt}</div>
+        <div style="font-size:13px;color:var(--ink-soft);">Telefono</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:14px;">📱 ${escapeHtml(r.telefono)}</div>
+        <div style="font-size:13px;color:var(--ink-soft);">Sport di interesse</div>
+        <div style="font-size:17px;margin-bottom:14px;">${sportLabel}</div>
+        <div style="font-size:13px;color:var(--ink-soft);">Messaggio</div>
+        <div style="font-size:16px;margin-bottom:14px;white-space:pre-wrap;">${r.messaggio ? escapeHtml(r.messaggio) : '—'}</div>
+        ${r.note_direttivo ? `<div style="font-size:13px;color:var(--ink-soft);">Nota interna</div><div style="font-size:15px;margin-bottom:14px;">📝 ${escapeHtml(r.note_direttivo)}</div>` : ''}
+      </div>
+      <div style="padding:12px 16px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px;background:var(--surface);">
+        <button id="rd-contatta" style="${btn}border:2px solid var(--accent);background:var(--surface);color:var(--accent);">📞 Contatta utente (copia numero)</button>
+        ${nuova ? `<button id="rd-archivia" style="${btn}border:2px solid var(--accent);background:var(--accent);color:#fff;">🗄️ Archivia (lavorazione fatta)</button>` : ''}
+      </div>
+    `;
+    document.body.appendChild(box);
+    const chiudi = function() { box.remove(); };
+    document.getElementById('rd-indietro').addEventListener('click', chiudi);
+    document.getElementById('rd-contatta').addEventListener('click', async function() {
+      const b = this;
+      let ok = false;
+      try {
+        await navigator.clipboard.writeText(telPulito);
+        ok = true;
+      } catch(e) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = telPulito;
+          ta.style.cssText = 'position:fixed;opacity:0;';
+          document.body.appendChild(ta);
+          ta.select();
+          ok = document.execCommand('copy');
+          ta.remove();
+        } catch(e2) { ok = false; }
+      }
+      const testoOrig = b.textContent;
+      b.textContent = ok ? '✅ Numero copiato: ' + telPulito : '❌ Copia non riuscita: ' + telPulito;
+      setTimeout(function() { b.textContent = testoOrig; }, 3000);
+    });
+    const arch = document.getElementById('rd-archivia');
+    if (arch) {
+      arch.addEventListener('click', async function() {
+        if (!confirm('Confermi di archiviare la richiesta di ' + r.nome + ' ' + r.cognome + '?\nVerrà spostata tra le lavorate.')) return;
+        await azioneRichiesta(id, 'lavorata');
+        chiudi();
+      });
     }
   }
   async function azioneRichiesta(id, azione, nota) {
