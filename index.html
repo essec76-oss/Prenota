@@ -1303,7 +1303,8 @@ function copiaLink() {
       }
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_keybox_codes', {
         method: 'POST',
-        headers: headers
+        headers: headers,
+        body: '{}'
       });
       if(!res.ok) throw new Error('fetch failed');
       const data = await res.json();
@@ -1498,7 +1499,8 @@ async function loadBookings(key){
     try{
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_giocatori_attivi', {
         method: 'POST',
-        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: '{}'
       });
       if (!res.ok) throw new Error('fetch failed');
       const rows = await res.json();
@@ -2009,7 +2011,8 @@ async function loadBookings(key){
           apikey: SUPABASE_KEY,
           'Content-Type': 'application/json',
           Authorization: 'Bearer ' + loggedUser.accessToken
-        }
+        },
+        body: '{}'
       });
       if (!response.ok) throw new Error('Errore caricamento status');
       const payload = await response.json();
