@@ -676,6 +676,7 @@
     body *{visibility:hidden !important;}
     #print-are-richieste, #print-are-richieste *{visibility:visible !important;}
     #print-are-richieste{
+      display:block;
       position:absolute;
       left:0; top:0;
       width:100%;
@@ -695,6 +696,193 @@
     }
   }
   #print-are-richieste{display:none;}
+  /* --- SCHEDA DETTAGLIO RICHIESTA (full-screen) --- */
+  #richiesta-dettaglio{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #richiesta-dettaglio .rd-top{
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  #richiesta-dettaglio .rd-back{
+    background:none;
+    border:none;
+    font-family:inherit;
+    font-size:16px;
+    font-weight:600;
+    color:var(--accent);
+    cursor:pointer;
+    padding:6px 0;
+  }
+  #richiesta-dettaglio .rd-top-title{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  #richiesta-dettaglio .rd-body{
+    flex:1;
+    overflow-y:auto;
+    padding:24px 20px 24px;
+    max-width:640px;
+    width:100%;
+    margin:0 auto;
+  }
+  #richiesta-dettaglio .rd-status{
+    display:inline-block;
+    padding:6px 16px;
+    border-radius:999px;
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  #richiesta-dettaglio h2.rd-name{
+    font-family:'Fraunces',serif;
+    font-size:34px;
+    line-height:1.1;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  #richiesta-dettaglio .rd-meta{
+    font-size:15px;
+    color:var(--ink-soft);
+    margin-bottom:24px;
+  }
+  #richiesta-dettaglio .rd-block{
+    margin-bottom:22px;
+  }
+  #richiesta-dettaglio .rd-label{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  #richiesta-dettaglio .rd-value-phone{
+    font-size:30px;
+    font-weight:700;
+    color:var(--ink);
+    letter-spacing:.02em;
+    word-break:break-all;
+    line-height:1.2;
+  }
+  #richiesta-dettaglio .rd-value-sport{
+    font-size:22px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  #richiesta-dettaglio .rd-value-msg{
+    font-size:20px;
+    line-height:1.5;
+    color:var(--ink);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  #richiesta-dettaglio .rd-value-note{
+    font-size:17px;
+    line-height:1.5;
+    color:var(--ink);
+    white-space:pre-wrap;
+    background:#FFF4E0;
+    border:1px solid #E8C989;
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  #richiesta-dettaglio .rd-copy-btn{
+    width:100%;
+    padding:18px 16px;
+    border-radius:12px;
+    border:2px solid var(--accent);
+    background:var(--surface);
+    color:var(--accent);
+    font-family:inherit;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .15s;
+    margin-top:8px;
+  }
+  #richiesta-dettaglio .rd-copy-btn:hover{
+    background:var(--accent);
+    color:#fff;
+  }
+  #richiesta-dettaglio .rd-copy-btn.copied{
+    background:var(--padel);
+    border-color:var(--padel);
+    color:#fff;
+  }
+  #richiesta-dettaglio .rd-actions{
+    flex-shrink:0;
+    padding:16px 20px 24px;
+    border-top:1px solid var(--line);
+    background:var(--surface);
+    display:flex;
+    gap:12px;
+    max-width:640px;
+    width:100%;
+    margin:0 auto;
+    box-shadow:0 -6px 20px rgba(0,0,0,0.05);
+  }
+  #richiesta-dettaglio .rd-actions button{
+    flex:1;
+    padding:18px 12px;
+    border-radius:12px;
+    font-family:inherit;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  #richiesta-dettaglio .rd-actions button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+  }
+  #richiesta-dettaglio .rd-btn-respingi{
+    background:var(--surface);
+    color:#B84B1E;
+    border:2px solid #B84B1E;
+  }
+  #richiesta-dettaglio .rd-btn-respingi:hover:not(:disabled){
+    background:#B84B1E;
+    color:#fff;
+  }
+  #richiesta-dettaglio .rd-btn-lavorata{
+    background:var(--padel);
+    color:#fff;
+    border:2px solid var(--padel);
+  }
+  #richiesta-dettaglio .rd-btn-lavorata:hover:not(:disabled){
+    background:#1e5744;
+    border-color:#1e5744;
+  }
+  #richiesta-dettaglio .rd-actions.single button{
+    flex:1;
+  }
+  @media (max-width:480px){
+    #richiesta-dettaglio h2.rd-name{font-size:28px;}
+    #richiesta-dettaglio .rd-value-phone{font-size:26px;}
+    #richiesta-dettaglio .rd-value-msg{font-size:18px;}
+    #richiesta-dettaglio .rd-actions{
+      flex-direction:column;
+      gap:10px;
+    }
+    #richiesta-dettaglio .rd-actions button{
+      padding:16px 12px;
+      font-size:16px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -769,7 +957,9 @@
     <div id="logged-in-extras-bottom" style="display:none;">
       <button class="clean-btn" id="clean-btn">🧹 Cancella prenotazioni vecchie (7+ giorni)</button>
     </div>
-      <script>
+  </div>
+</div>
+  <script>
 document.addEventListener('DOMContentLoaded', function(){
   var qrImg = document.getElementById('login-qr-code');
   if (qrImg) {
@@ -821,7 +1011,6 @@ function copiaLink() {
   const SUPABASE_URL = 'https://smwtbonxhvhrnyukrluw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_hEooIlJGPblzlaUbdO_ssA_wKEz6I-B';
   const SUPABASE_TABLE = 'Tennis';
-  const SUPABASE_TABLE_SETTINGS = 'Impostazioni';
   const CLEANUP_DAYS = 7;
   const PAST_SLOT_MARGIN_MINUTES = 10;
   let currentField = 'tennis';
@@ -988,7 +1177,8 @@ function copiaLink() {
         headers: { 
           apikey: SUPABASE_KEY,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal'
+          Prefer: 'return=minimal',
+          ...(loggedUser && loggedUser.accessToken ? { Authorization: 'Bearer ' + loggedUser.accessToken } : {})
         }
       });
       if (res.ok) {
@@ -1105,14 +1295,21 @@ function copiaLink() {
     });
   }
   async function loadKeyboxCode(){
+    // Codici key box via RPC: leggibili solo da membri validi loggati
     try{
-      const url = SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE_SETTINGS
-        + '?select=codice_keybox_tennis,codice_keybox_padel&id=eq.1';
-      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+      const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' };
+      if (loggedUser && loggedUser.accessToken) {
+        headers['Authorization'] = 'Bearer ' + loggedUser.accessToken;
+      }
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_keybox_codes', {
+        method: 'POST',
+        headers: headers,
+        body: '{}'
+      });
       if(!res.ok) throw new Error('fetch failed');
-      const rows = await res.json();
-      keyboxCodeTennis = (rows[0] && rows[0].codice_keybox_tennis) || null;
-      keyboxCodePadel = (rows[0] && rows[0].codice_keybox_padel) || null;
+      const data = await res.json();
+      keyboxCodeTennis = (data && data.tennis) || null;
+      keyboxCodePadel = (data && data.padel) || null;
     }catch(e){
       keyboxCodeTennis = null;
       keyboxCodePadel = null;
@@ -1201,7 +1398,6 @@ async function loadBookings(key){
         const keyboxHtml = (!loggedUser || booking.modalita === 'allenamento') ? '' : (keyboxCode
           ? '<div class="prenotato-da">🔑 Codice Key Box: <strong>' + keyboxCode + '</strong></div>'
           : '');
-        const ownCodeHtml = '';  // il codice non è più nel payload: lo carichiamo on-demand
         left.innerHTML = `
           <div class="time">${s.label}</div>
           <div class="status">${formatNamesDisplay(booking.names, currentField, booking.modalita)}</div>
@@ -1213,9 +1409,7 @@ async function loadBookings(key){
           // Nessuna azione disponibile per chi guarda senza login
         } else if (adminMode && loggedUser.is_admin) {
           const adminBtn = document.createElement('button');
-          adminBtn.className = 'book-btn';
-          adminBtn.style.background = '#B84B1E';
-          adminBtn.style.marginRight = '6px';
+          adminBtn.className = 'book-btn admin-delete';
           adminBtn.textContent = '🗑️ Admin';
           adminBtn.title = 'Cancella come admin (senza codice)';
           adminBtn.addEventListener('click', ()=> doAdminCancel(booking.id, s.label));
@@ -1271,6 +1465,10 @@ async function loadBookings(key){
       showToast('❌ Devi essere loggato per vedere il codice.');
       return;
     }
+    if (!loggedUser.accessToken) {
+      showToast('❌ Sessione sicura non attiva. Esci e rifai il login, poi riprova.');
+      return;
+    }
     try {
       const res = await fetch(SUPABASE_URL + '/functions/v1/hyper-function', {
         method: 'POST',
@@ -1297,20 +1495,21 @@ async function loadBookings(key){
   }
 
   async function loadAllPlayersForSelect(){
+    // Lettura tramite RPC: la tabella non è più leggibile direttamente
     try{
-      const [tessRes, ospRes] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo&attivo=eq.true&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,is_tennis_member,is_padel_member,attivo,scadenza&attivo=eq.true&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        })
-      ]);
-      const tesserati = tessRes.ok ? await tessRes.json() : [];
-      const ospiti = ospRes.ok ? await ospRes.json() : [];
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_giocatori_attivi', {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      if (!res.ok) throw new Error('fetch failed');
+      const rows = await res.json();
+      const tesserati = rows.filter(r => r.tipo === 'tesserato')
+        .map(r => ({ nome: r.nome, cognome: r.cognome }));
       const oggi = dateKey(new Date());
-      const ospitiValidi = ospiti.filter(o => !o.scadenza || o.scadenza >= oggi);
-      return { tesserati, ospiti: ospitiValidi };
+      const ospiti = rows.filter(r => r.tipo === 'ospite' && (!r.scadenza || r.scadenza >= oggi))
+        .map(r => ({ nome: r.nome, cognome: r.cognome }));
+      return { tesserati, ospiti };
     }catch(e){
       console.error('Errore caricamento giocatori:', e);
       return { tesserati: [], ospiti: [] };
@@ -1572,7 +1771,8 @@ async function loadBookings(key){
         method: 'DELETE',
         headers: {
           apikey: SUPABASE_KEY,
-          Prefer: 'return=minimal'
+          Prefer: 'return=minimal',
+          Authorization: 'Bearer ' + (loggedUser && loggedUser.accessToken ? loggedUser.accessToken : SUPABASE_KEY)
         }
       });
       if (res.ok) {
@@ -1805,14 +2005,18 @@ async function loadBookings(key){
   }
   async function load2FAStatus() {
     try {
-      const table = loggedUser.tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-      const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + loggedUser.id + '&select=totp_enabled', {
-        headers: { apikey: SUPABASE_KEY }
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_totp_status', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        },
+        body: '{}'
       });
       if (!response.ok) throw new Error('Errore caricamento status');
-      const data = await response.json();
-      const user = data[0];
-      if (!user) throw new Error('Utente non trovato');
+      const payload = await response.json();
+      const user = { totp_enabled: !!(payload && payload.totp_enabled) };
       const statusContainer = document.getElementById('2fa-status-container');
       if (user.totp_enabled) {
         statusContainer.innerHTML = `
@@ -1995,7 +2199,7 @@ async function loadBookings(key){
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="code-title">
           <h2 id="code-title">Prenotazione confermata</h2>
-          <div class="meta">Il tuo codice di cancellazione. Lo ritroverai sempre accanto a questa prenotazione nel calendario, quindi non devi segnarlo da nessuna parte.</div>
+          <div class="meta">Il tuo codice di cancellazione a 4 cifre. Puoi recuperarlo quando vuoi col pulsante «Mostra codice» accanto alla tua prenotazione nel calendario.</div>
           <div class="booking-code">${code}</div>
           <div class="modal-actions">
             <button class="btn-confirm" id="btn-code-ok" style="flex:none;width:100%;">Ho capito</button>
@@ -2238,85 +2442,60 @@ async function loadBookings(key){
   async function loadUserList(tipo) {
     const container = document.getElementById('user-list-container');
     container.innerHTML = '<div class="user-list-empty">⏳ Caricamento...</div>';
+    if (!loggedUser || !loggedUser.accessToken) {
+      container.innerHTML = '<div class="user-list-empty">❌ Serve una sessione admin sicura (modalità Admin attiva).</div>';
+      return;
+    }
     try {
-      let data = [];
-      if (tipo === 'tesserati') {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,scadenza,attivo,can_book_special&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        });
-        if (!res.ok) throw new Error('Errore caricamento tesserati');
-        data = await res.json();
-        if (data.length === 0) {
-          container.innerHTML = '<div class="user-list-empty">📭 Nessun tesserato presente.</div>';
-          return;
-        }
-        let html = '<div class="user-list-section-title">⭐ Tesserati</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Torneo/Allen.</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
-        data.forEach(u => {
-          userDataCache['Tesserati:' + u.id] = u;
-          const sports = [];
-          if (u.is_tennis_member) sports.push('🎾');
-          if (u.is_padel_member) sports.push('🏸');
-          const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
-          const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
-          const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
-          const specialLabel = u.can_book_special ? '✅' : '—';
-          html += `<tr>
-            <td><strong>${escapeHtml(u.codice)}</strong></td>
-            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
-            <td>${sportLabel}</td>
-            <td>${specialLabel}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
-            <td>
-              <div class="user-actions">
-                <button class="btn-edit" data-action="edit" data-table="Tesserati" data-id="${escapeHtml(u.id)}">✏️</button>
-                <button class="btn-delete" data-action="delete" data-table="Tesserati" data-id="${escapeHtml(u.id)}">🗑️</button>
-              </div>
-            </td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        attachUserActionListeners(container);
-      } else {
-        const res = await fetch(SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo&order=cognome.asc', {
-          headers: { apikey: SUPABASE_KEY }
-        });
-        if (!res.ok) throw new Error('Errore caricamento ospiti');
-        data = await res.json();
-        if (data.length === 0) {
-          container.innerHTML = '<div class="user-list-empty">📭 Nessun ospite presente.</div>';
-          return;
-        }
-        let html = '<div class="user-list-section-title">👤 Ospiti</div>';
-        html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
-        data.forEach(u => {
-          userDataCache['Ospiti:' + u.id] = u;
-          const sports = [];
-          if (u.is_tennis_member) sports.push('🎾');
-          if (u.is_padel_member) sports.push('🏸');
-          const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
-          const scadenza = u.scadenza ? u.scadenza.split('-').reverse().join('/') : 'N/D';
-          const attivo = u.attivo !== undefined ? (u.attivo ? '✅ Attivo' : '❌ Inattivo') : '✅ Attivo';
-          html += `<tr>
-            <td><strong>${escapeHtml(u.codice)}</strong></td>
-            <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
-            <td>${sportLabel}</td>
-            <td>${scadenza}</td>
-            <td>${attivo}</td>
-            <td>
-              <div class="user-actions">
-                <button class="btn-edit" data-action="edit" data-table="Ospiti" data-id="${escapeHtml(u.id)}">✏️</button>
-                <button class="btn-delete" data-action="delete" data-table="Ospiti" data-id="${escapeHtml(u.id)}">🗑️</button>
-              </div>
-            </td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        attachUserActionListeners(container);
+      // Elenco utenti via RPC: richiede token admin verificato server-side
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_admin_users', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        },
+        body: JSON.stringify({ tipo: tipo })
+      });
+      if (!res.ok) throw new Error('Errore caricamento utenti');
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        container.innerHTML = '<div class="user-list-empty">📭 Nessun ' + (tipo === 'tesserati' ? 'tesserato' : 'ospite') + ' presente.</div>';
+        return;
       }
+      const isTesserati = tipo === 'tesserati';
+      let html = '<div class="user-list-section-title">' + (isTesserati ? '⭐ Tesserati' : '👤 Ospiti') + '</div>';
+      html += '<table class="user-list-table"><thead><tr><th>Codice</th><th>Nome</th><th>Sport</th>'
+        + (isTesserati ? '<th>Torneo/Allen.</th>' : '')
+        + '<th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+      data.forEach(u => {
+        userDataCache[(isTesserati ? 'Tesserati:' : 'Ospiti:') + u.id] = u;
+        const sports = [];
+        if (u.is_tennis_member) sports.push('🎾');
+        if (u.is_padel_member) sports.push('🏸');
+        const sportLabel = sports.length === 0 ? '❌ Nessuno' : sports.join(' ');
+        const scadenza = u.scadenza ? String(u.scadenza).split('-').reverse().join('/') : 'N/D';
+        const attivo = (u.attivo === undefined || u.attivo === null) ? true : !!u.attivo;
+        const attivoLabel = attivo ? '✅ Attivo' : '❌ Inattivo';
+        const specialLabel = u.can_book_special ? '✅' : '—';
+        html += `<tr>
+          <td><strong>${escapeHtml(u.codice)}</strong></td>
+          <td>${escapeHtml(u.nome + ' ' + u.cognome)}</td>
+          <td>${sportLabel}</td>
+          ${isTesserati ? `<td>${specialLabel}</td>` : ''}
+          <td>${scadenza}</td>
+          <td>${attivoLabel}</td>
+          <td>
+            <div class="user-actions">
+              <button class="btn-edit" data-action="edit" data-table="${isTesserati ? 'Tesserati' : 'Ospiti'}" data-id="${escapeHtml(u.id)}">✏️</button>
+              <button class="btn-delete" data-action="delete" data-table="${isTesserati ? 'Tesserati' : 'Ospiti'}" data-id="${escapeHtml(u.id)}">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+      attachUserActionListeners(container);
     } catch(e) {
       container.innerHTML = '<div class="user-list-empty">❌ Errore nel caricamento: ' + e.message + '</div>';
     }
@@ -2395,18 +2574,20 @@ async function loadBookings(key){
       }
       codice = 'o' + suffix;
     }
-    const table = tipo === 'tesserato' ? 'Tesserati' : 'Ospiti';
-    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?codice=eq.' + codice + '&select=id', {
-      headers: { 
+    const checkRes = await fetch(SUPABASE_URL + '/rest/v1/rpc/codice_libero', {
+      method: 'POST',
+      headers: {
         apikey: SUPABASE_KEY,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + (loggedUser && loggedUser.accessToken ? loggedUser.accessToken : SUPABASE_KEY)
+      },
+      body: JSON.stringify({ p_codice: codice })
     });
     if (!checkRes.ok) {
       throw new Error('Errore verifica codice');
     }
-    const existing = await checkRes.json();
-    if (existing && existing.length > 0) {
+    const isFree = await checkRes.json();
+    if (isFree !== true) {
       console.log('🔄 Codice ' + codice + ' già esistente, ritento...');
       return generateUniqueCodeFrontend(tipo, tentativi + 1);
     }
@@ -2683,6 +2864,24 @@ async function loadBookings(key){
       console.warn('⚠️ Impossibile verificare prenotazioni future collegate:', checkErr);
     }
     if (!confirm(confirmMsg)) return;
+    // FIX: cancella davvero le prenotazioni collegate, come promesso nel messaggio di conferma
+    try {
+      const fkColumn = table === 'Tesserati' ? 'tesserato_id' : 'ospite_id';
+      const delBookRes = await fetch(SUPABASE_URL + '/rest/v1/' + SUPABASE_TABLE
+        + '?' + fkColumn + '=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+          Authorization: 'Bearer ' + loggedUser.accessToken
+        }
+      });
+      if (!delBookRes.ok) throw new Error('Errore cancellazione prenotazioni collegate');
+    } catch(delErr) {
+      console.warn('⚠️ Impossibile cancellare le prenotazioni collegate:', delErr);
+      showToast('⚠️ Le prenotazioni future potrebbero non essere state cancellate');
+    }
     try {
       const tableName = table;
       const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
@@ -2826,21 +3025,25 @@ async function loadBookings(key){
     errorEl.textContent = 'Verifica in corso...';
     loginBtn.disabled = true;
     try {
-      let url;
-      let tipo;
-      if (codice.startsWith('t')) {
-        tipo = 'tesserato';
-        url = SUPABASE_URL + '/rest/v1/Tesserati?select=id,nome,cognome,codice,is_tennis_member,is_padel_member,is_admin,is_direttivo,scadenza,auth_id,totp_enabled,can_book_special'
-          + '&codice=eq.' + encodeURIComponent(codice);
-      } else {
-        tipo = 'ospite';
-        url = SUPABASE_URL + '/rest/v1/Ospiti?select=id,nome,cognome,codice,scadenza,is_tennis_member,is_padel_member,attivo'
-          + '&codice=eq.' + encodeURIComponent(codice);
-      }
+      const tipo = codice.startsWith('t') ? 'tesserato' : 'ospite';
       console.log('🔍 Cerco utente con codice:', codice);
-      const res = await fetch(url, { headers: { apikey: SUPABASE_KEY } });
+            const res = await fetch(SUPABASE_URL + '/functions/v1/app-login', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ codice: codice })
+      });
+      if (res.status === 429) {
+        errorEl.textContent = 'Troppi tentativi. Riprova tra qualche minuto.';
+        loginBtn.disabled = false;
+        return;
+      }
       if (!res.ok) throw new Error('Errore di connessione');
-      const data = await res.json();
+      const loginResp = await res.json();
+      const data = loginResp.utente ? [loginResp.utente] : [];
       console.log('📦 Dati ricevuti:', data);
       if (data.length === 0) {
         errorEl.textContent = '❌ Codice non valido. Controlla di averlo scritto bene.';
@@ -2893,8 +3096,9 @@ async function loadBookings(key){
         try { localStorage.setItem('lastLoginCodice', loggedUser.codice); } catch(e) {}
         renderGuestExpiry();
         setupAdminToggle();
+        updateCleanBtnVisibility();
         renderTesseratoExpiry();
-        setAccent('tennis');
+        setAccent(currentField);
         renderFieldNote();
         renderDow();
         renderCalendar();
@@ -2912,7 +3116,6 @@ async function loadBookings(key){
     }
   }
   async function completeLogin(utente, tipo) {
-    adminMode
     let accessToken = null;
 const authEmail = utente.codice + '@circolo.local';
 const authPassword = utente.codice;
@@ -2968,6 +3171,7 @@ try {
     document.getElementById('user-badge').innerHTML = tipoLabel;
     renderGuestExpiry();
     setupAdminToggle();
+    updateCleanBtnVisibility();
     renderTesseratoExpiry();
     renderFieldNote();
     updateBookingDots();
@@ -3048,11 +3252,19 @@ try {
     }, { passive: true });
   })();
   document.getElementById('clean-btn').addEventListener('click', async function() {
+    if (!loggedUser || !loggedUser.is_admin || !loggedUser.accessToken) {
+      showToast('🔑 La pulizia delle prenotazioni vecchie è riservata agli admin con sessione attiva.');
+      return;
+    }
     await deleteOldBookings();
     showToast('🧹 Prenotazioni vecchie cancellate!');
     updateBookingDots();
     renderSlots();
   });
+  function updateCleanBtnVisibility(){
+    const btn = document.getElementById('clean-btn');
+    if (btn) btn.style.display = (loggedUser && loggedUser.is_admin) ? 'inline-block' : 'none';
+  }
   function mostraFormRichiestaContatto(utente) {
     const precompilato = !!utente;
     if (!precompilato) {
@@ -3213,13 +3425,13 @@ try {
       <div class="overlay" id="overlay">
         <div class="modal" role="dialog" aria-modal="true" style="max-width:820px;">
           <h2>📩 Richieste di contatto</h2>
-          <p class="modal-subtitle">Elenco delle richieste ricevute dagli ospiti. Puoi stampare o esportare in CSV.</p>
+          <p class="modal-subtitle">Tocca una richiesta per aprirla, contatta la persona e poi archiviala. Puoi anche stampare o esportare in CSV.</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
             <label style="font-size:13px;color:var(--ink-soft);">Filtro stato:</label>
             <select id="richieste-filtro" style="padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">
-              <option value="nuova">🆕 Solo nuove</option>
-              <option value="lavorata">✅ Solo lavorate</option>
-              <option value="archiviata">🗄️ Solo archiviate</option>
+              <option value="nuova">🆕 Da lavorare (nuove)</option>
+              <option value="lavorata">✅ Già lavorate (archiviate)</option>
+              <option value="respinta">🚫 Respinte</option>
               <option value="">📋 Tutte</option>
             </select>
             <button class="clean-btn" id="richieste-stampa" style="padding:8px 14px;">🖨️ Stampa elenco</button>
@@ -3264,49 +3476,158 @@ try {
         container.innerHTML = '<div class="user-list-empty">📭 Nessuna richiesta in questo stato.</div>';
         return;
       }
-      let html = '<table class="user-list-table"><thead><tr>'
-        + '<th>Data</th><th>Nome</th><th>Telefono</th><th>Sport</th><th>Messaggio</th><th>Stato</th><th>Azioni</th>'
-        + '</tr></thead><tbody>';
+      let html = '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;">👆 Tocca una richiesta per aprirla</div>';
       richiesteCache.forEach(r => {
         const dataFmt = r.created_at ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
         const sportLabel = r.sport === 'tennis' ? '🎾' : r.sport === 'padel' ? '🏸' : '🎾🏸';
-        const statoBadge = r.stato === 'nuova' ? '🆕' : r.stato === 'lavorata' ? '✅' : '🗄️';
+        let st;
+        if (r.stato === 'nuova') st = {t:'🆕 Nuova', bg:'#fde8c8', c:'#8a4b00'};
+        else if (r.stato === 'respinta') st = {t:'🚫 Respinta', bg:'#f8d7da', c:'#7a1f2b'};
+        else st = {t:'✅ Lavorata', bg:'#d9f0df', c:'#1f6b3a'};
         const msg = r.messaggio ? escapeHtml(r.messaggio).slice(0,60) : '—';
-        html += `<tr>
-          <td style="font-size:12px;white-space:nowrap;">${dataFmt}</td>
-          <td>${escapeHtml(r.nome + ' ' + r.cognome)}</td>
-          <td>${escapeHtml(r.telefono)}</td>
-          <td>${sportLabel}</td>
-          <td style="font-size:12px;">${msg}</td>
-          <td>${statoBadge}</td>
-          <td>
-            <div class="user-actions">
-              ${r.stato === 'nuova' ? `<button class="btn-edit" data-az="lavorata" data-id="${escapeHtml(r.id)}">✅</button>` : ''}
-              <button class="btn-edit" data-az="nota" data-id="${escapeHtml(r.id)}">📝</button>
-              ${r.stato !== 'archiviata' ? `<button class="btn-delete" data-az="archiviata" data-id="${escapeHtml(r.id)}">🗄️</button>` : ''}
-            </div>
-          </td>
-        </tr>`;
+        html += `<div data-apri="${escapeHtml(r.id)}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong style="font-size:16px;">${sportLabel} ${escapeHtml(r.nome + ' ' + r.cognome)}</strong>
+            <span style="background:${st.bg};color:${st.c};padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;">${st.t}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">${dataFmt}</div>
+          <div style="font-size:13px;margin-top:4px;">${msg}</div>
+        </div>`;
       });
-      html += '</tbody></table>';
       container.innerHTML = html;
-      container.querySelectorAll('button[data-az]').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const az = btn.dataset.az;
-          const id = btn.dataset.id;
-          if (az === 'nota') {
-            const nota = prompt('Nota interna:');
-            if (nota === null) return;
-            azioneRichiesta(id, 'nota', nota);
-          } else {
-            azioneRichiesta(id, az);
-          }
+      container.querySelectorAll('[data-apri]').forEach(riga => {
+        riga.addEventListener('click', function() {
+          apriDettaglioRichiesta(riga.dataset.apri);
         });
       });
     } catch(e) {
       container.innerHTML = '<div class="user-list-empty">❌ ' + e.message + '</div>';
     }
   }
+
+  // ==== SCHEDA DETTAGLIO RICHIESTA (full-screen) ====
+  function apriDettaglioRichiesta(id) {
+    const r = richiesteCache.find(x => String(x.id) === String(id));
+    if (!r) return;
+    const vecchia = document.getElementById('richiesta-dettaglio');
+    if (vecchia) vecchia.remove();
+
+    const dataFmt = r.created_at
+      ? new Date(r.created_at).toLocaleString('it-IT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '';
+    const sportLabel = r.sport === 'tennis' ? '🎾 Tennis'
+                     : r.sport === 'padel' ? '🏸 Padel'
+                     : '🎾🏸 Tennis e Padel';
+
+    const nuova = r.stato === 'nuova';
+    let stBg, stCol, stTxt;
+    if (r.stato === 'nuova')      { stBg='#fde8c8'; stCol='#8a4b00'; stTxt='🆕 Nuova'; }
+    else if (r.stato === 'respinta') { stBg='#f8d7da'; stCol='#7a1f2b'; stTxt='🚫 Respinta'; }
+    else                          { stBg='#d9f0df'; stCol='#1f6b3a'; stTxt='✅ Lavorata'; }
+
+    const telPulito = String(r.telefono || '').replace(/[^\d+]/g, '');
+
+    const box = document.createElement('div');
+    box.id = 'richiesta-dettaglio';
+    box.innerHTML = `
+      <div class="rd-top">
+        <button class="rd-back" id="rd-indietro">← Indietro</button>
+        <div class="rd-top-title">Dettaglio richiesta</div>
+      </div>
+      <div class="rd-body">
+        <span class="rd-status" style="background:${stBg};color:${stCol};">${stTxt}</span>
+        <h2 class="rd-name">${escapeHtml(r.nome + ' ' + r.cognome)}</h2>
+        <div class="rd-meta">Ricevuta il ${dataFmt}</div>
+
+        <div class="rd-block">
+          <div class="rd-label">Telefono</div>
+          <div class="rd-value-phone">📱 ${escapeHtml(r.telefono || '—')}</div>
+          <button class="rd-copy-btn" id="rd-contatta">📋 Copia numero di telefono</button>
+        </div>
+
+        <div class="rd-block">
+          <div class="rd-label">Sport di interesse</div>
+          <div class="rd-value-sport">${sportLabel}</div>
+        </div>
+
+        <div class="rd-block">
+          <div class="rd-label">Messaggio</div>
+          <div class="rd-value-msg">${r.messaggio ? escapeHtml(r.messaggio) : '—'}</div>
+        </div>
+
+        ${r.note_direttivo ? `
+        <div class="rd-block">
+          <div class="rd-label">Nota interna</div>
+          <div class="rd-value-note">📝 ${escapeHtml(r.note_direttivo)}</div>
+        </div>` : ''}
+      </div>
+      <div class="rd-actions">
+        ${nuova
+          ? `<button class="rd-btn-respingi" id="rd-respingi">🚫 Respingi richiesta</button>
+             <button class="rd-btn-lavorata" id="rd-lavorata">✅ Richiesta lavorata</button>`
+          : `<button class="rd-btn-lavorata" id="rd-chiudi" style="background:var(--surface);color:var(--accent);border:2px solid var(--accent);">Chiudi</button>`
+        }
+      </div>
+    `;
+    document.body.appendChild(box);
+
+    const chiudi = () => box.remove();
+
+    document.getElementById('rd-indietro').addEventListener('click', chiudi);
+
+    const copiaBtn = document.getElementById('rd-contatta');
+    copiaBtn.addEventListener('click', async function() {
+      const b = this;
+      let ok = false;
+      try {
+        await navigator.clipboard.writeText(telPulito);
+        ok = true;
+      } catch(e) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = telPulito;
+          ta.style.cssText = 'position:fixed;opacity:0;';
+          document.body.appendChild(ta);
+          ta.select();
+          ok = document.execCommand('copy');
+          ta.remove();
+        } catch(e2) { ok = false; }
+      }
+      const testoOrig = '📋 Copia numero di telefono';
+      b.textContent = ok ? '✅ Numero copiato: ' + telPulito : '❌ Copia non riuscita: ' + telPulito;
+      b.classList.add('copied');
+      setTimeout(() => {
+        b.textContent = testoOrig;
+        b.classList.remove('copied');
+      }, 2500);
+    });
+
+    const respingiBtn = document.getElementById('rd-respingi');
+    if (respingiBtn) {
+      respingiBtn.addEventListener('click', async function() {
+        if (!confirm('Confermi di RESPINGERE la richiesta di ' + r.nome + ' ' + r.cognome + '?')) return;
+        this.disabled = true;
+        await azioneRichiesta(id, 'respinta');
+        chiudi();
+      });
+    }
+
+    const lavorataBtn = document.getElementById('rd-lavorata');
+    if (lavorataBtn) {
+      lavorataBtn.addEventListener('click', async function() {
+        if (!confirm('Confermi di segnare come LAVORATA la richiesta di ' + r.nome + ' ' + r.cognome + '?')) return;
+        this.disabled = true;
+        await azioneRichiesta(id, 'lavorata');
+        chiudi();
+      });
+    }
+
+    const chiudiBtn = document.getElementById('rd-chiudi');
+    if (chiudiBtn) {
+      chiudiBtn.addEventListener('click', chiudi);
+    }
+  }
+
   async function azioneRichiesta(id, azione, nota) {
     if (!loggedUser || !loggedUser.accessToken) {
       showToast('❌ Devi essere loggato come admin.');
@@ -3376,7 +3697,7 @@ try {
     URL.revokeObjectURL(url);
     showToast('✅ CSV scaricato');
   }
-  })();
+})();
 </script>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
