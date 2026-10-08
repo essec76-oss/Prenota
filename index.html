@@ -3102,7 +3102,7 @@ async function loadBookings(key){
         renderFieldNote();
         renderDow();
         renderCalendar();
-        deleteOldBookings();
+        // deleteOldBookings();
         showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
         errorEl.textContent = '';
         loginBtn.disabled = false;
@@ -3177,7 +3177,7 @@ try {
     renderFieldNote();
     updateBookingDots();
     if (selectedDate) { renderSlots(); }
-    deleteOldBookings();
+    // deleteOldBookings();
     if (accessToken) {
       setTimeout(function(){ showToast('🔐 Login sicuro (Supabase Auth) attivo per ' + loggedUser.codice); }, 400);
     }
