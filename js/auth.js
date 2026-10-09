@@ -54,14 +54,15 @@ export async function handleLogin() {
     // Chiama app-login passando codice + pin
     const res = await appLogin(codice, pin);
 
-    // Rate limit
+    // ============ ORDINE CONTROLLI IMPORTANTE ============
+    // 1. Rate limit (429) — priorità massima
     if (res.status === 429) {
       errorEl.textContent = 'Troppi tentativi. Riprova tra qualche minuto.';
       loginBtn.disabled = false;
       return;
     }
 
-    // 401: PIN richiesto o PIN sbagliato
+    // 2. 401: PIN richiesto o PIN sbagliato (DEVE venire PRIMA di !res.ok)
     if (res.status === 401) {
       const errResp = await res.json().catch(() => ({}));
 
@@ -87,7 +88,9 @@ export async function handleLogin() {
       return;
     }
 
+    // 3. Ora è sicuro controllare !res.ok (401 e 429 già gestiti sopra)
     if (!res.ok) throw new Error('Errore di connessione');
+    // ======================================================
 
     const loginResp = await res.json();
     const data = loginResp.utente ? [loginResp.utente] : [];
