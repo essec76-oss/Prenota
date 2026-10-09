@@ -1,5 +1,12 @@
-  // ============================================================
+// ============================================================
 // slots.js — Slot orari, prenotazione, modale booking
+// ============================================================
+// Modifiche:
+//  - Menu unico misto (tesserati + ospiti) con etichetta a fianco
+//  - Filtro stretto per sport (padel → solo is_padel_member, tennis → solo is_tennis_member)
+//  - Esclusione del prenotante dal menu giocatori
+//  - Esclusione dinamica dei giocatori già scelti negli altri campi
+//  - Confronto case-insensitive + trim spazi
 // ============================================================
 
 import { FIELDS } from './config.js';
@@ -8,6 +15,11 @@ import { dateKey, fmtTime, escapeHtml, showToast, closeModal, scrollToAuth } fro
 import { loadBookings, loadKeyboxCodes, loadAllPlayers, createBooking } from './api.js';
 import { canBookField, isOwnBooking } from './ui.js';
 import { updateBookingDots } from './calendar.js';
+
+// ---------- NORMALIZZAZIONE NOMI (case-insensitive + trim) ----------
+function normName(s) {
+  return String(s || '').trim().toLowerCase();
+}
 
 export function buildSlots(field) {
   const f = FIELDS[field];
@@ -172,9 +184,10 @@ export function openBookingModal(slot, timeId) {
   const root = document.getElementById('modal-root');
   const nameCount = f.maxNames;
   const requiredCount = f.minNames;
-  const prenotanteName = escapeHtml(state.loggedUser.nome + ' ' + state.loggedUser.cognome);
+  const prenotanteName = state.loggedUser.nome + ' ' + state.loggedUser.cognome;
+  const prenotanteNameEscaped = escapeHtml(prenotanteName);
 
-  let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteName + '" readonly />\n      </div>';
+  let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteNameEscaped + '" readonly />\n      </div>';
   for (let i = 1; i < nameCount; i++) {
     const isRequired = i < requiredCount;
     fieldsHtml += '<div class="name-field" id="name-field-' + i + '">\n        <label for="name-' + i + '">Giocatore ' + (i + 1) + (isRequired ? ' (obbligatorio)' : ' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
@@ -194,7 +207,7 @@ export function openBookingModal(slot, timeId) {
         <h2 id="modal-title">${f.label}</h2>
         <div class="meta">${new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })} · ${slot.label}</div>
         <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
-          👤 Stai prenotando come: <strong>${escapeHtml(state.loggedUser.nome + ' ' + state.loggedUser.cognome)}</strong>
+          👤 Stai prenotando come: <strong>${prenotanteNameEscaped}</strong>
           ${state.loggedUser.tipo === 'tesserato' ? '⭐ (Tesserato)' : '(Ospite)'}
         </div>
         ${modeSelectorHtml}
@@ -224,36 +237,90 @@ export function openBookingModal(slot, timeId) {
     });
   }
 
+  // Carica tutti i giocatori, filtra per sport, esclude prenotante, poi monta TomSelect
   loadAllPlayers().then(({ tesserati, ospiti }) => {
-    const options = [];
+    // Costruisci lista mista con etichette
+    const allOptions = [];
+
+    const fieldKey = state.currentField; // 'tennis' o 'padel'
+    const sportFlag = fieldKey === 'padel' ? 'is_padel_member' : 'is_tennis_member';
+
     tesserati.forEach(u => {
+      if (!u[sportFlag]) return; // filtro stretto per sport
       const label = u.nome + ' ' + u.cognome;
-      options.push({ value: label, text: label, optgroup: 'tesserati' });
+      allOptions.push({
+        value: label,
+        text: label + '  ⭐ Tesserato',
+        nameRaw: label
+      });
     });
     ospiti.forEach(u => {
+      if (!u[sportFlag]) return;
       const label = u.nome + ' ' + u.cognome;
-      options.push({ value: label, text: label, optgroup: 'ospiti' });
+      allOptions.push({
+        value: label,
+        text: label + '  👤 Ospite',
+        nameRaw: label
+      });
     });
+
+    // Ordina alfabeticamente per nomeRaw
+    allOptions.sort((a, b) => a.nameRaw.localeCompare(b.nameRaw, 'it'));
+
+    // Crea i TomSelect con callback di esclusione dinamica
+    const tomSelects = {}; // { 'name-1': tomSelectInstance, ... }
+    const prenotanteNorm = normName(prenotanteName);
+
+    function getAllSelectedNorm() {
+      const selected = [prenotanteNorm]; // il prenotante è sempre "occupato"
+      Object.keys(tomSelects).forEach(id => {
+        const v = tomSelects[id].getValue();
+        if (v) selected.push(normName(v));
+      });
+      return selected;
+    }
+
+    function refreshAllOptions() {
+      const excluded = getAllSelectedNorm();
+      Object.keys(tomSelects).forEach(id => {
+        const ts = tomSelects[id];
+        const currentValue = ts.getValue();
+        const currentValueNorm = normName(currentValue);
+        // Opzioni disponibili = tutte tranne quelle occupate (ma la propria selezione resta visibile)
+        const available = allOptions.filter(opt => {
+          const n = normName(opt.nameRaw);
+          if (n === currentValueNorm) return true; // tieni visibile la propria selezione
+          return !excluded.includes(n);
+        });
+        ts.clearOptions();
+        ts.addOptions(available);
+        ts.refreshOptions(false);
+      });
+    }
+
     for (let i = 1; i < nameCount; i++) {
       const el = document.getElementById('name-' + i);
       if (!el) continue;
-      new TomSelect(el, {
-        options: options,
-        optgroups: [
-          { value: 'tesserati', label: '⭐ Tesserati' },
-          { value: 'ospiti', label: '👤 Ospiti' }
-        ],
-        optgroupField: 'optgroup',
+
+      const ts = new TomSelect(el, {
+        options: allOptions,
         labelField: 'text',
         valueField: 'value',
-        searchField: ['text'],
+        searchField: ['text', 'nameRaw'],
         placeholder: 'Cerca per nome...',
         allowEmptyOption: true,
-        maxOptions: 300,
+        maxOptions: 500,
         create: false,
-        sortField: { field: 'text', direction: 'asc' }
+        sortField: { field: 'nameRaw', direction: 'asc' },
+        onChange: function () {
+          refreshAllOptions();
+        }
       });
+      tomSelects['name-' + i] = ts;
     }
+
+    // Applica subito l'esclusione del prenotante
+    refreshAllOptions();
   });
 }
 
@@ -286,6 +353,19 @@ export async function confirmBooking(timeId, requiredCount, nameCount) {
     for (let i = 0; i < nameCount; i++) {
       const val = document.getElementById('name-' + i).value.trim();
       if (val) names.push(val);
+    }
+  }
+
+  // Validazione doppioni (case-insensitive)
+  if (!isAllenamento) {
+    const seen = new Set();
+    for (const n of names) {
+      const key = normName(n);
+      if (seen.has(key)) {
+        errorEl.textContent = 'Non puoi selezionare la stessa persona due volte.';
+        return;
+      }
+      seen.add(key);
     }
   }
 
