@@ -57,13 +57,20 @@
     </div>
     <div id="auth-section">
       <div id="login-box" class="login-box">
-        <div class="name-field">
-          <label for="login-codice">Codice ID (es. t1234 o oab12c)</label>
-          <input id="login-codice" type="password" placeholder="Inserisci il tuo codice" />
-        </div>
-        <div class="form-error" id="login-error"></div>
-        <button class="btn-confirm" id="login-btn">🔓 Accedi per prenotare</button>
-      </div>
+  <div class="name-field">
+    <label for="login-codice">Codice ID (es. t1234 o oab12c)</label>
+    <input id="login-codice" type="text" placeholder="Inserisci il tuo codice" autocomplete="username" />
+  </div>
+  <div class="name-field" id="pin-field" style="display:none;">
+    <label for="login-pin">PIN (6 cifre)</label>
+    <input id="login-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="current-password" />
+    <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">
+      Il PIN che hai scelto al primo accesso
+    </div>
+  </div>
+  <div class="form-error" id="login-error"></div>
+  <button class="btn-confirm" id="login-btn">🔓 Accedi per prenotare</button>
+</div>
       <div class="qr-share-box">
         <p class="qr-share-title">Condividi il link di prenotazione</p>
         <img id="login-qr-code" class="qr-image" alt="QR code del portale di prenotazione" />
