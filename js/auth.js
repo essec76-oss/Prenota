@@ -38,6 +38,12 @@ export async function handleLogin() {
     return;
   }
 
+  // Se l'utente ha inserito un PIN ma non è nel formato giusto, fermiamoci subito
+  if (pin && !/^\d{6}$/.test(pin)) {
+    errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
+    return;
+  }
+
   errorEl.textContent = 'Verifica in corso...';
   loginBtn.disabled = true;
 
@@ -45,13 +51,42 @@ export async function handleLogin() {
     const tipo = codice.startsWith('t') ? 'tesserato' : 'ospite';
     console.log('🔍 Cerco utente con codice [REDACTED]');
 
-    const res = await appLogin(codice);
+    // Chiama app-login passando codice + pin
+    const res = await appLogin(codice, pin);
 
+    // Rate limit
     if (res.status === 429) {
       errorEl.textContent = 'Troppi tentativi. Riprova tra qualche minuto.';
       loginBtn.disabled = false;
       return;
     }
+
+    // 401: PIN richiesto o PIN sbagliato
+    if (res.status === 401) {
+      const errResp = await res.json().catch(() => ({}));
+
+      if (errResp.pin_required) {
+        setLoginPinVisible(true);
+        const pinInput = document.getElementById('login-pin');
+        if (pinInput) pinInput.focus();
+        errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
+        loginBtn.disabled = false;
+        return;
+      }
+
+      if (errResp.error === 'PIN non corretto') {
+        errorEl.textContent = '❌ PIN non corretto. Riprova.';
+        const pinInput = document.getElementById('login-pin');
+        if (pinInput) { pinInput.value = ''; pinInput.focus(); }
+        loginBtn.disabled = false;
+        return;
+      }
+
+      errorEl.textContent = errResp.error || 'Accesso negato.';
+      loginBtn.disabled = false;
+      return;
+    }
+
     if (!res.ok) throw new Error('Errore di connessione');
 
     const loginResp = await res.json();
@@ -65,26 +100,6 @@ export async function handleLogin() {
     }
 
     const utente = data[0];
-
-    // --- GESTIONE PIN ---
-    const pinSet = utente.pin_set === true;
-
-    // Se l'utente ha il PIN ma non l'ha scritto → mostro il campo e chiedo di inserirlo
-    if (pinSet && !pin) {
-      setLoginPinVisible(true);
-      const pinInput = document.getElementById('login-pin');
-      if (pinInput) pinInput.focus();
-      errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
-      loginBtn.disabled = false;
-      return;
-    }
-
-    // Validazione formato PIN (se inserito)
-    if (pin && !/^\d{6}$/.test(pin)) {
-      errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
-      loginBtn.disabled = false;
-      return;
-    }
 
     // Controllo scadenza ospite
     if (tipo === 'ospite') {
@@ -124,7 +139,7 @@ export async function handleLogin() {
         can_book_special: utente.can_book_special || false,
         scadenza: utente.scadenza || null,
         totp_enabled: utente.totp_enabled || false,
-        pin_set: pinSet,
+        pin_set: utente.pin_set === true,
         authenticated: !!(loginResp.session && loginResp.session.access_token),
         accessToken: loginResp.session ? loginResp.session.access_token : null
       };
@@ -155,12 +170,12 @@ export async function handleLogin() {
 export async function completeLogin(utente, tipo, pin, sessionFromAppLogin) {
   let accessToken = null;
 
-  // 1. Usa la sessione che arriva da app-login (già valida lato server, magic link)
+  // 1. Usa la sessione che arriva da app-login (già valida lato server)
   if (sessionFromAppLogin && sessionFromAppLogin.access_token) {
     accessToken = sessionFromAppLogin.access_token;
     console.log('🔐 Sessione ottenuta da app-login');
   } else {
-    // Fallback: prova login Supabase Auth classico (per retrocompatibilità)
+    // Fallback: prova login Supabase Auth classico (retrocompatibilità)
     const authEmail = utente.codice + '@circolo.local';
     const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
     try {
