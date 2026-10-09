@@ -38,7 +38,6 @@ export async function handleLogin() {
     return;
   }
 
-  // Se l'utente ha inserito un PIN ma non è nel formato giusto, fermiamoci subito
   if (pin && !/^\d{6}$/.test(pin)) {
     errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
     return;
@@ -51,7 +50,6 @@ export async function handleLogin() {
     const tipo = codice.startsWith('t') ? 'tesserato' : 'ospite';
     console.log('🔍 Cerco utente con codice [REDACTED]');
 
-    // Chiama app-login passando codice + pin
     const res = await appLogin(codice, pin);
 
     // ============ ORDINE CONTROLLI IMPORTANTE ============
@@ -104,7 +102,6 @@ export async function handleLogin() {
 
     const utente = data[0];
 
-    // Controllo scadenza ospite
     if (tipo === 'ospite') {
       const oggi = dateKey(new Date());
       const scaduto = utente.scadenza && utente.scadenza < oggi;
@@ -125,7 +122,6 @@ export async function handleLogin() {
       }
     }
 
-    // Admin con 2FA
     if (utente.is_admin && utente.totp_enabled) {
       console.log('🔐 Admin richiede 2FA');
       showLoggedInUI();
@@ -173,12 +169,10 @@ export async function handleLogin() {
 export async function completeLogin(utente, tipo, pin, sessionFromAppLogin) {
   let accessToken = null;
 
-  // 1. Usa la sessione che arriva da app-login (già valida lato server)
   if (sessionFromAppLogin && sessionFromAppLogin.access_token) {
     accessToken = sessionFromAppLogin.access_token;
     console.log('🔐 Sessione ottenuta da app-login');
   } else {
-    // Fallback: prova login Supabase Auth classico (retrocompatibilità)
     const authEmail = utente.codice + '@circolo.local';
     const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
     try {
