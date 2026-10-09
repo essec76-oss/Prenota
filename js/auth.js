@@ -69,6 +69,7 @@ export async function handleLogin() {
     // --- GESTIONE PIN ---
     const pinSet = utente.pin_set === true;
 
+    // Se l'utente ha il PIN ma non l'ha scritto → mostro il campo e chiedo di inserirlo
     if (pinSet && !pin) {
       setLoginPinVisible(true);
       const pinInput = document.getElementById('login-pin');
@@ -78,6 +79,7 @@ export async function handleLogin() {
       return;
     }
 
+    // Validazione formato PIN (se inserito)
     if (pin && !/^\d{6}$/.test(pin)) {
       errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
       loginBtn.disabled = false;
@@ -123,8 +125,8 @@ export async function handleLogin() {
         scadenza: utente.scadenza || null,
         totp_enabled: utente.totp_enabled || false,
         pin_set: pinSet,
-        authenticated: false,
-        accessToken: null
+        authenticated: !!(loginResp.session && loginResp.session.access_token),
+        accessToken: loginResp.session ? loginResp.session.access_token : null
       };
       renderUserBadge();
       try { localStorage.setItem('lastLoginCodice', state.loggedUser.codice); } catch (e) {}
@@ -142,7 +144,7 @@ export async function handleLogin() {
       return;
     }
 
-    await completeLogin(utente, tipo, pin);
+    await completeLogin(utente, tipo, pin, loginResp.session);
   } catch (e) {
     errorEl.textContent = 'Errore di connessione. Riprova.';
     loginBtn.disabled = false;
@@ -150,29 +152,23 @@ export async function handleLogin() {
   }
 }
 
-export async function completeLogin(utente, tipo, pin) {
+export async function completeLogin(utente, tipo, pin, sessionFromAppLogin) {
   let accessToken = null;
-  const authEmail = utente.codice + '@circolo.local';
-  // Se l'utente ha un PIN → password = codice:PIN, altrimenti password = codice
-  const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
 
-  // 1. Assicura utente Auth (con pin se presente, per allineare la password)
-  await ensureAuthUser(utente.codice, pin);
-
-  // 2. Login Supabase Auth
-  try {
-    const authData = await signInWithSupabaseAuth(authEmail, authPassword);
-    accessToken = authData.access_token;
-    console.log('🔐 Login Supabase Auth riuscito');
-  } catch (authErr) {
-    console.warn('⚠️ Login Auth fallito al 1° tentativo:', authErr);
+  // 1. Usa la sessione che arriva da app-login (già valida lato server, magic link)
+  if (sessionFromAppLogin && sessionFromAppLogin.access_token) {
+    accessToken = sessionFromAppLogin.access_token;
+    console.log('🔐 Sessione ottenuta da app-login');
+  } else {
+    // Fallback: prova login Supabase Auth classico (per retrocompatibilità)
+    const authEmail = utente.codice + '@circolo.local';
+    const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
     try {
-      await new Promise(r => setTimeout(r, 800));
-      const retry = await signInWithSupabaseAuth(authEmail, authPassword);
-      accessToken = retry.access_token;
-      console.log('🔐 Login Supabase Auth riuscito al 2° tentativo');
-    } catch (e2) {
-      console.warn('⚠️ Login Auth fallito anche al retry:', e2);
+      const authData = await signInWithSupabaseAuth(authEmail, authPassword);
+      accessToken = authData.access_token;
+      console.log('🔐 Login Supabase Auth riuscito (fallback)');
+    } catch (e) {
+      console.warn('⚠️ Nessuna sessione disponibile:', e);
     }
   }
 
@@ -213,16 +209,13 @@ export async function completeLogin(utente, tipo, pin) {
     setTimeout(function () { showToast('🔐 Login sicuro attivo'); }, 400);
   }
 
-  // ===== STEP 3a: se l'utente non ha ancora il PIN, chiediglielo =====
+  // ===== STEP 3a: se il tesserato non ha ancora il PIN, chiediglielo =====
   if (!state.loggedUser.pin_set && state.loggedUser.tipo === 'tesserato') {
-    // Piccolo delay per far vedere la home per un istante
     setTimeout(function () {
       mostraSceltaPin(true, function (ok) {
         if (ok) {
           showToast('🎉 Benvenuto! Ora puoi prenotare.');
         }
-        // Anche se non scegliesse il PIN (non possibile, essendo obbligatorio),
-        // lo lasciamo comunque usare l'app.
       });
     }, 600);
   }
@@ -247,7 +240,6 @@ export function handleLogout() {
 }
 
 // ---------- ADMIN TOGGLE ----------
-// (Invariato — non toccato in questo step)
 export function setupAdminToggle() {
   const container = document.getElementById('admin-toggle-container');
   const toggle = document.getElementById('admin-toggle');
