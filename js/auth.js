@@ -4,11 +4,12 @@
 
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { state } from './state.js';
-import { dateKey, showToast, closeModal, escapeHtml } from './utils.js';
+import { dateKey, showToast, closeModal, escapeHtml, setLoginPinVisible } from './utils.js';
 import { signInWithSupabaseAuth, ensureAuthUser, appLogin, verify2FA, setup2FA, verify2FASetup, disable2FA, getTotpStatus } from './api.js';
 import { showLoggedInUI, showAuthUI, renderGuestExpiry, renderTesseratoExpiry, setAccent, renderFieldNote, renderUserBadge, updateCleanBtnVisibility } from './ui.js';
 import { renderDow, renderCalendar, updateBookingDots } from './calendar.js';
 import { renderSlots } from './slots.js';
+import { mostraSceltaPin } from './pin.js';
 
 // ---------- PREFILL ----------
 export function prefillLastCodice() {
@@ -21,14 +22,16 @@ export function prefillLastCodice() {
 // ---------- LOGIN ----------
 export async function handleLogin() {
   const codice = document.getElementById('login-codice').value.trim().toLowerCase();
-  const pin = (document.getElementById('login-pin') || {}).value || '';
+  const pinEl = document.getElementById('login-pin');
+  const pin = pinEl ? pinEl.value.trim() : '';
   const errorEl = document.getElementById('login-error');
   const loginBtn = document.getElementById('login-btn');
 
   if (!codice) {
     errorEl.textContent = 'Inserisci il tuo codice ID.';
     return;
-  }  const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
+  }
+  const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
   const isOspiteCode = /^o[a-z0-9]{7}$/.test(codice);
   if (!isTesseratoCode && !isOspiteCode) {
     errorEl.textContent = 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXXXX (ospite).';
@@ -63,29 +66,83 @@ export async function handleLogin() {
 
     const utente = data[0];
 
-// --- NUOVO: gestione PIN ---
-const pinSet = utente.pin_set === true;
+    // --- GESTIONE PIN ---
+    const pinSet = utente.pin_set === true;
 
-// Se l'utente ha già il PIN, ma non è stato inserito → chiedi di inserirlo
-if (pinSet && !pin) {
-  setLoginPinVisible(true);
-  errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
-  loginBtn.disabled = false;
-  return;
-}
+    if (pinSet && !pin) {
+      setLoginPinVisible(true);
+      const pinInput = document.getElementById('login-pin');
+      if (pinInput) pinInput.focus();
+      errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
+      loginBtn.disabled = false;
+      return;
+    }
 
-// Se l'utente NON ha il PIN, ma ne ha inserito uno → ignora (non è ancora supportato)
-// Se l'utente ha il PIN e lo ha inserito → verifica più avanti (nel completeLogin)
+    if (pin && !/^\d{6}$/.test(pin)) {
+      errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
+      loginBtn.disabled = false;
+      return;
+    }
 
-if (tipo === 'ospite') {
-  // ... controllo scadenza ospite ...
-}
+    // Controllo scadenza ospite
+    if (tipo === 'ospite') {
+      const oggi = dateKey(new Date());
+      const scaduto = utente.scadenza && utente.scadenza < oggi;
+      const inattivo = utente.attivo === false;
+      if (scaduto || inattivo) {
+        errorEl.textContent = '';
+        loginBtn.disabled = false;
+        const { mostraFormRichiestaContatto } = await import('./richieste-contatto.js');
+        mostraFormRichiestaContatto({
+          nome: utente.nome,
+          cognome: utente.cognome,
+          sport: utente.is_tennis_member && utente.is_padel_member ? 'both'
+               : utente.is_tennis_member ? 'tennis'
+               : utente.is_padel_member ? 'padel' : 'both',
+          codice: utente.codice
+        });
+        return;
+      }
+    }
 
-if (utente.is_admin && utente.totp_enabled) {
-  // ... 2FA admin ...
-}
+    // Admin con 2FA
+    if (utente.is_admin && utente.totp_enabled) {
+      console.log('🔐 Admin richiede 2FA');
+      showLoggedInUI();
+      state.loggedUser = {
+        id: utente.id,
+        nome: utente.nome,
+        cognome: utente.cognome,
+        codice: utente.codice,
+        tipo: tipo,
+        is_tennis_member: utente.is_tennis_member || false,
+        is_padel_member: utente.is_padel_member || false,
+        is_admin: utente.is_admin || false,
+        is_direttivo: utente.is_direttivo || false,
+        can_book_special: utente.can_book_special || false,
+        scadenza: utente.scadenza || null,
+        totp_enabled: utente.totp_enabled || false,
+        pin_set: pinSet,
+        authenticated: false,
+        accessToken: null
+      };
+      renderUserBadge();
+      try { localStorage.setItem('lastLoginCodice', state.loggedUser.codice); } catch (e) {}
+      renderGuestExpiry();
+      setupAdminToggle();
+      updateCleanBtnVisibility();
+      renderTesseratoExpiry();
+      setAccent(state.currentField);
+      renderFieldNote();
+      renderDow();
+      renderCalendar();
+      showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
+      errorEl.textContent = '';
+      loginBtn.disabled = false;
+      return;
+    }
 
-await completeLogin(utente, tipo, pin);
+    await completeLogin(utente, tipo, pin);
   } catch (e) {
     errorEl.textContent = 'Errore di connessione. Riprova.';
     loginBtn.disabled = false;
@@ -98,8 +155,9 @@ export async function completeLogin(utente, tipo, pin) {
   const authEmail = utente.codice + '@circolo.local';
   // Se l'utente ha un PIN → password = codice:PIN, altrimenti password = codice
   const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
-  // 1. Assicura utente Auth
-  await ensureAuthUser(utente.codice);
+
+  // 1. Assicura utente Auth (con pin se presente, per allineare la password)
+  await ensureAuthUser(utente.codice, pin);
 
   // 2. Login Supabase Auth
   try {
@@ -131,6 +189,7 @@ export async function completeLogin(utente, tipo, pin) {
     can_book_special: utente.can_book_special || false,
     scadenza: utente.scadenza || null,
     totp_enabled: utente.totp_enabled || false,
+    pin_set: utente.pin_set === true,
     authenticated: !!accessToken,
     accessToken: accessToken
   };
@@ -151,7 +210,21 @@ export async function completeLogin(utente, tipo, pin) {
   if (state.selectedDate) { renderSlots(); }
 
   if (accessToken) {
-    setTimeout(function () { showToast('🔐 Login sicuro (Supabase Auth) attivo'); }, 400);
+    setTimeout(function () { showToast('🔐 Login sicuro attivo'); }, 400);
+  }
+
+  // ===== STEP 3a: se l'utente non ha ancora il PIN, chiediglielo =====
+  if (!state.loggedUser.pin_set && state.loggedUser.tipo === 'tesserato') {
+    // Piccolo delay per far vedere la home per un istante
+    setTimeout(function () {
+      mostraSceltaPin(true, function (ok) {
+        if (ok) {
+          showToast('🎉 Benvenuto! Ora puoi prenotare.');
+        }
+        // Anche se non scegliesse il PIN (non possibile, essendo obbligatorio),
+        // lo lasciamo comunque usare l'app.
+      });
+    }, 600);
   }
 }
 
@@ -160,7 +233,10 @@ export function handleLogout() {
   state.loggedUser = null;
   state.adminMode = false;
   showAuthUI();
+  setLoginPinVisible(false);
   prefillLastCodice();
+  const pinEl = document.getElementById('login-pin');
+  if (pinEl) pinEl.value = '';
   document.getElementById('login-error').textContent = '';
   document.getElementById('guest-expiry').style.display = 'none';
   document.getElementById('tesserato-expiry').style.display = 'none';
@@ -171,6 +247,7 @@ export function handleLogout() {
 }
 
 // ---------- ADMIN TOGGLE ----------
+// (Invariato — non toccato in questo step)
 export function setupAdminToggle() {
   const container = document.getElementById('admin-toggle-container');
   const toggle = document.getElementById('admin-toggle');
