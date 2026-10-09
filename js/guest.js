@@ -10,6 +10,15 @@ export async function loadGuestSlotsCounter() {
   if (!el) return;
   try {
     const data = await loadGuestSlots();
+
+    // Se l'API non risponde (es. GitHub Pages senza backend) nascondi il box
+    if (data === null || data === undefined || typeof data.rimasti !== 'number') {
+      el.style.display = 'none';
+      return;
+    }
+
+    el.style.display = 'block';
+
     if (data.rimasti <= 0) {
       el.textContent = '⛔ Limite giornaliero raggiunto. Riprova domani.';
       el.classList.add('esaurito');
@@ -20,6 +29,8 @@ export async function loadGuestSlotsCounter() {
     }
   } catch (e) {
     console.error('Errore caricamento posti rimasti:', e);
+    // In caso di errore, nascondi il contatore (non mostrare "undefined")
+    el.style.display = 'none';
   }
 }
 
