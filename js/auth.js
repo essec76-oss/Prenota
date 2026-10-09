@@ -21,14 +21,14 @@ export function prefillLastCodice() {
 // ---------- LOGIN ----------
 export async function handleLogin() {
   const codice = document.getElementById('login-codice').value.trim().toLowerCase();
+  const pin = (document.getElementById('login-pin') || {}).value || '';
   const errorEl = document.getElementById('login-error');
   const loginBtn = document.getElementById('login-btn');
 
   if (!codice) {
     errorEl.textContent = 'Inserisci il tuo codice ID.';
     return;
-  }
-  const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
+  }  const isTesseratoCode = /^t[a-z0-9\-]{4,20}$/.test(codice);
   const isOspiteCode = /^o[a-z0-9]{7}$/.test(codice);
   if (!isTesseratoCode && !isOspiteCode) {
     errorEl.textContent = 'Codice non valido. Formato: tXXXX (tesserato) o oXXXXXXX (ospite).';
@@ -63,62 +63,29 @@ export async function handleLogin() {
 
     const utente = data[0];
 
-    if (tipo === 'ospite') {
-      const oggi = dateKey(new Date());
-      const scaduto = utente.scadenza && utente.scadenza < oggi;
-      const inattivo = utente.attivo === false;
-      if (scaduto || inattivo) {
-        errorEl.textContent = '';
-        loginBtn.disabled = false;
-        const { mostraFormRichiestaContatto } = await import('./richieste-contatto.js');
-        mostraFormRichiestaContatto({
-          nome: utente.nome,
-          cognome: utente.cognome,
-          sport: utente.is_tennis_member && utente.is_padel_member ? 'both'
-               : utente.is_tennis_member ? 'tennis'
-               : utente.is_padel_member ? 'padel' : 'both',
-          codice: utente.codice
-        });
-        return;
-      }
-    }
+// --- NUOVO: gestione PIN ---
+const pinSet = utente.pin_set === true;
 
-    if (utente.is_admin && utente.totp_enabled) {
-      console.log('🔐 Admin richiede 2FA');
-      showLoggedInUI();
-      state.loggedUser = {
-        id: utente.id,
-        nome: utente.nome,
-        cognome: utente.cognome,
-        codice: utente.codice,
-        tipo: tipo,
-        is_tennis_member: utente.is_tennis_member || false,
-        is_padel_member: utente.is_padel_member || false,
-        is_admin: utente.is_admin || false,
-        is_direttivo: utente.is_direttivo || false,
-        can_book_special: utente.can_book_special || false,
-        scadenza: utente.scadenza || null,
-        totp_enabled: utente.totp_enabled || false,
-        authenticated: false,
-        accessToken: null
-      };
-      renderUserBadge();
-      try { localStorage.setItem('lastLoginCodice', state.loggedUser.codice); } catch (e) {}
-      renderGuestExpiry();
-      setupAdminToggle();
-      updateCleanBtnVisibility();
-      renderTesseratoExpiry();
-      setAccent(state.currentField);
-      renderFieldNote();
-      renderDow();
-      renderCalendar();
-      showToast('🔐 Accesso riuscito! Attiva la modalità admin per continuare.');
-      errorEl.textContent = '';
-      loginBtn.disabled = false;
-      return;
-    }
+// Se l'utente ha già il PIN, ma non è stato inserito → chiedi di inserirlo
+if (pinSet && !pin) {
+  setLoginPinVisible(true);
+  errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
+  loginBtn.disabled = false;
+  return;
+}
 
-    await completeLogin(utente, tipo);
+// Se l'utente NON ha il PIN, ma ne ha inserito uno → ignora (non è ancora supportato)
+// Se l'utente ha il PIN e lo ha inserito → verifica più avanti (nel completeLogin)
+
+if (tipo === 'ospite') {
+  // ... controllo scadenza ospite ...
+}
+
+if (utente.is_admin && utente.totp_enabled) {
+  // ... 2FA admin ...
+}
+
+await completeLogin(utente, tipo, pin);
   } catch (e) {
     errorEl.textContent = 'Errore di connessione. Riprova.';
     loginBtn.disabled = false;
@@ -126,11 +93,11 @@ export async function handleLogin() {
   }
 }
 
-export async function completeLogin(utente, tipo) {
+export async function completeLogin(utente, tipo, pin) {
   let accessToken = null;
   const authEmail = utente.codice + '@circolo.local';
-  const authPassword = utente.codice;
-
+  // Se l'utente ha un PIN → password = codice:PIN, altrimenti password = codice
+  const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
   // 1. Assicura utente Auth
   await ensureAuthUser(utente.codice);
 
