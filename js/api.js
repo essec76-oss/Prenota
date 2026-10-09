@@ -44,7 +44,7 @@ export async function ensureAuthUser(codice, pin) {
   }
 }
 
-export async function appLogin(codice) {
+export async function appLogin(codice, pin) {
   const res = await fetch(SUPABASE_URL + '/functions/v1/app-login', {
     method: 'POST',
     headers: {
@@ -52,7 +52,7 @@ export async function appLogin(codice) {
       'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ codice })
+    body: JSON.stringify({ codice, pin: pin || '' })
   });
   return res;
 }

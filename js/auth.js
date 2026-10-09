@@ -38,6 +38,11 @@ export async function handleLogin() {
     return;
   }
 
+  if (pin && !/^\d{6}$/.test(pin)) {
+    errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
+    return;
+  }
+
   errorEl.textContent = 'Verifica in corso...';
   loginBtn.disabled = true;
 
@@ -45,14 +50,45 @@ export async function handleLogin() {
     const tipo = codice.startsWith('t') ? 'tesserato' : 'ospite';
     console.log('🔍 Cerco utente con codice [REDACTED]');
 
-    const res = await appLogin(codice);
+    const res = await appLogin(codice, pin);
 
+    // ============ ORDINE CONTROLLI IMPORTANTE ============
+    // 1. Rate limit (429) — priorità massima
     if (res.status === 429) {
       errorEl.textContent = 'Troppi tentativi. Riprova tra qualche minuto.';
       loginBtn.disabled = false;
       return;
     }
+
+    // 2. 401: PIN richiesto o PIN sbagliato (DEVE venire PRIMA di !res.ok)
+    if (res.status === 401) {
+      const errResp = await res.json().catch(() => ({}));
+
+      if (errResp.pin_required) {
+        setLoginPinVisible(true);
+        const pinInput = document.getElementById('login-pin');
+        if (pinInput) pinInput.focus();
+        errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
+        loginBtn.disabled = false;
+        return;
+      }
+
+      if (errResp.error === 'PIN non corretto') {
+        errorEl.textContent = '❌ PIN non corretto. Riprova.';
+        const pinInput = document.getElementById('login-pin');
+        if (pinInput) { pinInput.value = ''; pinInput.focus(); }
+        loginBtn.disabled = false;
+        return;
+      }
+
+      errorEl.textContent = errResp.error || 'Accesso negato.';
+      loginBtn.disabled = false;
+      return;
+    }
+
+    // 3. Ora è sicuro controllare !res.ok (401 e 429 già gestiti sopra)
     if (!res.ok) throw new Error('Errore di connessione');
+    // ======================================================
 
     const loginResp = await res.json();
     const data = loginResp.utente ? [loginResp.utente] : [];
@@ -66,25 +102,6 @@ export async function handleLogin() {
 
     const utente = data[0];
 
-    // --- GESTIONE PIN ---
-    const pinSet = utente.pin_set === true;
-
-    if (pinSet && !pin) {
-      setLoginPinVisible(true);
-      const pinInput = document.getElementById('login-pin');
-      if (pinInput) pinInput.focus();
-      errorEl.textContent = '⚠️ Inserisci il tuo PIN per accedere.';
-      loginBtn.disabled = false;
-      return;
-    }
-
-    if (pin && !/^\d{6}$/.test(pin)) {
-      errorEl.textContent = '⚠️ Il PIN deve essere di 6 cifre.';
-      loginBtn.disabled = false;
-      return;
-    }
-
-    // Controllo scadenza ospite
     if (tipo === 'ospite') {
       const oggi = dateKey(new Date());
       const scaduto = utente.scadenza && utente.scadenza < oggi;
@@ -105,7 +122,6 @@ export async function handleLogin() {
       }
     }
 
-    // Admin con 2FA
     if (utente.is_admin && utente.totp_enabled) {
       console.log('🔐 Admin richiede 2FA');
       showLoggedInUI();
@@ -122,9 +138,9 @@ export async function handleLogin() {
         can_book_special: utente.can_book_special || false,
         scadenza: utente.scadenza || null,
         totp_enabled: utente.totp_enabled || false,
-        pin_set: pinSet,
-        authenticated: false,
-        accessToken: null
+        pin_set: utente.pin_set === true,
+        authenticated: !!(loginResp.session && loginResp.session.access_token),
+        accessToken: loginResp.session ? loginResp.session.access_token : null
       };
       renderUserBadge();
       try { localStorage.setItem('lastLoginCodice', state.loggedUser.codice); } catch (e) {}
@@ -142,7 +158,7 @@ export async function handleLogin() {
       return;
     }
 
-    await completeLogin(utente, tipo, pin);
+    await completeLogin(utente, tipo, pin, loginResp.session);
   } catch (e) {
     errorEl.textContent = 'Errore di connessione. Riprova.';
     loginBtn.disabled = false;
@@ -150,29 +166,21 @@ export async function handleLogin() {
   }
 }
 
-export async function completeLogin(utente, tipo, pin) {
+export async function completeLogin(utente, tipo, pin, sessionFromAppLogin) {
   let accessToken = null;
-  const authEmail = utente.codice + '@circolo.local';
-  // Se l'utente ha un PIN → password = codice:PIN, altrimenti password = codice
-  const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
 
-  // 1. Assicura utente Auth (con pin se presente, per allineare la password)
-  await ensureAuthUser(utente.codice, pin);
-
-  // 2. Login Supabase Auth
-  try {
-    const authData = await signInWithSupabaseAuth(authEmail, authPassword);
-    accessToken = authData.access_token;
-    console.log('🔐 Login Supabase Auth riuscito');
-  } catch (authErr) {
-    console.warn('⚠️ Login Auth fallito al 1° tentativo:', authErr);
+  if (sessionFromAppLogin && sessionFromAppLogin.access_token) {
+    accessToken = sessionFromAppLogin.access_token;
+    console.log('🔐 Sessione ottenuta da app-login');
+  } else {
+    const authEmail = utente.codice + '@circolo.local';
+    const authPassword = (utente.pin_set && pin) ? (utente.codice + ':' + pin) : utente.codice;
     try {
-      await new Promise(r => setTimeout(r, 800));
-      const retry = await signInWithSupabaseAuth(authEmail, authPassword);
-      accessToken = retry.access_token;
-      console.log('🔐 Login Supabase Auth riuscito al 2° tentativo');
-    } catch (e2) {
-      console.warn('⚠️ Login Auth fallito anche al retry:', e2);
+      const authData = await signInWithSupabaseAuth(authEmail, authPassword);
+      accessToken = authData.access_token;
+      console.log('🔐 Login Supabase Auth riuscito (fallback)');
+    } catch (e) {
+      console.warn('⚠️ Nessuna sessione disponibile:', e);
     }
   }
 
@@ -213,16 +221,13 @@ export async function completeLogin(utente, tipo, pin) {
     setTimeout(function () { showToast('🔐 Login sicuro attivo'); }, 400);
   }
 
-  // ===== STEP 3a: se l'utente non ha ancora il PIN, chiediglielo =====
+  // ===== STEP 3a: se il tesserato non ha ancora il PIN, chiediglielo =====
   if (!state.loggedUser.pin_set && state.loggedUser.tipo === 'tesserato') {
-    // Piccolo delay per far vedere la home per un istante
     setTimeout(function () {
       mostraSceltaPin(true, function (ok) {
         if (ok) {
           showToast('🎉 Benvenuto! Ora puoi prenotare.');
         }
-        // Anche se non scegliesse il PIN (non possibile, essendo obbligatorio),
-        // lo lasciamo comunque usare l'app.
       });
     }, 600);
   }
@@ -247,7 +252,6 @@ export function handleLogout() {
 }
 
 // ---------- ADMIN TOGGLE ----------
-// (Invariato — non toccato in questo step)
 export function setupAdminToggle() {
   const container = document.getElementById('admin-toggle-container');
   const toggle = document.getElementById('admin-toggle');
