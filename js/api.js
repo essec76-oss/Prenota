@@ -19,7 +19,9 @@ export async function signInWithSupabaseAuth(email, password) {
   return await res.json();
 }
 
-export async function ensureAuthUser(codice) {
+// Assicura che l'utente Auth esista, allinea password e auth_id.
+// Se riceve un `pin`, la password diventa `codice:pin` invece di `codice`.
+export async function ensureAuthUser(codice, pin) {
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/super-endpoint', {
       method: 'POST',
@@ -27,7 +29,7 @@ export async function ensureAuthUser(codice) {
         apikey: SUPABASE_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ codice })
+      body: JSON.stringify({ codice, pin: pin || null })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -209,8 +211,6 @@ export async function loadKeyboxCodes(accessToken) {
 }
 
 // ---------- GIOCATORI ----------
-// Restituisce tesserati + ospiti attivi con flag sport (is_tennis_member, is_padel_member)
-// necessari per il filtro stretto per sport nella modale di prenotazione.
 export async function loadAllPlayers() {
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_giocatori_attivi', {
@@ -416,11 +416,11 @@ export async function updateKeybox(codiceTennis, codicePadel, accessToken) {
 }
 
 // ---------- GUEST ----------
-export async function createGuest(nome, cognome, sport, telefono) {
+export async function createGuest(nome, cognome, sport, telefono, pin) {
   const res = await fetch('/api/create-guest', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome, cognome, sport, telefono })
+    body: JSON.stringify({ nome, cognome, sport, telefono, pin: pin || null })
   });
   let data;
   try { data = await res.json(); } catch (_) { data = {}; }
