@@ -209,6 +209,8 @@ export async function loadKeyboxCodes(accessToken) {
 }
 
 // ---------- GIOCATORI ----------
+// Restituisce tesserati + ospiti attivi con flag sport (is_tennis_member, is_padel_member)
+// necessari per il filtro stretto per sport nella modale di prenotazione.
 export async function loadAllPlayers() {
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_giocatori_attivi', {
@@ -218,11 +220,26 @@ export async function loadAllPlayers() {
     });
     if (!res.ok) throw new Error('fetch failed');
     const rows = await res.json();
-    const tesserati = rows.filter(r => r.tipo === 'tesserato')
-      .map(r => ({ nome: r.nome, cognome: r.cognome }));
     const oggi = new Date().toISOString().slice(0, 10);
-    const ospiti = rows.filter(r => r.tipo === 'ospite' && (!r.scadenza || r.scadenza >= oggi))
-      .map(r => ({ nome: r.nome, cognome: r.cognome }));
+
+    const tesserati = rows
+      .filter(r => r.tipo === 'tesserato')
+      .map(r => ({
+        nome: r.nome,
+        cognome: r.cognome,
+        is_tennis_member: !!r.is_tennis_member,
+        is_padel_member: !!r.is_padel_member
+      }));
+
+    const ospiti = rows
+      .filter(r => r.tipo === 'ospite' && (!r.scadenza || r.scadenza >= oggi))
+      .map(r => ({
+        nome: r.nome,
+        cognome: r.cognome,
+        is_tennis_member: !!r.is_tennis_member,
+        is_padel_member: !!r.is_padel_member
+      }));
+
     return { tesserati, ospiti };
   } catch (e) {
     console.error('Errore caricamento giocatori:', e);
