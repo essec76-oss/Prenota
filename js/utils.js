@@ -2,6 +2,14 @@
 // utils.js — Utility generiche
 // ============================================================
 
+export function setLoginPinVisible(visible) {
+  const el = document.getElementById('pin-field');
+  if (!el) return;
+  el.style.display = visible ? 'block' : 'none';
+  const pinInput = document.getElementById('login-pin');
+  if (pinInput) pinInput.value = '';
+}
+
 export function pad(n) {
   return n.toString().padStart(2, '0');
 }
