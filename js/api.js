@@ -1,6 +1,24 @@
 // ============================================================
 // api.js — Tutte le chiamate a Supabase (REST, Auth, Edge Functions, RPC)
 // ============================================================
+// Resetta il PIN di un utente: pin_set = false, pin_hash = null
+// Al prossimo login, l'utente sceglierà un nuovo PIN.
+export async function resetUserPin(tableName, id, accessToken) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + tableName + '?id=eq.' + encodeURIComponent(id), {
+    method: 'PATCH',
+    headers: {
+      apikey: SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+      Authorization: 'Bearer ' + accessToken
+    },
+    body: JSON.stringify({
+      pin_set: false,
+      pin_hash: null
+    })
+  });
+  return res.ok;
+}
 
 import { SUPABASE_URL, SUPABASE_KEY, SUPABASE_TABLE } from './config.js';
 import { state } from './state.js';
