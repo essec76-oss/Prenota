@@ -3,7 +3,7 @@
 
 import { loadAdminUsers, resetUserPin } from './api.js';
 import { state } from './state.js';
-import { showToast, closeModal } from './utils.js';
+import { showToast, closeModal, escapeHtml } from './utils.js';
 
 let currentUsers = [];
 let currentTipo = 'tesserato'; // 'tesserato' | 'ospite'
@@ -65,15 +65,6 @@ function aggiornaTabAttiva() {
   o.classList.toggle('active', currentTipo === 'ospite');
 }
 
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
-    .replace(/'/g, '&#39;');
-}
-
 async function caricaEmostra() {
   const container = document.getElementById('admin-users-container');
   if (!container) return;
@@ -89,7 +80,7 @@ async function caricaEmostra() {
     renderUsersTable(container, currentUsers);
   } catch (err) {
     console.error('Errore caricamento utenti:', err);
-    container.innerHTML = `<p class="error">Errore: ${escapeHtml(err.message)}</p>`;
+    container.innerHTML = '<p class="error">Errore: ' + escapeHtml(err.message) + '</p>';
   }
 }
 
@@ -104,37 +95,36 @@ function renderUsersTable(container, users) {
       ? '<span title="PIN impostato">✅</span>'
       : '<span title="PIN non impostato">⚠️</span>';
 
-    return `
-      <tr data-user-id="${escapeHtml(u.id)}">
-        <td>${escapeHtml(u.nome || '')}</td>
-        <td>${escapeHtml(u.cognome || '')}</td>
-        <td>${escapeHtml(u.email || '')}</td>
-        <td>${escapeHtml(u.ruolo || '')}</td>
-        <td class="col-pin">${pinStatus}</td>
-        <td>
-          <button class="btn-reset-pin" data-user-id="${escapeHtml(u.id)}">
-            🔐 Reset PIN
-          </button>
-        </td>
-      </tr>
-    `;
+    return (
+      '<tr data-user-id="' + escapeHtml(u.id) + '">' +
+        '<td>' + escapeHtml(u.nome || '') + '</td>' +
+        '<td>' + escapeHtml(u.cognome || '') + '</td>' +
+        '<td>' + escapeHtml(u.email || '') + '</td>' +
+        '<td>' + escapeHtml(u.ruolo || '') + '</td>' +
+        '<td class="col-pin">' + pinStatus + '</td>' +
+        '<td>' +
+          '<button class="btn-reset-pin" data-user-id="' + escapeHtml(u.id) + '">' +
+            '🔐 Reset PIN' +
+          '</button>' +
+        '</td>' +
+      '</tr>'
+    );
   }).join('');
 
-  container.innerHTML = `
-    <table class="admin-users-table" style="width:100%;">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Cognome</th>
-          <th>Email</th>
-          <th>Ruolo</th>
-          <th>PIN</th>
-          <th>Azioni</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+  container.innerHTML =
+    '<table class="admin-users-table" style="width:100%;">' +
+      '<thead>' +
+        '<tr>' +
+          '<th>Nome</th>' +
+          '<th>Cognome</th>' +
+          '<th>Email</th>' +
+          '<th>Ruolo</th>' +
+          '<th>PIN</th>' +
+          '<th>Azioni</th>' +
+        '</tr>' +
+      '</thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>';
 
   container.querySelectorAll('.btn-reset-pin').forEach(btn => {
     btn.addEventListener('click', () => handleResetPin(btn.dataset.userId));
@@ -143,9 +133,9 @@ function renderUsersTable(container, users) {
 
 async function handleResetPin(userId) {
   const user = currentUsers.find(u => String(u.id) === String(userId));
-  const label = user ? `${user.nome || ''} ${user.cognome || ''}`.trim() : userId;
+  const label = user ? ((user.nome || '') + ' ' + (user.cognome || '')).trim() : userId;
 
-  if (!confirm(`Vuoi resettare il PIN di ${label}?\n\nL'utente dovrà scegliere un nuovo PIN al prossimo login.`)) {
+  if (!confirm('Vuoi resettare il PIN di ' + label + '?\n\nL\'utente dovrà scegliere un nuovo PIN al prossimo login.')) {
     return;
   }
 
