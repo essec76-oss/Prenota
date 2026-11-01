@@ -65,6 +65,15 @@ function aggiornaTabAttiva() {
   o.classList.toggle('active', currentTipo === 'ospite');
 }
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, '&#39;');
+}
+
 async function caricaEmostra() {
   const container = document.getElementById('admin-users-container');
   if (!container) return;
@@ -154,13 +163,4 @@ async function handleResetPin(userId) {
     console.error('Errore reset PIN:', err);
     showToast('❌ Errore reset PIN: ' + err.message);
   }
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
