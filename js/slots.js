@@ -190,7 +190,7 @@ export function openBookingModal(slot, timeId) {
   let fieldsHtml = '<div class="name-field">\n        <label for="name-0">Prenotante</label>\n        <input id="name-0" type="text" autocomplete="off" value="' + prenotanteNameEscaped + '" readonly />\n      </div>';
   for (let i = 1; i < nameCount; i++) {
     const isRequired = i < requiredCount;
-    fieldsHtml += '<div class="name-field" id="name-field-' + i + '">\n        <label for="name-' + i + '">Giocatore ' + (i + 1) + (isRequired ? ' (obbligatorio)' : ' (facoltativo)') + '</label>\n        <select id="name-' + i + '" class="player-select" placeholder="Cerca e seleziona..."></select>\n      </div>';
+    fieldsHtml += '<div class="name-field" id="name-field-' + i + '">\n        <label>Giocatore ' + (i + 1) + (isRequired ? ' (obbligatorio)' : ' (facoltativo)') + '</label>\n        <div class="player-pair" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">\n          <div><div class="player-col-title" style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">⭐ Tesserati</div><select id="tes-' + i + '" class="player-select" placeholder="Cerca tesserato..."></select></div>\n          <div><div class="player-col-title" style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">👤 Ospiti</div><select id="osp-' + i + '" class="player-select" placeholder="Cerca ospite..."></select></div>\n        </div>\n        <input type="hidden" id="name-' + i + '" value="" />\n      </div>';
   }
 
   const modeSelectorHtml = canUseSpecialModes()
@@ -203,7 +203,7 @@ export function openBookingModal(slot, timeId) {
 
   root.innerHTML = `
     <div class="overlay" id="overlay">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="max-width:820px;width:94%;">
         <h2 id="modal-title">${f.label}</h2>
         <div class="meta">${new Date(state.selectedDate + 'T00:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })} · ${slot.label}</div>
         <div style="background:var(--accent-soft);border-radius:8px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--ink-soft);">
@@ -237,44 +237,23 @@ export function openBookingModal(slot, timeId) {
     });
   }
 
-  // Carica tutti i giocatori, filtra per sport, esclude prenotante, poi monta TomSelect
+  // Carica i giocatori, filtra per sport, monta due menu paralleli per slot
   loadAllPlayers().then(({ tesserati, ospiti }) => {
-    // Costruisci lista mista con etichette
-    const allOptions = [];
-
     const fieldKey = state.currentField; // 'tennis' o 'padel'
     const sportFlag = fieldKey === 'padel' ? 'is_padel_member' : 'is_tennis_member';
-
-    tesserati.forEach(u => {
-      if (!u[sportFlag]) return; // filtro stretto per sport
+    const mk = u => {
       const label = u.nome + ' ' + u.cognome;
-      allOptions.push({
-        value: label,
-        text: label,
-        nameRaw: label,
-        optgroup: 'tesserati'
-      });
-    });
-    ospiti.forEach(u => {
-      if (!u[sportFlag]) return;
-      const label = u.nome + ' ' + u.cognome;
-      allOptions.push({
-        value: label,
-        text: label,
-        nameRaw: label,
-        optgroup: 'ospiti'
-      });
-    });
+      return { value: label, text: label, nameRaw: label };
+    };
+    const byName = (a, b) => a.nameRaw.localeCompare(b.nameRaw, 'it');
+    const optTes = tesserati.filter(u => u[sportFlag]).map(mk).sort(byName);
+    const optOsp = ospiti.filter(u => u[sportFlag]).map(mk).sort(byName);
 
-    // Ordina alfabeticamente per nomeRaw
-    allOptions.sort((a, b) => a.nameRaw.localeCompare(b.nameRaw, 'it'));
-
-    // Crea i TomSelect con callback di esclusione dinamica
-    const tomSelects = {}; // { 'name-1': tomSelectInstance, ... }
+    const tomSelects = {}; // { 'tes-1': ts, 'osp-1': ts, ... }
     const prenotanteNorm = normName(prenotanteName);
 
     function getAllSelectedNorm() {
-      const selected = [prenotanteNorm]; // il prenotante è sempre "occupato"
+      const selected = [prenotanteNorm]; // il prenotante è sempre occupato
       Object.keys(tomSelects).forEach(id => {
         const v = tomSelects[id].getValue();
         if (v) selected.push(normName(v));
@@ -286,10 +265,9 @@ export function openBookingModal(slot, timeId) {
       const excluded = getAllSelectedNorm();
       Object.keys(tomSelects).forEach(id => {
         const ts = tomSelects[id];
-        const currentValue = ts.getValue();
-        const currentValueNorm = normName(currentValue);
-        // Opzioni disponibili = tutte tranne quelle occupate (ma la propria selezione resta visibile)
-        const available = allOptions.filter(opt => {
+        const source = id.startsWith('tes-') ? optTes : optOsp;
+        const currentValueNorm = normName(ts.getValue());
+        const available = source.filter(opt => {
           const n = normName(opt.nameRaw);
           if (n === currentValueNorm) return true; // tieni visibile la propria selezione
           return !excluded.includes(n);
@@ -300,30 +278,49 @@ export function openBookingModal(slot, timeId) {
       });
     }
 
-    for (let i = 1; i < nameCount; i++) {
-      const el = document.getElementById('name-' + i);
-      if (!el) continue;
+    // Il campo nascosto name-i contiene la scelta, qualunque dei due menu sia usato
+    function sincronizza(i) {
+      const tv = tomSelects['tes-' + i].getValue();
+      const ov = tomSelects['osp-' + i].getValue();
+      const hidden = document.getElementById('name-' + i);
+      if (hidden) hidden.value = tv || ov || '';
+    }
 
-      const ts = new TomSelect(el, {
-        options: allOptions,
-        optgroups: [
-          { value: 'tesserati', label: '⭐ Tesserati' },
-          { value: 'ospiti', label: '👤 Ospiti' }
-        ],
-        optgroupField: 'optgroup',
-        labelField: 'text',
-        valueField: 'value',
-        searchField: ['text', 'nameRaw'],
-        placeholder: 'Cerca per nome...',
-        allowEmptyOption: true,
-        maxOptions: 500,
-        create: false,
-        sortField: { field: 'nameRaw', direction: 'asc' },
-        onChange: function () {
+    const common = {
+      labelField: 'text',
+      valueField: 'value',
+      searchField: ['text', 'nameRaw'],
+      allowEmptyOption: true,
+      maxOptions: 500,
+      create: false,
+      sortField: { field: 'nameRaw', direction: 'asc' }
+    };
+
+    for (let i = 1; i < nameCount; i++) {
+      const tesEl = document.getElementById('tes-' + i);
+      const ospEl = document.getElementById('osp-' + i);
+      if (!tesEl || !ospEl) continue;
+
+      tomSelects['tes-' + i] = new TomSelect(tesEl, Object.assign({}, common, {
+        options: optTes,
+        placeholder: 'Cerca tesserato...',
+        onChange: function (v) {
+          // un giocatore solo: scegliendo qui, svuota il menu ospiti (silenzioso)
+          if (v) tomSelects['osp-' + i].clear(true);
+          sincronizza(i);
           refreshAllOptions();
         }
-      });
-      tomSelects['name-' + i] = ts;
+      }));
+
+      tomSelects['osp-' + i] = new TomSelect(ospEl, Object.assign({}, common, {
+        options: optOsp,
+        placeholder: 'Cerca ospite...',
+        onChange: function (v) {
+          if (v) tomSelects['tes-' + i].clear(true);
+          sincronizza(i);
+          refreshAllOptions();
+        }
+      }));
     }
 
     // Applica subito l'esclusione del prenotante
