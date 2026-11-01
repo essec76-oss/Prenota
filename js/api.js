@@ -1,6 +1,10 @@
 // ============================================================
 // api.js — Tutte le chiamate a Supabase (REST, Auth, Edge Functions, RPC)
 // ============================================================
+
+import { SUPABASE_URL, SUPABASE_KEY, SUPABASE_TABLE } from './config.js';
+import { state } from './state.js';
+
 // Resetta il PIN di un utente: pin_set = false, pin_hash = null
 // Al prossimo login, l'utente sceglierà un nuovo PIN.
 export async function resetUserPin(tableName, id, accessToken) {
@@ -19,9 +23,6 @@ export async function resetUserPin(tableName, id, accessToken) {
   });
   return res.ok;
 }
-
-import { SUPABASE_URL, SUPABASE_KEY, SUPABASE_TABLE } from './config.js';
-import { state } from './state.js';
 
 // ---------- AUTH ----------
 export async function signInWithSupabaseAuth(email, password) {
