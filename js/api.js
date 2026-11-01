@@ -536,3 +536,34 @@ export async function loadPrenotazioniAdmin(tipo) {
   if (!res.ok) throw new Error('Errore caricamento prenotazioni');
   return await res.json();
 }
+
+// ---------- GESTIONE UTENTI (admin, tramite server) ----------
+export async function adminCreateUser(payload, accessToken) {
+  const res = await fetch('/api/create-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken },
+    body: JSON.stringify(payload)
+  });
+  let data; try { data = await res.json(); } catch (_) { data = {}; }
+  return { ok: res.ok, data };
+}
+
+export async function adminUpdateUser(payload, accessToken) {
+  const res = await fetch('/api/update-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken },
+    body: JSON.stringify({ azione: 'update', ...payload })
+  });
+  let data; try { data = await res.json(); } catch (_) { data = {}; }
+  return { ok: res.ok, data };
+}
+
+export async function adminDeleteUser(id, tipo, accessToken) {
+  const res = await fetch('/api/update-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken },
+    body: JSON.stringify({ azione: 'delete', id, tipo })
+  });
+  let data; try { data = await res.json(); } catch (_) { data = {}; }
+  return { ok: res.ok, data };
+}
