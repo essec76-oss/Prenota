@@ -250,8 +250,9 @@ export function openBookingModal(slot, timeId) {
       const label = u.nome + ' ' + u.cognome;
       allOptions.push({
         value: label,
-        text: label + '  ⭐ Tesserato',
-        nameRaw: label
+        text: label,
+        nameRaw: label,
+        optgroup: 'tesserati'
       });
     });
     ospiti.forEach(u => {
@@ -259,8 +260,9 @@ export function openBookingModal(slot, timeId) {
       const label = u.nome + ' ' + u.cognome;
       allOptions.push({
         value: label,
-        text: label + '  👤 Ospite',
-        nameRaw: label
+        text: label,
+        nameRaw: label,
+        optgroup: 'ospiti'
       });
     });
 
@@ -304,6 +306,11 @@ export function openBookingModal(slot, timeId) {
 
       const ts = new TomSelect(el, {
         options: allOptions,
+        optgroups: [
+          { value: 'tesserati', label: '⭐ Tesserati' },
+          { value: 'ospiti', label: '👤 Ospiti' }
+        ],
+        optgroupField: 'optgroup',
         labelField: 'text',
         valueField: 'value',
         searchField: ['text', 'nameRaw'],
